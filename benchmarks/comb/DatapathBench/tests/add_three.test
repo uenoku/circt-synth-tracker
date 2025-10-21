@@ -1,0 +1,2 @@
+RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/add_three/sv/add_three.sv --bw %BW -top add_three -o %t.aig
+RUN: %judge %t.aig | %submit %s --name add_three

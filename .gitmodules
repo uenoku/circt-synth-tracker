@@ -1,0 +1,6 @@
+[submodule "benchmarks/external/DatapathBench/DatapathBench"]
+	path = benchmarks/comb/DatapathBench/DatapathBench
+	url = https://github.com/cowardsa/DatapathBench
+[submodule "benchmarks/comb/EALU/ELAU"]
+	path = benchmarks/comb/ELAU/ELAU
+	url = https://github.com/pulp-platform/ELAU
