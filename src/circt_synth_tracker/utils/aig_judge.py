@@ -56,7 +56,7 @@ def main():
     # Run the C++ binary for both technologies
     results = {}
     technologies = ["asap7", "sky130"]
-    
+
     for tech in technologies:
         try:
             result = subprocess.run(
@@ -86,36 +86,38 @@ def main():
 
     # Merge results into a single metrics object
     merged_stats = {}
-    
+
     # Use the first successful result for common fields
     base_result = None
     for tech in technologies:
-        if results[tech].get('success', False):
+        if results[tech].get("success", False):
             base_result = results[tech]
             break
-    
+
     if base_result is None:
         print("Error: All technology mappings failed", file=sys.stderr)
         return 1
-    
+
     # Copy common fields
-    merged_stats['filename'] = base_result.get('filename', '')
-    merged_stats['gates'] = base_result.get('gates', 0)
-    merged_stats['num_inputs'] = base_result.get('num_inputs', 0)
-    merged_stats['num_outputs'] = base_result.get('num_outputs', 0)
-    merged_stats['depth'] = base_result.get('depth', 0)
-    
+    merged_stats["filename"] = base_result.get("filename", "")
+    merged_stats["gates"] = base_result.get("gates", 0)
+    merged_stats["num_inputs"] = base_result.get("num_inputs", 0)
+    merged_stats["num_outputs"] = base_result.get("num_outputs", 0)
+    merged_stats["depth"] = base_result.get("depth", 0)
+
     # Add technology-specific area/delay fields
     for tech in technologies:
-        if results[tech].get('success', False):
-            merged_stats[f'area_{tech}'] = results[tech].get('area', 0)
-            merged_stats[f'delay_{tech}'] = results[tech].get('delay', 0)
+        if results[tech].get("success", False):
+            merged_stats[f"area_{tech}"] = results[tech].get("area", 0)
+            merged_stats[f"delay_{tech}"] = results[tech].get("delay", 0)
         else:
-            merged_stats[f'area_{tech}'] = None
-            merged_stats[f'delay_{tech}'] = None
-    
+            merged_stats[f"area_{tech}"] = None
+            merged_stats[f"delay_{tech}"] = None
+
     # Overall success if at least one technology succeeded
-    merged_stats['success'] = any(results[tech].get('success', False) for tech in technologies)
+    merged_stats["success"] = any(
+        results[tech].get("success", False) for tech in technologies
+    )
 
     # Output format
     if args.text:

@@ -24,8 +24,8 @@ def main():
     parser.add_argument("--benchmark", help="Specific benchmark to compare")
     parser.add_argument(
         "--format",
-        default="table",
-        choices=["table", "json", "csv", "markdown", "html"],
+        default="",
+        choices=["table", "json", "markdown", "html"],
         help="Output format",
     )
     parser.add_argument(
@@ -41,15 +41,12 @@ def main():
     if args.export and not args.format:
         ext = Path(args.export).suffix.lower()
         if ext == ".html":
+            print("Exporting to HTML report")
             args.format = "html"
         elif ext == ".json":
             args.format = "json"
-        elif ext == ".csv":
-            args.format = "csv"
         elif ext == ".md":
             args.format = "markdown"
-
-    args = parser.parse_args()
 
     # Load all summary files
     summaries = {}
@@ -103,6 +100,15 @@ def compare_benchmark(
             import json
 
             output = json.dumps(comparison, indent=2)
+        elif format_type == "markdown":
+            # Capture Markdown output
+            import io
+            from contextlib import redirect_stdout
+
+            f = io.StringIO()
+            with redirect_stdout(f):
+                display_markdown(comparison, metric_filter)
+            output = f.getvalue()
         elif format_type == "html":
             # Capture HTML output
             import io
@@ -138,6 +144,16 @@ def compare_all(summaries, format_type, export_path=None):
     # If HTML export requested, generate full report
     if export_path and format_type == "html":
         generate_html_report(summaries, all_benchmarks, export_path)
+        return
+
+    # If JSON export requested, generate combined JSON
+    if export_path and format_type == "json":
+        generate_json_report(summaries, all_benchmarks, export_path)
+        return
+
+    # If Markdown export requested, generate combined Markdown
+    if export_path and format_type == "markdown":
+        generate_markdown_report(summaries, all_benchmarks, export_path)
         return
 
     # Compare each benchmark
@@ -380,7 +396,7 @@ def generate_html_report(summaries, all_benchmarks, output_path):
 </head>
 <body>
     <div class="container">
-        <h1>🔬 Synthesis Benchmark Comparison Report</h1>
+        <h1>Synthesis Benchmark Comparison Report</h1>
         
         <div class="summary">
             <strong>Tools Compared:</strong> """
@@ -401,7 +417,7 @@ def generate_html_report(summaries, all_benchmarks, output_path):
 
     # Generate comparison table
     html += """
-        <h2>📊 Benchmark Comparison</h2>
+        <h2>Benchmark Comparison</h2>
         <table>
             <thead>
                 <tr>
@@ -568,7 +584,7 @@ def generate_html_report(summaries, all_benchmarks, output_path):
     # Add geometric mean comparison table
     if len(tool_names) == 2:
         html += """
-        <h2>📊 Geometric Mean Comparison
+        <h2>Geometric Mean Comparison
             <button class="copy-button" onclick="copyGeomeanAsMarkdown()">📋 Copy as Markdown</button>
             <span id="copy-feedback" class="copy-feedback">✓ Copied!</span>
         </h2>
@@ -765,6 +781,121 @@ def generate_html_report(summaries, all_benchmarks, output_path):
     print(f"HTML report generated: {output_path}")
 
 
+def generate_json_report(summaries, all_benchmarks, output_path):
+    """Generate a comprehensive JSON report comparing all benchmarks."""
+    import json
+
+    tool_names = list(summaries.keys())
+
+    # Build comprehensive JSON structure
+    report = {
+        "metadata": {
+            "tools_compared": tool_names,
+            "total_benchmarks": len(all_benchmarks),
+            "generated": summaries[tool_names[0]].get("timestamp", "N/A")
+        },
+        "benchmarks": {}
+    }
+
+    for benchmark_name in sorted(all_benchmarks):
+        comparison = {}
+
+        for tool_name, summary in summaries.items():
+            benchmarks = summary.get("benchmarks", {})
+            if benchmark_name in benchmarks:
+                comparison[tool_name] = benchmarks[benchmark_name]
+
+        if len(comparison) >= 2:  # Include benchmarks with at least 2 tools
+            report["benchmarks"][benchmark_name] = comparison
+
+    # Write JSON file
+    with open(output_path, "w") as f:
+        json.dump(report, f, indent=2)
+
+    print(f"JSON report generated: {output_path}")
+
+
+def generate_markdown_report(summaries, all_benchmarks, output_path):
+    """Generate a comprehensive Markdown report comparing all benchmarks."""
+
+    tool_names = list(summaries.keys())
+
+    markdown = f"""# Synthesis Benchmark Comparison Report
+
+**Tools Compared:** {", ".join(tool_names)}\\
+**Total Benchmarks:** {len(all_benchmarks)}\\
+**Generated:** {summaries[tool_names[0]].get("timestamp", "N/A")}
+
+"""
+
+    for benchmark_name in sorted(all_benchmarks):
+        comparison = {}
+
+        for tool_name, summary in summaries.items():
+            benchmarks = summary.get("benchmarks", {})
+            if benchmark_name in benchmarks:
+                comparison[tool_name] = benchmarks[benchmark_name]
+
+        if len(comparison) < 2:
+            continue
+
+        markdown += f"## {benchmark_name}\n\n"
+
+        # Get baseline (first tool)
+        baseline_tool = tool_names[0]
+        baseline_result = comparison.get(baseline_tool, {})
+        baseline_gates = baseline_result.get("gates", 0)
+        baseline_depth = baseline_result.get("depth", 0)
+        baseline_area_asap7 = baseline_result.get("area_asap7", 0)
+        baseline_delay_asap7 = baseline_result.get("delay_asap7", 0)
+        baseline_area_sky130 = baseline_result.get("area_sky130", 0)
+        baseline_delay_sky130 = baseline_result.get("delay_sky130", 0)
+        baseline_runtime = baseline_result.get("runtime_ms", 0)
+
+        headers = ["Tool", "Gates", "Depth", "Area (ASAP7)", "Delay (ASAP7)", "Area (Sky130)", "Delay (Sky130)", "Runtime"]
+        rows = []
+
+        for tool in sorted(comparison.keys()):
+            result = comparison[tool]
+
+            # Helper to format value with percentage
+            def fmt(value, baseline):
+                if value is None or value == "N/A":
+                    return "-"
+                if not baseline or tool == baseline_tool:
+                    return str(value)
+                diff = value - baseline
+                diff_pct = (diff / baseline * 100) if baseline > 0 else 0
+                if diff > 0:
+                    return f"{value} (+{diff_pct:.1f}%)"
+                elif diff < 0:
+                    return f"**{value}** ({diff_pct:.1f}%)"
+                else:
+                    return str(value)
+
+            row = [
+                tool,
+                fmt(result.get("gates"), baseline_gates),
+                fmt(result.get("depth"), baseline_depth),
+                fmt(result.get("area_asap7"), baseline_area_asap7),
+                fmt(result.get("delay_asap7"), baseline_delay_asap7),
+                fmt(result.get("area_sky130"), baseline_area_sky130),
+                fmt(result.get("delay_sky130"), baseline_delay_sky130),
+                fmt(result.get("runtime_ms"), baseline_runtime),
+            ]
+            rows.append(row)
+
+        # Add table using tabulate
+        from tabulate import tabulate
+        markdown += tabulate(rows, headers=headers, tablefmt="github") + "\n\n"
+
+    # Write Markdown file
+    with open(output_path, "w") as f:
+        f.write(markdown)
+
+    print(f"Markdown report generated: {output_path}")
+
+
 def display_comparison(comparison, benchmark_name, format_type, metric_filter=None):
     """Display comparison in requested format."""
 
@@ -780,8 +911,6 @@ def display_comparison(comparison, benchmark_name, format_type, metric_filter=No
         import json
 
         print(json.dumps(comparison, indent=2))
-    elif format_type == "csv":
-        display_csv(comparison, metric_filter)
     elif format_type == "markdown":
         display_markdown(comparison, metric_filter)
     elif format_type == "html":
@@ -844,12 +973,12 @@ def display_differences(comparison):
     # Include technology-specific metric names
     metrics = [
         ("gates", "gates"),
-        ("depth", "depth"), 
+        ("depth", "depth"),
         ("area_asap7", "area (ASAP7)"),
         ("delay_asap7", "delay (ASAP7)"),
         ("area_sky130", "area (sky130)"),
         ("delay_sky130", "delay (sky130)"),
-        ("runtime_ms", "runtime_ms")
+        ("runtime_ms", "runtime_ms"),
     ]
 
     for metric_key, metric_display in metrics:
@@ -872,44 +1001,6 @@ def display_differences(comparison):
             print(f"  {tool:15s}: {sign}{diff:6d} ({sign}{diff_pct:+6.2f}%)")
 
 
-def display_csv(comparison, metric_filter=None):
-    """Display comparison as CSV."""
-    import csv
-    import sys
-
-    fieldnames = [
-        "Tool",
-        "Gates",
-        "Inputs",
-        "Outputs",
-        "Depth",
-        "Area (ASAP7)",
-        "Delay (ASAP7)",
-        "Area (Sky130)",
-        "Delay (Sky130)",
-        "Runtime (ms)",
-    ]
-
-    writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
-    writer.writeheader()
-
-    for tool, result in sorted(comparison.items()):
-        writer.writerow(
-            {
-                "Tool": tool,
-                "Gates": result.get("gates", ""),
-                "Inputs": result.get("inputs", ""),
-                "Outputs": result.get("outputs", ""),
-                "Depth": result.get("depth", ""),
-                "Area (ASAP7)": result.get("area_asap7", ""),
-                "Delay (ASAP7)": result.get("delay_asap7", ""),
-                "Area (Sky130)": result.get("area_sky130", ""),
-                "Delay (Sky130)": result.get("delay_sky130", ""),
-                "Runtime (ms)": result.get("runtime_ms", ""),
-            }
-        )
-
-
 def display_markdown(comparison, metric_filter=None):
     """Display comparison as Markdown table with percentages."""
 
@@ -918,7 +1009,16 @@ def display_markdown(comparison, metric_filter=None):
         return
 
     # Compact headers - show technology-specific metrics
-    headers = ["Tool", "Gates", "Depth", "Area (ASAP7)", "Delay (ASAP7)", "Area (Sky130)", "Delay (Sky130)", "Runtime"]
+    headers = [
+        "Tool",
+        "Gates",
+        "Depth",
+        "Area (ASAP7)",
+        "Delay (ASAP7)",
+        "Area (Sky130)",
+        "Delay (Sky130)",
+        "Runtime",
+    ]
     rows = []
 
     # Get baseline (first tool)
