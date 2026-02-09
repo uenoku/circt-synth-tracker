@@ -1,2 +1,2 @@
-RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/blend/sv/blend.sv --bw %BW -top blend -o %t.aig
-RUN: %judge %t.aig | %submit %s --name blend
+RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/AlphaBlend/sv/AlphaBlend.sv --bw %BW -top AlphaBlend -o %t.aig
+RUN: %judge %t.aig | %submit %s --name AlphaBlend
