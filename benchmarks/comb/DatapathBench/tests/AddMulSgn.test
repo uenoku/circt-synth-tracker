@@ -1,0 +1,2 @@
+RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/AddMulSgn/sv/AddMulSgn.sv --bw %BW -top AddMulSgn -o %t.aig
+RUN: %judge %t.aig | %submit %s --name AddMulSgn

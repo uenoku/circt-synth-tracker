@@ -1,0 +1,2 @@
+RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/MulThree/sv/MulThree.sv --bw %BW -top MulThree -o %t.aig
+RUN: %judge %t.aig | %submit %s --name MulThree

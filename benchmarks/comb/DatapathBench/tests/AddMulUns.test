@@ -1,0 +1,2 @@
+RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/AddMulUns/sv/AddMulUns.sv --bw %BW -top AddMulUns -o %t.aig
+RUN: %judge %t.aig | %submit %s --name AddMulUns
