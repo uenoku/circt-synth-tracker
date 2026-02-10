@@ -1,2 +1,0 @@
-RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/dot_product/sv/dot_product.sv --bw %BW -top dot_product -o %t.aig
-RUN: %judge %t.aig | %submit %s --name dot_product

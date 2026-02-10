@@ -1,2 +1,0 @@
-RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/fma/sv/fma.sv --bw %BW -top fma -o %t.aig
-RUN: %judge %t.aig | %submit %s --name fma

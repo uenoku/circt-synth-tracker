@@ -1,0 +1,2 @@
+RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/FmaShare/sv/FmaShare.sv --bw %BW -top FmaShare -o %t.aig
+RUN: %judge %t.aig | %submit %s --name FmaShare

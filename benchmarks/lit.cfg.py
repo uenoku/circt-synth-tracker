@@ -67,7 +67,7 @@ else:  # default to circt
 
 # Results directory (configurable via --param RESULTS_DIR=<dir>)
 results_dir = lit_config.params.get('RESULTS_DIR', '')
-submit_cmd = 'submit-results'
+submit_cmd = f'submit-results --tool {tool_name}'
 if results_dir:
     submit_cmd = f'submit-results --output-dir {results_dir}'
 

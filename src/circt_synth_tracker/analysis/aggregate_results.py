@@ -51,7 +51,7 @@ def main():
     results = {}
 
     # Search for results in 'results' subdirectories
-    json_files = list(results_dir.glob("**/results/**/*.json"))
+    json_files = list(results_dir.glob(f"**/results/{args.tool}/*.json"))
 
     if not json_files:
         print(

@@ -1,0 +1,2 @@
+RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/CarrySaveCompare/sv/CarrySaveCompare.sv --bw %BW -top CarrySaveCompare -o %t.aig
+RUN: %judge %t.aig | %submit %s --name CarrySaveCompare
