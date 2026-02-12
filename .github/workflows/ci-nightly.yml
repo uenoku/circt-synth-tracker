@@ -1,0 +1,119 @@
+name: CIRCT Nightly Integration Tests
+
+on:
+  schedule:
+    # Run daily at 12:00 UTC (after CIRCT nightly builds)
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      bitwidth:
+        description: 'Bitwidth for parameterized tests'
+        required: false
+        default: '16'
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Yosys vs CIRCT Comparison
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/circt/images/circt-integration-test:v20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install CIRCT nightly
+        uses: circt/install-circt@3f8dda6e1c1965537b5801a43c81c287bac4eae4 # v1.1.1
+        with:
+          version: 'nightly'
+          github-token: ${{ github.token }}
+
+      - name: Add CIRCT to PATH
+        run: |
+          echo "$GITHUB_WORKSPACE/circt/bin" >> $GITHUB_PATH
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Verify environment
+        run: |
+          which yosys
+          which circt-synth
+          which circt-verilog
+          which circt-translate
+          yosys --version
+          circt-synth --version
+
+      - name: Install Python dependencies
+        run: |
+          uv sync
+
+      - name: Build aig-judge
+        run: |
+          uv run build-judge
+
+      - name: Run CIRCT tests
+        run: |
+          source .venv/bin/activate
+          BW=${{ github.event.inputs.bitwidth || '16' }}
+          lit -v benchmarks/ -DSYNTH_TOOL=circt -DTEST_OUTPUT_DIR=build_circt -DBW=$BW
+
+      - name: Run Yosys tests
+        run: |
+          source .venv/bin/activate
+          BW=${{ github.event.inputs.bitwidth || '16' }}
+          lit -v benchmarks/ -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys -DBW=$BW
+
+      - name: Aggregate CIRCT results
+        run: |
+          source .venv/bin/activate
+          aggregate-results --tool circt --results-dir build_circt -o circt-summary.json
+
+      - name: Aggregate Yosys results
+        run: |
+          source .venv/bin/activate
+          aggregate-results --tool yosys --results-dir build_yosys -o yosys-summary.json
+
+      - name: Compare results
+        run: |
+          source .venv/bin/activate
+          compare-results circt-summary.json yosys-summary.json -o report.html
+          compare-results circt-summary.json yosys-summary.json -o report.md
+          compare-results circt-summary.json yosys-summary.json -o report.json --format json
+
+      - name: Upload comparison reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: comparison-reports
+          path: |
+            report.html
+            report.md
+            report.json
+            circt-summary.json
+            yosys-summary.json
+
+      - name: Upload test outputs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-outputs
+          path: |
+            build_circt/
+            build_yosys/
+
+      - name: Post results summary
+        if: always()
+        run: |
+          if [ -f report.md ]; then
+            echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+            cat report.md >> $GITHUB_STEP_SUMMARY
+          fi
