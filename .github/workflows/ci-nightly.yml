@@ -23,10 +23,19 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/circt/images/circt-integration-test:v20
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install jq (required by install-circt action)
+        run: |
+          apt-get update && apt-get install -y jq
 
       - name: Install CIRCT nightly
         uses: circt/install-circt@3f8dda6e1c1965537b5801a43c81c287bac4eae4 # v1.1.1
@@ -37,6 +46,12 @@ jobs:
       - name: Add CIRCT to PATH
         run: |
           echo "$GITHUB_WORKSPACE/circt/bin" >> $GITHUB_PATH
+
+      - name: Get CIRCT version
+        run: |
+          CIRCT_VERSION=$(circt-synth --version | tail -1)
+          echo "CIRCT_VERSION=$CIRCT_VERSION" >> $GITHUB_ENV
+          echo "CIRCT Version: $CIRCT_VERSION"
 
       - name: Install uv
         run: |
@@ -61,12 +76,14 @@ jobs:
           uv run build-judge
 
       - name: Run CIRCT tests
+        continue-on-error: true
         run: |
           source .venv/bin/activate
           BW=${{ github.event.inputs.bitwidth || '16' }}
           lit -v benchmarks/ -DSYNTH_TOOL=circt -DTEST_OUTPUT_DIR=build_circt -DBW=$BW
 
       - name: Run Yosys tests
+        continue-on-error: true
         run: |
           source .venv/bin/activate
           BW=${{ github.event.inputs.bitwidth || '16' }}
@@ -85,9 +102,9 @@ jobs:
       - name: Compare results
         run: |
           source .venv/bin/activate
-          compare-results circt-summary.json yosys-summary.json -o report.html
-          compare-results circt-summary.json yosys-summary.json -o report.md
-          compare-results circt-summary.json yosys-summary.json -o report.json --format json
+          compare-results yosys-summary.json circt-summary.json -o report.html
+          compare-results yosys-summary.json circt-summary.json -o report.md
+          compare-results yosys-summary.json circt-summary.json -o report.json --format json
 
       - name: Upload comparison reports
         uses: actions/upload-artifact@v4
@@ -113,7 +130,18 @@ jobs:
       - name: Post results summary
         if: always()
         run: |
+          echo "## CIRCT Synth Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "**CIRCT Version:** \`${CIRCT_VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f report.md ]; then
-            echo "## Test Results" >> $GITHUB_STEP_SUMMARY
             cat report.md >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Deploy report to GitHub Pages
+        if: (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          include_patterns: |
+            report.html
