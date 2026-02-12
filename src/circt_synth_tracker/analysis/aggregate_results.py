@@ -19,7 +19,7 @@ def main():
         description="Aggregate synthesis benchmark results into JSON summary"
     )
     parser.add_argument(
-        "--tool", required=True, help="Tool name (circt-synth, yosys, etc.)"
+        "--tool", required=True, help="Tool name (circt, yosys, etc.)"
     )
     parser.add_argument(
         "--results-dir", required=True, help="Directory containing result files"

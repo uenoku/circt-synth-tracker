@@ -1,5 +1,8 @@
 # circt-synth-tracker
 
+[![CIRCT Nightly Integration Tests](https://github.com/uenoku/circt-synth-tracker/actions/workflows/ci-nightly.yml/badge.svg)](https://github.com/uenoku/circt-synth-tracker/actions/workflows/ci-nightly.yml)
+[![Report](https://img.shields.io/badge/report-html-blue)](https://uenoku.github.io/circt-synth-tracker/report.html)
+
 NOTE: This repository is a prototype and under active development.
 
 A testing framework for tracking synthesis results for the [Circuit IR and Tools (CIRCT)](https://circt.llvm.org/) project using LLVM lit.
