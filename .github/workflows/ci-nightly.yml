@@ -23,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/circt/images/circt-integration-test:v20
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
