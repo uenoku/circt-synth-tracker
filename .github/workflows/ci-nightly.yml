@@ -52,11 +52,14 @@ jobs:
         run: |
           echo "$GITHUB_WORKSPACE/circt/bin" >> $GITHUB_PATH
 
-      - name: Get CIRCT version
+      - name: Get CIRCT and Yosys versions
         run: |
-          CIRCT_VERSION=$(circt-synth --version | tail -1)
+          CIRCT_VERSION=$(circt-synth --version | tail -1 | xargs)
+          YOSYS_VERSION=$(yosys --version | head -1 | xargs)
           echo "CIRCT_VERSION=$CIRCT_VERSION" >> $GITHUB_ENV
+          echo "YOSYS_VERSION=$YOSYS_VERSION" >> $GITHUB_ENV
           echo "CIRCT Version: $CIRCT_VERSION"
+          echo "Yosys Version: $YOSYS_VERSION"
 
       - name: Install uv
         run: |
@@ -97,12 +100,12 @@ jobs:
       - name: Aggregate CIRCT results
         run: |
           source .venv/bin/activate
-          aggregate-results --tool circt --results-dir build_circt -o circt-summary.json
+          aggregate-results --tool circt --version "$CIRCT_VERSION" --results-dir build_circt -o circt-summary.json
 
       - name: Aggregate Yosys results
         run: |
           source .venv/bin/activate
-          aggregate-results --tool yosys --results-dir build_yosys -o yosys-summary.json
+          aggregate-results --tool yosys --version "$YOSYS_VERSION" --results-dir build_yosys -o yosys-summary.json
 
       - name: Compare results
         run: |
@@ -137,6 +140,7 @@ jobs:
         run: |
           echo "## CIRCT Synth Test Results" >> $GITHUB_STEP_SUMMARY
           echo "**CIRCT Version:** \`${CIRCT_VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Yosys Version:** \`${YOSYS_VERSION}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f report.md ]; then
             cat report.md >> $GITHUB_STEP_SUMMARY
