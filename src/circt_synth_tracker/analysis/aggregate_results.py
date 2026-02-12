@@ -22,6 +22,9 @@ def main():
         "--tool", required=True, help="Tool name (circt, yosys, etc.)"
     )
     parser.add_argument(
+        "--version", required=False, help="Tool version (e.g., nightly, v1.0, etc.)", default="unknown"
+    )
+    parser.add_argument(
         "--results-dir", required=True, help="Directory containing result files"
     )
     parser.add_argument(
@@ -86,6 +89,7 @@ def main():
     # Create summary
     summary = {
         "tool": args.tool,
+        "version": args.version,
         "timestamp": datetime.now().isoformat(),
         "total_benchmarks": len(results),
         "benchmarks": results,

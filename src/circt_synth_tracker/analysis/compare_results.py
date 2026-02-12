@@ -12,6 +12,7 @@ Usage:
 import sys
 import json
 import argparse
+from html import escape
 from pathlib import Path
 from tabulate import tabulate
 
@@ -233,6 +234,9 @@ def generate_html_report(summaries, all_benchmarks, output_path):
             border-left: 4px solid #4CAF50;
             margin-bottom: 20px;
         }
+        .summary-line {
+            margin: 8px 0;
+        }
         table {
             border-collapse: collapse;
             width: 100%;
@@ -397,20 +401,23 @@ def generate_html_report(summaries, all_benchmarks, output_path):
 <body>
     <div class="container">
         <h1>Synthesis Benchmark Comparison Report</h1>
-        
+
         <div class="summary">
-            <strong>Tools Compared:</strong> """
-        + ", ".join(tool_names)
-        + """<br>
-            <strong>Total Benchmarks:</strong> """
+            <div class="summary-line"><strong>Tools Compared:</strong> """
+        + escape(", ".join(tool_names))
+        + """</div>
+            <div class="summary-line"><strong>Tool Versions:</strong> """
+        + escape(", ".join([f"{tool} v{summaries[tool].get('version', 'unknown')}" for tool in tool_names]))
+        + """</div>
+            <div class="summary-line"><strong>Total Benchmarks:</strong> """
         + str(len(all_benchmarks))
-        + """<br>
-            <strong>Categories:</strong> """
+        + """</div>
+            <div class="summary-line"><strong>Categories:</strong> """
         + str(len(sorted_categories))
-        + """<br>
-            <strong>Generated:</strong> """
-        + summaries[tool_names[0]].get("timestamp", "N/A")
-        + """
+        + """</div>
+            <div class="summary-line"><strong>Generated:</strong> """
+        + escape(summaries[tool_names[0]].get("timestamp", "N/A"))
+        + """</div>
         </div>
 """
     )
@@ -426,7 +433,7 @@ def generate_html_report(summaries, all_benchmarks, output_path):
 
     # Add headers for each tool
     for tool in tool_names:
-        html += f"                    <th class='tool-column' colspan='7'>{tool}</th>\n"
+        html += f"                    <th class='tool-column' colspan='7'>{escape(tool)}</th>\n"
 
     html += """
                 </tr>
