@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Synthesis Benchmark Comparison Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .summary {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            margin-bottom: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .metric {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+        .metric-value {
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .benchmark-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .diff {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .tool-column {
+            min-width: 150px;
+        }
+        .category-header {
+            background-color: #e8f5e9;
+            font-weight: bold;
+            color: #2e7d32;
+            padding: 10px 8px;
+            border-top: 2px solid #4CAF50;
+        }
+        .copy-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .copy-button:hover {
+            background-color: #45a049;
+        }
+        .copy-button:active {
+            background-color: #3d8b40;
+        }
+        .copy-feedback {
+            display: inline-block;
+            margin-left: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .copy-feedback.show {
+            opacity: 1;
+        }
+    </style>
+    <script>
+        function copyGeomeanAsMarkdown() {
+            try {
+                // Build markdown table from the geometric mean comparison table
+                const markdown = generateGeomeanMarkdown();
+                
+                console.log('Attempting to copy markdown...');
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(markdown).then(() => {
+                    console.log('Copy successful!');
+                    // Show feedback
+                    const feedback = document.getElementById('copy-feedback');
+                    feedback.classList.add('show');
+                    setTimeout(() => {
+                        feedback.classList.remove('show');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Clipboard error:', err);
+                    alert('Failed to copy to clipboard: ' + err + '\n\nTry opening the browser console to see the markdown table.');
+                });
+            } catch (err) {
+                console.error('Error generating markdown:', err);
+                alert('Error: ' + err);
+            }
+        }
+        
+        function generateGeomeanMarkdown() {
+            const tool1 = 'yosys';
+            const tool2 = 'circt';
+            
+            let md = '| Category | Metric | ' + tool1 + ' | ' + tool2 + ' |' + '\n';
+            md += '|----------|--------|' + '-'.repeat(tool1.length + 2) + '|' + '-'.repeat(tool2.length + 2) + '|' + '\n';
+            
+            // Get all rows from the geomean table
+            const rows = document.querySelectorAll('#geomean-table tbody tr');
+            let currentCategory = '';
+            
+            rows.forEach(row => {{
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 0) return;
+                
+                // Check if this row has a category cell
+                const categoryCell = cells[0];
+                if (categoryCell.classList.contains('category-cell')) {{
+                    currentCategory = categoryCell.textContent.trim();
+                }}
+                
+                // Extract metric and values
+                const metricIdx = categoryCell.classList.contains('category-cell') ? 1 : 0;
+                const metric = cells[metricIdx].textContent.trim();
+                const val1 = cells[metricIdx + 1].textContent.trim();
+                const val2 = cells[metricIdx + 2].textContent.trim();
+                
+                // Format category (only show on first metric)
+                const categoryText = (metric === 'Gates' || metric === '**Gates**') ? currentCategory : '';
+                
+                md += '| ' + categoryText + ' | ' + metric.replace(/\*\*/g, '') + ' | ' + 
+                      val1.replace(/\*\*/g, '') + ' | ' + val2.replace(/\*\*/g, '') + ' |' + '\n';
+            }});
+            
+            console.log('Generated markdown:');
+            console.log(md);
+            return md;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Synthesis Benchmark Comparison Report</h1>
+        
+        <div class="summary">
+            <strong>Tools Compared:</strong> yosys, circt<br>
+            <strong>Total Benchmarks:</strong> 79<br>
+            <strong>Categories:</strong> 3<br>
+            <strong>Generated:</strong> 2026-02-12T07:27:45.332215
+        </div>
+
+        <h2>Benchmark Comparison</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Benchmark</th>
+                    <th class='tool-column' colspan='7'>yosys</th>
+                    <th class='tool-column' colspan='7'>circt</th>
+
+                </tr>
+                <tr>
+                    <th></th>
+                    <th class='metric'>Gates</th><th class='metric'>Depth</th><th class='metric'>Area (ASAP7)</th><th class='metric'>Delay (ASAP7)</th><th class='metric'>Area (Sky130)</th><th class='metric'>Delay (Sky130)</th><th class='metric'>Runtime</th>
+                    <th class='metric'>Gates</th><th class='metric'>Depth</th><th class='metric'>Area (ASAP7)</th><th class='metric'>Delay (ASAP7)</th><th class='metric'>Area (Sky130)</th><th class='metric'>Delay (Sky130)</th><th class='metric'>Runtime</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan='15' class='category-header'>📁 DatapathBench</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>AddMop</td>
+                    <td class='metric'>387</td>
+                    <td class='metric'>23</td>
+                    <td class='metric'>29</td>
+                    <td class='metric'>264</td>
+                    <td class='metric'>3179</td>
+                    <td class='metric'>1112</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(188,255,188);'>369 <span class='diff'>(-4.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(156,255,156);'>19 <span class='diff'>(-17.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>45 <span class='diff'>(+55.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(156,255,156);'>218 <span class='diff'>(-17.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,157,157);'>3714 <span class='diff'>(+16.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(156,255,156);'>920 <span class='diff'>(-17.3%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>AddMulSgn</td>
+                    <td class='metric'>2927</td>
+                    <td class='metric'>57</td>
+                    <td class='metric'>244</td>
+                    <td class='metric'>619</td>
+                    <td class='metric'>27122</td>
+                    <td class='metric'>2604</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>3804 <span class='diff'>(+30.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>44 <span class='diff'>(-22.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,163,163);'>280 <span class='diff'>(+14.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(155,255,155);'>508 <span class='diff'>(-17.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>36191 <span class='diff'>(+33.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>2089 <span class='diff'>(-19.8%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>AddMulUns</td>
+                    <td class='metric'>2616</td>
+                    <td class='metric'>57</td>
+                    <td class='metric'>202</td>
+                    <td class='metric'>620</td>
+                    <td class='metric'>24810</td>
+                    <td class='metric'>2587</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,190,190);'>2712 <span class='diff'>(+3.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>40 <span class='diff'>(-29.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,172,172);'>224 <span class='diff'>(+10.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>443 <span class='diff'>(-28.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(198,255,198);'>24643 <span class='diff'>(-0.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>1879 <span class='diff'>(-27.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>AddThree</td>
+                    <td class='metric'>281</td>
+                    <td class='metric'>19</td>
+                    <td class='metric'>20</td>
+                    <td class='metric'>223</td>
+                    <td class='metric'>2123</td>
+                    <td class='metric'>929</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(196,255,196);'>277 <span class='diff'>(-1.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>15 <span class='diff'>(-21.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>35 <span class='diff'>(+75.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>176 <span class='diff'>(-21.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>2610 <span class='diff'>(+22.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(151,255,151);'>748 <span class='diff'>(-19.5%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>AddThreeSgn</td>
+                    <td class='metric'>285</td>
+                    <td class='metric'>19</td>
+                    <td class='metric'>20</td>
+                    <td class='metric'>223</td>
+                    <td class='metric'>2062</td>
+                    <td class='metric'>927</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(195,255,195);'>280 <span class='diff'>(-1.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>15 <span class='diff'>(-21.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>35 <span class='diff'>(+75.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>176 <span class='diff'>(-21.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>2504 <span class='diff'>(+21.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>736 <span class='diff'>(-20.6%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>AlphaBlend</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>4239</td>
+                    <td class='metric'>44</td>
+                    <td class='metric'>408</td>
+                    <td class='metric'>488</td>
+                    <td class='metric'>39635</td>
+                    <td class='metric'>2049</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>CarrySaveCompare</td>
+                    <td class='metric'>2632</td>
+                    <td class='metric'>51</td>
+                    <td class='metric'>192</td>
+                    <td class='metric'>567</td>
+                    <td class='metric'>22628</td>
+                    <td class='metric'>2293</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(170,255,170);'>2317 <span class='diff'>(-12.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(155,255,155);'>42 <span class='diff'>(-17.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,177,177);'>209 <span class='diff'>(+8.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(157,255,157);'>470 <span class='diff'>(-17.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(179,255,179);'>20798 <span class='diff'>(-8.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(163,255,163);'>1954 <span class='diff'>(-14.8%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>CarrySaveSelect</td>
+                    <td class='metric'>2342</td>
+                    <td class='metric'>45</td>
+                    <td class='metric'>231</td>
+                    <td class='metric'>485</td>
+                    <td class='metric'>21203</td>
+                    <td class='metric'>2058</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(157,255,157);'>1947 <span class='diff'>(-16.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(161,255,161);'>38 <span class='diff'>(-15.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(179,255,179);'>212 <span class='diff'>(-8.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(164,255,164);'>416 <span class='diff'>(-14.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>16436 <span class='diff'>(-22.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(170,255,170);'>1813 <span class='diff'>(-11.9%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>DotProduct</td>
+                    <td class='metric'>4948</td>
+                    <td class='metric'>50</td>
+                    <td class='metric'>418</td>
+                    <td class='metric'>559</td>
+                    <td class='metric'>48655</td>
+                    <td class='metric'>2353</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(155,255,155);'>4063 <span class='diff'>(-17.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(165,255,165);'>43 <span class='diff'>(-14.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(161,255,161);'>354 <span class='diff'>(-15.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(164,255,164);'>479 <span class='diff'>(-14.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>37142 <span class='diff'>(-23.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(167,255,167);'>2046 <span class='diff'>(-13.0%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>DotProductSgn</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>4064</td>
+                    <td class='metric'>43</td>
+                    <td class='metric'>320</td>
+                    <td class='metric'>481</td>
+                    <td class='metric'>38459</td>
+                    <td class='metric'>2029</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>Fma</td>
+                    <td class='metric'>2498</td>
+                    <td class='metric'>42</td>
+                    <td class='metric'>219</td>
+                    <td class='metric'>473</td>
+                    <td class='metric'>24369</td>
+                    <td class='metric'>1970</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(163,255,163);'>2135 <span class='diff'>(-14.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(170,255,170);'>37 <span class='diff'>(-11.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'>199 <span class='diff'>(-9.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(163,255,163);'>404 <span class='diff'>(-14.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(154,255,154);'>19976 <span class='diff'>(-18.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(172,255,172);'>1753 <span class='diff'>(-11.0%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>FmaSgn</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>2136</td>
+                    <td class='metric'>35</td>
+                    <td class='metric'>205</td>
+                    <td class='metric'>397</td>
+                    <td class='metric'>21061</td>
+                    <td class='metric'>1700</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>FmaShare</td>
+                    <td class='metric'>2771</td>
+                    <td class='metric'>48</td>
+                    <td class='metric'>277</td>
+                    <td class='metric'>536</td>
+                    <td class='metric'>26364</td>
+                    <td class='metric'>2160</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(180,255,180);'>2559 <span class='diff'>(-7.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(153,255,153);'>39 <span class='diff'>(-18.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(161,255,161);'>234 <span class='diff'>(-15.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(153,255,153);'>436 <span class='diff'>(-18.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(184,255,184);'>24755 <span class='diff'>(-6.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(166,255,166);'>1870 <span class='diff'>(-13.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>FmaShareSgn</td>
+                    <td class='metric'>3306</td>
+                    <td class='metric'>57</td>
+                    <td class='metric'>274</td>
+                    <td class='metric'>613</td>
+                    <td class='metric'>28913</td>
+                    <td class='metric'>2504</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>Fmaa</td>
+                    <td class='metric'>3489</td>
+                    <td class='metric'>44</td>
+                    <td class='metric'>309</td>
+                    <td class='metric'>497</td>
+                    <td class='metric'>30599</td>
+                    <td class='metric'>2056</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(167,255,167);'>3031 <span class='diff'>(-13.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(165,255,165);'>38 <span class='diff'>(-13.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,199,199);'>310 <span class='diff'>(+0.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(160,255,160);'>419 <span class='diff'>(-15.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(178,255,178);'>28003 <span class='diff'>(-8.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(169,255,169);'>1802 <span class='diff'>(-12.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>FmaaSgn</td>
+                    <td class='metric'>4176</td>
+                    <td class='metric'>46</td>
+                    <td class='metric'>391</td>
+                    <td class='metric'>510</td>
+                    <td class='metric'>40115</td>
+                    <td class='metric'>2158</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>3100 <span class='diff'>(-25.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(161,255,161);'>39 <span class='diff'>(-15.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>288 <span class='diff'>(-26.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(159,255,159);'>427 <span class='diff'>(-16.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>28066 <span class='diff'>(-30.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(164,255,164);'>1855 <span class='diff'>(-14.0%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>MulAddSgn</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>2243</td>
+                    <td class='metric'>37</td>
+                    <td class='metric'>200</td>
+                    <td class='metric'>523</td>
+                    <td class='metric'>21569</td>
+                    <td class='metric'>1747</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>MulAddUns</td>
+                    <td class='metric'>2566</td>
+                    <td class='metric'>42</td>
+                    <td class='metric'>214</td>
+                    <td class='metric'>473</td>
+                    <td class='metric'>24654</td>
+                    <td class='metric'>1970</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(168,255,168);'>2242 <span class='diff'>(-12.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(170,255,170);'>37 <span class='diff'>(-11.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(176,255,176);'>194 <span class='diff'>(-9.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(166,255,166);'>409 <span class='diff'>(-13.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(169,255,169);'>21603 <span class='diff'>(-12.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(174,255,174);'>1772 <span class='diff'>(-10.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>MulThree</td>
+                    <td class='metric'>2159</td>
+                    <td class='metric'>66</td>
+                    <td class='metric'>191</td>
+                    <td class='metric'>731</td>
+                    <td class='metric'>21196</td>
+                    <td class='metric'>3047</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(178,255,178);'>1973 <span class='diff'>(-8.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>50 <span class='diff'>(-24.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(198,255,198);'>190 <span class='diff'>(-0.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>554 <span class='diff'>(-24.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(158,255,158);'>17693 <span class='diff'>(-16.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>2375 <span class='diff'>(-22.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>MulThreeSgn</td>
+                    <td class='metric'>2165</td>
+                    <td class='metric'>66</td>
+                    <td class='metric'>188</td>
+                    <td class='metric'>731</td>
+                    <td class='metric'>21153</td>
+                    <td class='metric'>3047</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'>1973 <span class='diff'>(-8.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>50 <span class='diff'>(-24.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,197,197);'>190 <span class='diff'>(+1.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>554 <span class='diff'>(-24.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(159,255,159);'>17693 <span class='diff'>(-16.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>2375 <span class='diff'>(-22.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>SqrSgn</td>
+                    <td class='metric'>2365</td>
+                    <td class='metric'>42</td>
+                    <td class='metric'>215</td>
+                    <td class='metric'>472</td>
+                    <td class='metric'>22698</td>
+                    <td class='metric'>1973</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>1785 <span class='diff'>(-24.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(158,255,158);'>35 <span class='diff'>(-16.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>147 <span class='diff'>(-31.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(153,255,153);'>385 <span class='diff'>(-18.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>16535 <span class='diff'>(-27.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(161,255,161);'>1668 <span class='diff'>(-15.5%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>SqrUns</td>
+                    <td class='metric'>2017</td>
+                    <td class='metric'>42</td>
+                    <td class='metric'>187</td>
+                    <td class='metric'>468</td>
+                    <td class='metric'>20455</td>
+                    <td class='metric'>1945</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>1045 <span class='diff'>(-48.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>29 <span class='diff'>(-31.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>89 <span class='diff'>(-52.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>323 <span class='diff'>(-31.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>9404 <span class='diff'>(-54.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>1373 <span class='diff'>(-29.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td colspan='15' class='category-header'>📁 ELAU</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AbsVal</td>
+                    <td class='metric'>111</td>
+                    <td class='metric'>10</td>
+                    <td class='metric'>6</td>
+                    <td class='metric'>110</td>
+                    <td class='metric'>755</td>
+                    <td class='metric'>439</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,190,190);'>115 <span class='diff'>(+3.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>8 <span class='diff'>(-20.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,158,158);'>7 <span class='diff'>(+16.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(168,255,168);'>96 <span class='diff'>(-12.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,175,175);'>828 <span class='diff'>(+9.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(169,255,169);'>386 <span class='diff'>(-12.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Add</td>
+                    <td class='metric'>138</td>
+                    <td class='metric'>16</td>
+                    <td class='metric'>9</td>
+                    <td class='metric'>175</td>
+                    <td class='metric'>780</td>
+                    <td class='metric'>739</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,161,161);'>159 <span class='diff'>(+15.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>12 <span class='diff'>(-25.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>13 <span class='diff'>(+44.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>135 <span class='diff'>(-22.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1217 <span class='diff'>(+56.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>567 <span class='diff'>(-23.3%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddC</td>
+                    <td class='metric'>151</td>
+                    <td class='metric'>21</td>
+                    <td class='metric'>9</td>
+                    <td class='metric'>206</td>
+                    <td class='metric'>946</td>
+                    <td class='metric'>892</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>218 <span class='diff'>(+44.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>13 <span class='diff'>(-38.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>20 <span class='diff'>(+122.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>163 <span class='diff'>(-20.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>2091 <span class='diff'>(+121.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>659 <span class='diff'>(-26.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddCfast</td>
+                    <td class='metric'>151</td>
+                    <td class='metric'>21</td>
+                    <td class='metric'>9</td>
+                    <td class='metric'>206</td>
+                    <td class='metric'>946</td>
+                    <td class='metric'>892</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>218 <span class='diff'>(+44.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>13 <span class='diff'>(-38.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>20 <span class='diff'>(+122.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>163 <span class='diff'>(-20.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>2091 <span class='diff'>(+121.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>659 <span class='diff'>(-26.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddCsv</td>
+                    <td class='metric'>156</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>6</td>
+                    <td class='metric'>56</td>
+                    <td class='metric'>1080</td>
+                    <td class='metric'>249</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>156</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>6</td>
+                    <td class='metric'>56</td>
+                    <td class='metric'>1080</td>
+                    <td class='metric'>249</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddMod2Nm1</td>
+                    <td class='metric'>251</td>
+                    <td class='metric'>26</td>
+                    <td class='metric'>19</td>
+                    <td class='metric'>256</td>
+                    <td class='metric'>1933</td>
+                    <td class='metric'>985</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,171,171);'>280 <span class='diff'>(+11.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>20 <span class='diff'>(-23.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,160,160);'>22 <span class='diff'>(+15.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(160,255,160);'>216 <span class='diff'>(-15.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,181,181);'>2077 <span class='diff'>(+7.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(168,255,168);'>861 <span class='diff'>(-12.6%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddMod2Nm1s0</td>
+                    <td class='metric'>252</td>
+                    <td class='metric'>26</td>
+                    <td class='metric'>20</td>
+                    <td class='metric'>257</td>
+                    <td class='metric'>1899</td>
+                    <td class='metric'>1025</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>316 <span class='diff'>(+25.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(151,255,151);'>21 <span class='diff'>(-19.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>25 <span class='diff'>(+25.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'>234 <span class='diff'>(-8.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>2371 <span class='diff'>(+24.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(173,255,173);'>918 <span class='diff'>(-10.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddMop</td>
+                    <td class='metric'>387</td>
+                    <td class='metric'>23</td>
+                    <td class='metric'>29</td>
+                    <td class='metric'>264</td>
+                    <td class='metric'>3179</td>
+                    <td class='metric'>1112</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(188,255,188);'>369 <span class='diff'>(-4.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(156,255,156);'>19 <span class='diff'>(-17.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>45 <span class='diff'>(+55.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(156,255,156);'>218 <span class='diff'>(-17.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,157,157);'>3714 <span class='diff'>(+16.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(156,255,156);'>920 <span class='diff'>(-17.3%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddMulUns</td>
+                    <td class='metric'>2616</td>
+                    <td class='metric'>57</td>
+                    <td class='metric'>202</td>
+                    <td class='metric'>620</td>
+                    <td class='metric'>24810</td>
+                    <td class='metric'>2587</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,190,190);'>2712 <span class='diff'>(+3.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>40 <span class='diff'>(-29.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,172,172);'>224 <span class='diff'>(+10.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>443 <span class='diff'>(-28.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(198,255,198);'>24643 <span class='diff'>(-0.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>1879 <span class='diff'>(-27.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddSub</td>
+                    <td class='metric'>253</td>
+                    <td class='metric'>24</td>
+                    <td class='metric'>22</td>
+                    <td class='metric'>271</td>
+                    <td class='metric'>2023</td>
+                    <td class='metric'>1011</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>405 <span class='diff'>(+60.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>15 <span class='diff'>(-37.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>32 <span class='diff'>(+45.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>180 <span class='diff'>(-33.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>3091 <span class='diff'>(+52.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>720 <span class='diff'>(-28.8%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddSubC</td>
+                    <td class='metric'>376</td>
+                    <td class='metric'>25</td>
+                    <td class='metric'>25</td>
+                    <td class='metric'>224</td>
+                    <td class='metric'>2143</td>
+                    <td class='metric'>1040</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>487 <span class='diff'>(+29.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>15 <span class='diff'>(-40.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>45 <span class='diff'>(+80.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(155,255,155);'>184 <span class='diff'>(-17.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>3880 <span class='diff'>(+81.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>742 <span class='diff'>(-28.7%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddSubV</td>
+                    <td class='metric'>419</td>
+                    <td class='metric'>29</td>
+                    <td class='metric'>38</td>
+                    <td class='metric'>282</td>
+                    <td class='metric'>3641</td>
+                    <td class='metric'>1110</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>519 <span class='diff'>(+23.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(165,255,165);'>25 <span class='diff'>(-13.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,153,153);'>45 <span class='diff'>(+18.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(153,255,153);'>229 <span class='diff'>(-18.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,178,178);'>3950 <span class='diff'>(+8.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(154,255,154);'>909 <span class='diff'>(-18.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AddV</td>
+                    <td class='metric'>188</td>
+                    <td class='metric'>27</td>
+                    <td class='metric'>17</td>
+                    <td class='metric'>247</td>
+                    <td class='metric'>1521</td>
+                    <td class='metric'>1030</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>244 <span class='diff'>(+29.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(162,255,162);'>23 <span class='diff'>(-14.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,185,185);'>18 <span class='diff'>(+5.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>163 <span class='diff'>(-34.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,162,162);'>1748 <span class='diff'>(+14.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>803 <span class='diff'>(-22.0%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AllOneDet</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>0</td>
+                    <td class='metric'>57</td>
+                    <td class='metric'>62</td>
+                    <td class='metric'>262</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>0</td>
+                    <td class='metric'>57</td>
+                    <td class='metric'>62</td>
+                    <td class='metric'>262</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_AllZeroDet</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>1</td>
+                    <td class='metric'>72</td>
+                    <td class='metric'>81</td>
+                    <td class='metric'>250</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>1</td>
+                    <td class='metric'>72</td>
+                    <td class='metric'>81</td>
+                    <td class='metric'>250</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Bin2Gray</td>
+                    <td class='metric'>45</td>
+                    <td class='metric'>2</td>
+                    <td class='metric'>2</td>
+                    <td class='metric'>36</td>
+                    <td class='metric'>230</td>
+                    <td class='metric'>149</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>45</td>
+                    <td class='metric'>2</td>
+                    <td class='metric'>2</td>
+                    <td class='metric'>36</td>
+                    <td class='metric'>230</td>
+                    <td class='metric'>149</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_CmpEQ</td>
+                    <td class='metric'>63</td>
+                    <td class='metric'>6</td>
+                    <td class='metric'>3</td>
+                    <td class='metric'>94</td>
+                    <td class='metric'>302</td>
+                    <td class='metric'>377</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>63</td>
+                    <td class='metric'>6</td>
+                    <td class='metric'>3</td>
+                    <td class='metric'>94</td>
+                    <td class='metric'>302</td>
+                    <td class='metric'>377</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_CmpEQGE</td>
+                    <td class='metric'>110</td>
+                    <td class='metric'>11</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>127</td>
+                    <td class='metric'>657</td>
+                    <td class='metric'>507</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>110</td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'>10 <span class='diff'>(-9.1%)</span></td>
+                    <td class='metric'>8</td>
+                    <td class='metric' style='background-color: rgb(198,255,198);'>126 <span class='diff'>(-0.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(198,255,198);'>653 <span class='diff'>(-0.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(199,255,199);'>505 <span class='diff'>(-0.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_CmpGE</td>
+                    <td class='metric'>110</td>
+                    <td class='metric'>11</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>127</td>
+                    <td class='metric'>647</td>
+                    <td class='metric'>507</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>110</td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'>10 <span class='diff'>(-9.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,168,168);'>9 <span class='diff'>(+12.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(196,255,196);'>125 <span class='diff'>(-1.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(199,255,199);'>645 <span class='diff'>(-0.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(199,255,199);'>505 <span class='diff'>(-0.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Cnt</td>
+                    <td class='metric'>131</td>
+                    <td class='metric'>28</td>
+                    <td class='metric'>12</td>
+                    <td class='metric'>299</td>
+                    <td class='metric'>1352</td>
+                    <td class='metric'>1305</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>104 <span class='diff'>(-20.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>19 <span class='diff'>(-32.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>8 <span class='diff'>(-33.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>195 <span class='diff'>(-34.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>994 <span class='diff'>(-26.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>897 <span class='diff'>(-31.3%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Dec</td>
+                    <td class='metric'>76</td>
+                    <td class='metric'>12</td>
+                    <td class='metric'>5</td>
+                    <td class='metric'>116</td>
+                    <td class='metric'>538</td>
+                    <td class='metric'>430</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>111 <span class='diff'>(+46.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(158,255,158);'>10 <span class='diff'>(-16.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>7 <span class='diff'>(+40.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(165,255,165);'>100 <span class='diff'>(-13.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>813 <span class='diff'>(+51.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,191,191);'>444 <span class='diff'>(+3.3%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_DecC</td>
+                    <td class='metric'>86</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>5</td>
+                    <td class='metric'>133</td>
+                    <td class='metric'>570</td>
+                    <td class='metric'>451</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>170 <span class='diff'>(+97.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>11 <span class='diff'>(-26.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>11 <span class='diff'>(+120.0%)</span></td>
+                    <td class='metric'>133</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1539 <span class='diff'>(+170.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>582 <span class='diff'>(+29.0%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Decode</td>
+                    <td class='metric'>28</td>
+                    <td class='metric'>3</td>
+                    <td class='metric'>2</td>
+                    <td class='metric'>43</td>
+                    <td class='metric'>249</td>
+                    <td class='metric'>202</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>28</td>
+                    <td class='metric'>3</td>
+                    <td class='metric'>2</td>
+                    <td class='metric'>43</td>
+                    <td class='metric'>249</td>
+                    <td class='metric'>202</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_FullAdder</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>0</td>
+                    <td class='metric'>56</td>
+                    <td class='metric'>66</td>
+                    <td class='metric'>217</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(168,255,168);'>7 <span class='diff'>(-12.5%)</span></td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>0</td>
+                    <td class='metric'>56</td>
+                    <td class='metric' style='background-color: rgb(162,255,162);'>56 <span class='diff'>(-15.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,163,163);'>249 <span class='diff'>(+14.7%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Gray2Bin</td>
+                    <td class='metric'>147</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>18</td>
+                    <td class='metric'>116</td>
+                    <td class='metric'>1192</td>
+                    <td class='metric'>493</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,159,159);'>171 <span class='diff'>(+16.3%)</span></td>
+                    <td class='metric'>8</td>
+                    <td class='metric' style='background-color: rgb(172,255,172);'>16 <span class='diff'>(-11.1%)</span></td>
+                    <td class='metric'>116</td>
+                    <td class='metric' style='background-color: rgb(164,255,164);'>1023 <span class='diff'>(-14.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,198,198);'>495 <span class='diff'>(+0.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Inc</td>
+                    <td class='metric'>66</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>101</td>
+                    <td class='metric'>505</td>
+                    <td class='metric'>364</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,188,188);'>69 <span class='diff'>(+4.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>6 <span class='diff'>(-25.0%)</span></td>
+                    <td class='metric'>4</td>
+                    <td class='metric' style='background-color: rgb(182,255,182);'>94 <span class='diff'>(-6.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>638 <span class='diff'>(+26.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(178,255,178);'>333 <span class='diff'>(-8.5%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_IncC</td>
+                    <td class='metric'>73</td>
+                    <td class='metric'>9</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>104</td>
+                    <td class='metric'>556</td>
+                    <td class='metric'>371</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,189,189);'>76 <span class='diff'>(+4.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>7 <span class='diff'>(-22.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>6 <span class='diff'>(+50.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(180,255,180);'>96 <span class='diff'>(-7.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>692 <span class='diff'>(+24.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(174,255,174);'>333 <span class='diff'>(-10.2%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_IncDec</td>
+                    <td class='metric'>137</td>
+                    <td class='metric'>16</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>173</td>
+                    <td class='metric'>825</td>
+                    <td class='metric'>746</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>225 <span class='diff'>(+64.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>12 <span class='diff'>(-25.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>15 <span class='diff'>(+87.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>118 <span class='diff'>(-31.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1454 <span class='diff'>(+76.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>487 <span class='diff'>(-34.7%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_IncDecC</td>
+                    <td class='metric'>167</td>
+                    <td class='metric'>21</td>
+                    <td class='metric'>10</td>
+                    <td class='metric'>217</td>
+                    <td class='metric'>958</td>
+                    <td class='metric'>906</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>293 <span class='diff'>(+75.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>13 <span class='diff'>(-38.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>19 <span class='diff'>(+90.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>150 <span class='diff'>(-30.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1932 <span class='diff'>(+101.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>619 <span class='diff'>(-31.7%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_LeadOneDet</td>
+                    <td class='metric'>68</td>
+                    <td class='metric'>17</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>183</td>
+                    <td class='metric'>759</td>
+                    <td class='metric'>771</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>106 <span class='diff'>(+55.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,185,185);'>18 <span class='diff'>(+5.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>5 <span class='diff'>(+25.0%)</span></td>
+                    <td class='metric'>183</td>
+                    <td class='metric' style='background-color: rgb(185,255,185);'>715 <span class='diff'>(-5.8%)</span></td>
+                    <td class='metric'>771</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_LeadSignDet</td>
+                    <td class='metric'>122</td>
+                    <td class='metric'>18</td>
+                    <td class='metric'>9</td>
+                    <td class='metric'>197</td>
+                    <td class='metric'>1133</td>
+                    <td class='metric'>770</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,154,154);'>144 <span class='diff'>(+18.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,186,186);'>19 <span class='diff'>(+5.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(172,255,172);'>8 <span class='diff'>(-11.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,187,187);'>207 <span class='diff'>(+5.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(161,255,161);'>957 <span class='diff'>(-15.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,173,173);'>852 <span class='diff'>(+10.6%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_LeadZeroDet</td>
+                    <td class='metric'>68</td>
+                    <td class='metric'>17</td>
+                    <td class='metric'>5</td>
+                    <td class='metric'>182</td>
+                    <td class='metric'>646</td>
+                    <td class='metric'>771</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>106 <span class='diff'>(+55.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,185,185);'>18 <span class='diff'>(+5.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>6 <span class='diff'>(+20.0%)</span></td>
+                    <td class='metric'>182</td>
+                    <td class='metric' style='background-color: rgb(255,196,196);'>654 <span class='diff'>(+1.2%)</span></td>
+                    <td class='metric'>771</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Log2</td>
+                    <td class='metric'>33</td>
+                    <td class='metric'>14</td>
+                    <td class='metric'>2</td>
+                    <td class='metric'>154</td>
+                    <td class='metric'>244</td>
+                    <td class='metric'>672</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>68 <span class='diff'>(+106.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,182,182);'>15 <span class='diff'>(+7.1%)</span></td>
+                    <td class='metric'>2</td>
+                    <td class='metric'>154</td>
+                    <td class='metric' style='background-color: rgb(255,197,197);'>246 <span class='diff'>(+0.8%)</span></td>
+                    <td class='metric'>672</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_MulAddSgn</td>
+                    <td class='metric'>1197</td>
+                    <td class='metric'>36</td>
+                    <td class='metric'>109</td>
+                    <td class='metric'>400</td>
+                    <td class='metric'>11375</td>
+                    <td class='metric'>1685</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(169,255,169);'>1053 <span class='diff'>(-12.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(172,255,172);'>32 <span class='diff'>(-11.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(181,255,181);'>101 <span class='diff'>(-7.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(179,255,179);'>367 <span class='diff'>(-8.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(165,255,165);'>9822 <span class='diff'>(-13.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(180,255,180);'>1555 <span class='diff'>(-7.7%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_MulAddUns</td>
+                    <td class='metric'>1197</td>
+                    <td class='metric'>36</td>
+                    <td class='metric'>109</td>
+                    <td class='metric'>400</td>
+                    <td class='metric'>11375</td>
+                    <td class='metric'>1685</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(169,255,169);'>1053 <span class='diff'>(-12.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(172,255,172);'>32 <span class='diff'>(-11.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(181,255,181);'>101 <span class='diff'>(-7.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(179,255,179);'>367 <span class='diff'>(-8.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(165,255,165);'>9822 <span class='diff'>(-13.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(180,255,180);'>1555 <span class='diff'>(-7.7%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_MulSgn</td>
+                    <td class='metric'>3477</td>
+                    <td class='metric'>46</td>
+                    <td class='metric'>318</td>
+                    <td class='metric'>520</td>
+                    <td class='metric'>34573</td>
+                    <td class='metric'>2151</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>2021 <span class='diff'>(-41.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>35 <span class='diff'>(-23.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>185 <span class='diff'>(-41.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>394 <span class='diff'>(-24.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>19811 <span class='diff'>(-42.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>1683 <span class='diff'>(-21.8%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_MulUns</td>
+                    <td class='metric'>2310</td>
+                    <td class='metric'>42</td>
+                    <td class='metric'>225</td>
+                    <td class='metric'>476</td>
+                    <td class='metric'>21906</td>
+                    <td class='metric'>1964</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(168,255,168);'>2020 <span class='diff'>(-12.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(170,255,170);'>37 <span class='diff'>(-11.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>175 <span class='diff'>(-22.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(161,255,161);'>403 <span class='diff'>(-15.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(151,255,151);'>17692 <span class='diff'>(-19.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(170,255,170);'>1733 <span class='diff'>(-11.8%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Neg</td>
+                    <td class='metric'>59</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>103</td>
+                    <td class='metric'>480</td>
+                    <td class='metric'>397</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,157,157);'>69 <span class='diff'>(+16.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>6 <span class='diff'>(-25.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>6 <span class='diff'>(+50.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(180,255,180);'>95 <span class='diff'>(-7.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,151,151);'>574 <span class='diff'>(+19.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(169,255,169);'>349 <span class='diff'>(-12.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_NegC</td>
+                    <td class='metric'>104</td>
+                    <td class='metric'>10</td>
+                    <td class='metric'>6</td>
+                    <td class='metric'>107</td>
+                    <td class='metric'>777</td>
+                    <td class='metric'>431</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,168,168);'>117 <span class='diff'>(+12.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>8 <span class='diff'>(-20.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>8 <span class='diff'>(+33.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(178,255,178);'>98 <span class='diff'>(-8.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,198,198);'>782 <span class='diff'>(+0.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(179,255,179);'>395 <span class='diff'>(-8.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_RedAnd</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>0</td>
+                    <td class='metric'>57</td>
+                    <td class='metric'>62</td>
+                    <td class='metric'>262</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>0</td>
+                    <td class='metric'>57</td>
+                    <td class='metric'>62</td>
+                    <td class='metric'>262</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_RedOr</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>0</td>
+                    <td class='metric'>62</td>
+                    <td class='metric'>62</td>
+                    <td class='metric'>262</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>15</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>0</td>
+                    <td class='metric'>62</td>
+                    <td class='metric'>62</td>
+                    <td class='metric'>262</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_RedXor</td>
+                    <td class='metric'>45</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>4</td>
+                    <td class='metric'>125</td>
+                    <td class='metric'>244</td>
+                    <td class='metric'>495</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>45</td>
+                    <td class='metric'>8</td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>3 <span class='diff'>(-25.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(196,255,196);'>123 <span class='diff'>(-1.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(180,255,180);'>225 <span class='diff'>(-7.8%)</span></td>
+                    <td class='metric'>495</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_Sub</td>
+                    <td class='metric'>153</td>
+                    <td class='metric'>16</td>
+                    <td class='metric'>10</td>
+                    <td class='metric'>184</td>
+                    <td class='metric'>1004</td>
+                    <td class='metric'>771</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>200 <span class='diff'>(+30.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(153,255,153);'>13 <span class='diff'>(-18.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>18 <span class='diff'>(+80.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(176,255,176);'>167 <span class='diff'>(-9.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1764 <span class='diff'>(+75.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(171,255,171);'>683 <span class='diff'>(-11.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_SubC</td>
+                    <td class='metric'>220</td>
+                    <td class='metric'>24</td>
+                    <td class='metric'>13</td>
+                    <td class='metric'>224</td>
+                    <td class='metric'>1422</td>
+                    <td class='metric'>1004</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(197,255,197);'>218 <span class='diff'>(-0.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>13 <span class='diff'>(-45.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>23 <span class='diff'>(+76.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>167 <span class='diff'>(-25.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>2074 <span class='diff'>(+45.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>705 <span class='diff'>(-29.8%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_SubCZ</td>
+                    <td class='metric'>236</td>
+                    <td class='metric'>25</td>
+                    <td class='metric'>17</td>
+                    <td class='metric'>251</td>
+                    <td class='metric'>1810</td>
+                    <td class='metric'>1077</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(197,255,197);'>234 <span class='diff'>(-0.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>17 <span class='diff'>(-32.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>23 <span class='diff'>(+35.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(168,255,168);'>219 <span class='diff'>(-12.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>2184 <span class='diff'>(+20.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>858 <span class='diff'>(-20.3%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_SubV</td>
+                    <td class='metric'>255</td>
+                    <td class='metric'>26</td>
+                    <td class='metric'>14</td>
+                    <td class='metric'>200</td>
+                    <td class='metric'>2466</td>
+                    <td class='metric'>1048</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(193,255,193);'>248 <span class='diff'>(-2.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(171,255,171);'>23 <span class='diff'>(-11.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>21 <span class='diff'>(+50.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,192,192);'>206 <span class='diff'>(+3.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>1730 <span class='diff'>(-29.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(152,255,152);'>850 <span class='diff'>(-18.9%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_SubVZ</td>
+                    <td class='metric'>262</td>
+                    <td class='metric'>30</td>
+                    <td class='metric'>14</td>
+                    <td class='metric'>200</td>
+                    <td class='metric'>2281</td>
+                    <td class='metric'>1173</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,196,196);'>266 <span class='diff'>(+1.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>23 <span class='diff'>(-23.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>27 <span class='diff'>(+92.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,176,176);'>219 <span class='diff'>(+9.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(185,255,185);'>2152 <span class='diff'>(-5.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>875 <span class='diff'>(-25.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>behavioural_SumZeroDet</td>
+                    <td class='metric'>158</td>
+                    <td class='metric'>22</td>
+                    <td class='metric'>10</td>
+                    <td class='metric'>232</td>
+                    <td class='metric'>1152</td>
+                    <td class='metric'>944</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>219 <span class='diff'>(+38.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>17 <span class='diff'>(-22.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>21 <span class='diff'>(+110.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(181,255,181);'>215 <span class='diff'>(-7.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1785 <span class='diff'>(+54.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(165,255,165);'>812 <span class='diff'>(-14.0%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td colspan='15' class='category-header'>📁 microbenchmarks</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>add</td>
+                    <td class='metric'>138</td>
+                    <td class='metric'>16</td>
+                    <td class='metric'>9</td>
+                    <td class='metric'>175</td>
+                    <td class='metric'>784</td>
+                    <td class='metric'>739</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,161,161);'>159 <span class='diff'>(+15.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>12 <span class='diff'>(-25.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>13 <span class='diff'>(+44.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>135 <span class='diff'>(-22.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1217 <span class='diff'>(+55.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>567 <span class='diff'>(-23.3%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>alu</td>
+                    <td class='metric'>786</td>
+                    <td class='metric'>27</td>
+                    <td class='metric'>53</td>
+                    <td class='metric'>289</td>
+                    <td class='metric'>5178</td>
+                    <td class='metric'>1143</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>993 <span class='diff'>(+26.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(162,255,162);'>23 <span class='diff'>(-14.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>65 <span class='diff'>(+22.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'>263 <span class='diff'>(-9.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,183,183);'>5517 <span class='diff'>(+6.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(193,255,193);'>1115 <span class='diff'>(-2.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>barrel_shifter</td>
+                    <td class='metric'>162</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>9</td>
+                    <td class='metric'>107</td>
+                    <td class='metric'>1156</td>
+                    <td class='metric'>468</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>162</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>9</td>
+                    <td class='metric'>107</td>
+                    <td class='metric' style='background-color: rgb(255,199,199);'>1160 <span class='diff'>(+0.3%)</span></td>
+                    <td class='metric'>468</td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>comparator</td>
+                    <td class='metric'>111</td>
+                    <td class='metric'>11</td>
+                    <td class='metric'>10</td>
+                    <td class='metric'>129</td>
+                    <td class='metric'>949</td>
+                    <td class='metric'>542</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>157 <span class='diff'>(+41.4%)</span></td>
+                    <td class='metric'>11</td>
+                    <td class='metric' style='background-color: rgb(255,175,175);'>11 <span class='diff'>(+10.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(196,255,196);'>127 <span class='diff'>(-1.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1231 <span class='diff'>(+29.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(196,255,196);'>535 <span class='diff'>(-1.3%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>icmp</td>
+                    <td class='metric'>116</td>
+                    <td class='metric'>13</td>
+                    <td class='metric'>11</td>
+                    <td class='metric'>149</td>
+                    <td class='metric'>1086</td>
+                    <td class='metric'>632</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>184 <span class='diff'>(+58.6%)</span></td>
+                    <td class='metric'>13</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>15 <span class='diff'>(+36.4%)</span></td>
+                    <td class='metric' style='background-color: rgb(194,255,194);'>146 <span class='diff'>(-2.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,162,162);'>1251 <span class='diff'>(+15.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(189,255,189);'>606 <span class='diff'>(-4.1%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>mul</td>
+                    <td class='metric'>2310</td>
+                    <td class='metric'>42</td>
+                    <td class='metric'>225</td>
+                    <td class='metric'>476</td>
+                    <td class='metric'>21906</td>
+                    <td class='metric'>1964</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(168,255,168);'>2020 <span class='diff'>(-12.6%)</span></td>
+                    <td class='metric' style='background-color: rgb(170,255,170);'>37 <span class='diff'>(-11.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>175 <span class='diff'>(-22.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(161,255,161);'>403 <span class='diff'>(-15.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(151,255,151);'>17692 <span class='diff'>(-19.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(170,255,170);'>1733 <span class='diff'>(-11.8%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>mux</td>
+                    <td class='metric'>132</td>
+                    <td class='metric'>6</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>71</td>
+                    <td class='metric'>1166</td>
+                    <td class='metric'>312</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,169,169);'>148 <span class='diff'>(+12.1%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,158,158);'>7 <span class='diff'>(+16.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>11 <span class='diff'>(+37.5%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>96 <span class='diff'>(+35.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'>1062 <span class='diff'>(-8.9%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,151,151);'>373 <span class='diff'>(+19.6%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>parity</td>
+                    <td class='metric'>45</td>
+                    <td class='metric'>8</td>
+                    <td class='metric'>6</td>
+                    <td class='metric'>121</td>
+                    <td class='metric'>325</td>
+                    <td class='metric'>490</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric'>45</td>
+                    <td class='metric'>8</td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>4 <span class='diff'>(-33.3%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,195,195);'>123 <span class='diff'>(+1.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(150,255,150);'>240 <span class='diff'>(-26.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,197,197);'>495 <span class='diff'>(+1.0%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+                <tr>
+                    <td class='benchmark-name'>sub</td>
+                    <td class='metric'>153</td>
+                    <td class='metric'>16</td>
+                    <td class='metric'>10</td>
+                    <td class='metric'>184</td>
+                    <td class='metric'>1004</td>
+                    <td class='metric'>771</td>
+                    <td class='metric'>N/A</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>200 <span class='diff'>(+30.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(153,255,153);'>13 <span class='diff'>(-18.8%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>18 <span class='diff'>(+80.0%)</span></td>
+                    <td class='metric' style='background-color: rgb(176,255,176);'>167 <span class='diff'>(-9.2%)</span></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>1764 <span class='diff'>(+75.7%)</span></td>
+                    <td class='metric' style='background-color: rgb(171,255,171);'>683 <span class='diff'>(-11.4%)</span></td>
+                    <td class='metric'>N/A</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <h2>Geometric Mean Comparison
+            <button class="copy-button" onclick="copyGeomeanAsMarkdown()">📋 Copy as Markdown</button>
+            <span id="copy-feedback" class="copy-feedback">✓ Copied!</span>
+        </h2>
+        <table id="geomean-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Metric</th>
+                    <th>yosys</th>
+                    <th>circt</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr style='background-color: #e3f2fd;'>
+                    <td rowspan='6' class='category-cell' style='background-color: #e3f2fd; font-weight: bold;'>Overall (79 benchmarks)</td>
+                    <td><strong>Gates</strong></td>
+                    <td class='metric'><strong>264.3</strong></td>
+                    <td class='metric' style='background-color: rgb(255,156,156);'><strong>310.4 <span class='diff'>(+17.4%)</span></strong></td>
+                </tr>
+
+                <tr style='background-color: #e3f2fd;'>
+                    
+                    <td><strong>Depth</strong></td>
+                    <td class='metric'><strong>18.2</strong></td>
+                    <td class='metric' style='background-color: rgb(166,255,166);'><strong>15.8 <span class='diff'>(-13.4%)</span></strong></td>
+                </tr>
+
+                <tr style='background-color: #e3f2fd;'>
+                    
+                    <td><strong>Area (ASAP7)</strong></td>
+                    <td class='metric'><strong>23.0</strong></td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'><strong>29.4 <span class='diff'>(+27.7%)</span></strong></td>
+                </tr>
+
+                <tr style='background-color: #e3f2fd;'>
+                    
+                    <td><strong>Delay (ASAP7)</strong></td>
+                    <td class='metric'><strong>207.5</strong></td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'><strong>188.6 <span class='diff'>(-9.1%)</span></strong></td>
+                </tr>
+
+                <tr style='background-color: #e3f2fd;'>
+                    
+                    <td><strong>Area (Sky130)</strong></td>
+                    <td class='metric'><strong>2021.7</strong></td>
+                    <td class='metric' style='background-color: rgb(255,154,154);'><strong>2390.0 <span class='diff'>(+18.2%)</span></strong></td>
+                </tr>
+
+                <tr style='background-color: #e3f2fd;'>
+                    
+                    <td><strong>Delay (Sky130)</strong></td>
+                    <td class='metric'><strong>863.4</strong></td>
+                    <td class='metric' style='background-color: rgb(177,255,177);'><strong>784.5 <span class='diff'>(-9.1%)</span></strong></td>
+                </tr>
+
+                <tr>
+                    <td rowspan='6' class='category-cell benchmark-name'>DatapathBench</td>
+                    <td>Gates</td>
+                    <td class='metric'>1930.0</td>
+                    <td class='metric' style='background-color: rgb(188,255,188);'>1842.2 <span class='diff'>(-4.6%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Depth</td>
+                    <td class='metric'>42.8</td>
+                    <td class='metric' style='background-color: rgb(153,255,153);'>34.9 <span class='diff'>(-18.4%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Area (ASAP7)</td>
+                    <td class='metric'>163.0</td>
+                    <td class='metric' style='background-color: rgb(255,183,183);'>173.9 <span class='diff'>(+6.7%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Delay (ASAP7)</td>
+                    <td class='metric'>478.1</td>
+                    <td class='metric' style='background-color: rgb(156,255,156);'>395.2 <span class='diff'>(-17.3%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Area (Sky130)</td>
+                    <td class='metric'>17574.5</td>
+                    <td class='metric' style='background-color: rgb(193,255,193);'>17096.2 <span class='diff'>(-2.7%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Delay (Sky130)</td>
+                    <td class='metric'>1989.1</td>
+                    <td class='metric' style='background-color: rgb(159,255,159);'>1665.0 <span class='diff'>(-16.3%)</span></td>
+                </tr>
+
+                <tr>
+                    <td rowspan='6' class='category-cell benchmark-name'>ELAU</td>
+                    <td>Gates</td>
+                    <td class='metric'>132.4</td>
+                    <td class='metric' style='background-color: rgb(255,166,166);'>150.3 <span class='diff'>(+13.6%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Depth</td>
+                    <td class='metric'>14.0</td>
+                    <td class='metric' style='background-color: rgb(157,255,157);'>11.6 <span class='diff'>(-17.0%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Area (ASAP7)</td>
+                    <td class='metric'>11.2</td>
+                    <td class='metric' style='background-color: rgb(255,150,150);'>13.9 <span class='diff'>(+24.5%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Delay (ASAP7)</td>
+                    <td class='metric'>158.8</td>
+                    <td class='metric' style='background-color: rgb(172,255,172);'>141.3 <span class='diff'>(-11.1%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Area (Sky130)</td>
+                    <td class='metric'>949.3</td>
+                    <td class='metric' style='background-color: rgb(255,165,165);'>1082.1 <span class='diff'>(+14.0%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Delay (Sky130)</td>
+                    <td class='metric'>660.1</td>
+                    <td class='metric' style='background-color: rgb(171,255,171);'>584.5 <span class='diff'>(-11.5%)</span></td>
+                </tr>
+
+                <tr>
+                    <td rowspan='6' class='category-cell benchmark-name'>microbenchmarks</td>
+                    <td>Gates</td>
+                    <td class='metric'>198.3</td>
+                    <td class='metric' style='background-color: rgb(255,156,156);'>232.5 <span class='diff'>(+17.2%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Depth</td>
+                    <td class='metric'>13.6</td>
+                    <td class='metric' style='background-color: rgb(183,255,183);'>12.7 <span class='diff'>(-6.7%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Area (ASAP7)</td>
+                    <td class='metric'>15.5</td>
+                    <td class='metric' style='background-color: rgb(255,163,163);'>17.7 <span class='diff'>(+14.6%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Delay (ASAP7)</td>
+                    <td class='metric'>162.3</td>
+                    <td class='metric' style='background-color: rgb(190,255,190);'>156.4 <span class='diff'>(-3.7%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Area (Sky130)</td>
+                    <td class='metric'>1507.9</td>
+                    <td class='metric' style='background-color: rgb(255,174,174);'>1659.4 <span class='diff'>(+10.0%)</span></td>
+                </tr>
+
+                <tr>
+                    
+                    <td>Delay (Sky130)</td>
+                    <td class='metric'>680.6</td>
+                    <td class='metric' style='background-color: rgb(189,255,189);'>650.9 <span class='diff'>(-4.4%)</span></td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <div class="footer">
+            Generated by circt-synth-tracker compare-results
+        </div>
+    </div>
+</body>
+</html>
