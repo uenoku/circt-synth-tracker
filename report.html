@@ -34,6 +34,9 @@
             border-left: 4px solid #4CAF50;
             margin-bottom: 20px;
         }
+        .summary-line {
+            margin: 8px 0;
+        }
         table {
             border-collapse: collapse;
             width: 100%;
@@ -194,12 +197,13 @@
 <body>
     <div class="container">
         <h1>Synthesis Benchmark Comparison Report</h1>
-        
+
         <div class="summary">
-            <strong>Tools Compared:</strong> yosys, circt<br>
-            <strong>Total Benchmarks:</strong> 79<br>
-            <strong>Categories:</strong> 3<br>
-            <strong>Generated:</strong> 2026-02-12T08:07:07.523927
+            <div class="summary-line"><strong>Tools Compared:</strong> yosys, circt</div>
+            <div class="summary-line"><strong>Tool Versions:</strong> yosys vYosys 0.47 (git sha1 647d61dd9212365a3cd44db219660b8f90b95cbd, clang++ 17.0.6 -fPIC -O3), circt vCIRCT firtool-1.140.0-59-g5e760efa9</div>
+            <div class="summary-line"><strong>Total Benchmarks:</strong> 79</div>
+            <div class="summary-line"><strong>Categories:</strong> 3</div>
+            <div class="summary-line"><strong>Generated:</strong> 2026-02-12T08:25:13.405810</div>
         </div>
 
         <h2>Benchmark Comparison</h2>
