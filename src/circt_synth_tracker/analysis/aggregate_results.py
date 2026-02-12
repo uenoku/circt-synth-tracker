@@ -7,6 +7,7 @@ Usage:
     aggregate-results --tool yosys --results-dir output/results -o yosys-summary.json
 """
 
+from html import parser
 import sys
 import json
 import argparse
@@ -20,6 +21,9 @@ def main():
     )
     parser.add_argument(
         "--tool", required=True, help="Tool name (circt, yosys, etc.)"
+    )
+    parser.add_argument(
+        "--version", required=False, help="Tool version (e.g., nightly, v1.0, etc.)", default="unknown"
     )
     parser.add_argument(
         "--results-dir", required=True, help="Directory containing result files"
@@ -86,6 +90,7 @@ def main():
     # Create summary
     summary = {
         "tool": args.tool,
+        "version": args.version,
         "timestamp": datetime.now().isoformat(),
         "total_benchmarks": len(results),
         "benchmarks": results,

@@ -233,6 +233,9 @@ def generate_html_report(summaries, all_benchmarks, output_path):
             border-left: 4px solid #4CAF50;
             margin-bottom: 20px;
         }
+        .summary-line {
+            margin: 8px 0;
+        }
         table {
             border-collapse: collapse;
             width: 100%;
@@ -397,20 +400,23 @@ def generate_html_report(summaries, all_benchmarks, output_path):
 <body>
     <div class="container">
         <h1>Synthesis Benchmark Comparison Report</h1>
-        
+
         <div class="summary">
-            <strong>Tools Compared:</strong> """
+            <div class="summary-line"><strong>Tools Compared:</strong> """
         + ", ".join(tool_names)
-        + """<br>
-            <strong>Total Benchmarks:</strong> """
+        + """</div>
+            <div class="summary-line"><strong>Tool Versions:</strong> """
+        + ", ".join([f"{tool} {summaries[tool].get('version', 'unknown')}" for tool in tool_names])
+        + """</div>
+            <div class="summary-line"><strong>Total Benchmarks:</strong> """
         + str(len(all_benchmarks))
-        + """<br>
-            <strong>Categories:</strong> """
+        + """</div>
+            <div class="summary-line"><strong>Categories:</strong> """
         + str(len(sorted_categories))
-        + """<br>
-            <strong>Generated:</strong> """
+        + """</div>
+            <div class="summary-line"><strong>Generated:</strong> """
         + summaries[tool_names[0]].get("timestamp", "N/A")
-        + """
+        + """</div>
         </div>
 """
     )
