@@ -28,6 +28,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install jq (required by install-circt action)
+        run: |
+          apt-get update && apt-get install -y jq
+
       - name: Install CIRCT nightly
         uses: circt/install-circt@3f8dda6e1c1965537b5801a43c81c287bac4eae4 # v1.1.1
         with:
