@@ -12,6 +12,7 @@ Usage:
 import sys
 import json
 import argparse
+from html import escape
 from pathlib import Path
 from tabulate import tabulate
 
@@ -403,10 +404,10 @@ def generate_html_report(summaries, all_benchmarks, output_path):
 
         <div class="summary">
             <div class="summary-line"><strong>Tools Compared:</strong> """
-        + ", ".join(tool_names)
+        + escape(", ".join(tool_names))
         + """</div>
             <div class="summary-line"><strong>Tool Versions:</strong> """
-        + ", ".join([f"{tool} {summaries[tool].get('version', 'unknown')}" for tool in tool_names])
+        + escape(", ".join([f"{tool} v{summaries[tool].get('version', 'unknown')}" for tool in tool_names]))
         + """</div>
             <div class="summary-line"><strong>Total Benchmarks:</strong> """
         + str(len(all_benchmarks))
@@ -415,7 +416,7 @@ def generate_html_report(summaries, all_benchmarks, output_path):
         + str(len(sorted_categories))
         + """</div>
             <div class="summary-line"><strong>Generated:</strong> """
-        + summaries[tool_names[0]].get("timestamp", "N/A")
+        + escape(summaries[tool_names[0]].get("timestamp", "N/A"))
         + """</div>
         </div>
 """
@@ -432,7 +433,7 @@ def generate_html_report(summaries, all_benchmarks, output_path):
 
     # Add headers for each tool
     for tool in tool_names:
-        html += f"                    <th class='tool-column' colspan='7'>{tool}</th>\n"
+        html += f"                    <th class='tool-column' colspan='7'>{escape(tool)}</th>\n"
 
     html += """
                 </tr>

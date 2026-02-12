@@ -7,7 +7,6 @@ Usage:
     aggregate-results --tool yosys --results-dir output/results -o yosys-summary.json
 """
 
-from html import parser
 import sys
 import json
 import argparse
