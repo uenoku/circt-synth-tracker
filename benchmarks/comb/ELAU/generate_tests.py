@@ -3,11 +3,6 @@
 Test generator for ELAU benchmarks.
 
 This script automatically generates lit test files for ELAU arithmetic modules.
-Each test follows this pipeline:
-  1. circt-verilog: Parse SystemVerilog to MLIR with parameters
-  2. firtool: Convert MLIR to synthesizable Verilog
-  3. SYNTH_TOOL: Synthesize to AIG format
-  4. judge + submit: Evaluate and record results
 
 Usage:
     ./generate_tests.py
