@@ -4,15 +4,13 @@ version = "0.1.0"
 description = "A test suite for CIRCT synthesis using LLVM-lit"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "lit>=18.0.0",
-    "tabulate>=0.9.0",
-]
+dependencies = ["lit>=18.0.0", "tabulate>=0.9.0"]
 
 [project.scripts]
 # Synthesis tool wrappers
 run-circt-synth = "circt_synth_tracker.tools.circt_synth:main"
 run-yosys = "circt_synth_tracker.tools.yosys:main"
+run-abc = "circt_synth_tracker.tools.abc:main"
 
 # Utility tools
 aig-judge = "circt_synth_tracker.utils.aig_judge:main"
@@ -26,10 +24,7 @@ append-history = "circt_synth_tracker.analysis.append_history:main"
 timeseries-report = "circt_synth_tracker.analysis.timeseries_report:main"
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "ruff>=0.1.0",
-]
+dev = ["pytest>=7.0.0", "ruff>=0.1.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -39,13 +34,7 @@ build-backend = "hatchling.build"
 packages = ["src/circt_synth_tracker"]
 
 [tool.ruff]
-exclude = [
-    "benchmarks/",
-    "tests/",
-]
+exclude = ["benchmarks/", "tests/"]
 
 [dependency-groups]
-dev = [
-    "lit>=18.0.0",
-    "ruff>=0.14.1",
-]
+dev = ["lit>=18.0.0", "ruff>=0.14.1"]

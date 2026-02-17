@@ -65,9 +65,17 @@ if tool_name == 'yosys':
 else:  # default to circt
     tool_cmd = circt_synth_wrapper
 
+# Select Technology Mapper
+tech_map = lit_config.params.get('TECH_MAP', 'mockturtle')
+config.environment['TECH_MAP'] = tech_map
+if tech_map == 'abc':
+    tech_map_command = f'run-abc'
+else:
+    tech_map_command = 'aig-judge'
+
 # Results directory (configurable via --param RESULTS_DIR=<dir>)
 results_dir = lit_config.params.get('RESULTS_DIR', '')
-submit_cmd = f'submit-results --tool {tool_name}'
+submit_cmd = f'submit-results --tool {tool_name}-{tech_map}'
 if results_dir:
     submit_cmd = f'submit-results --output-dir {results_dir}'
 
@@ -77,7 +85,7 @@ bw = lit_config.params.get('BW', '16')
 # Add substitutions (order matters - more specific patterns first)
 config.substitutions.append(('%SYNTH_TOOL', tool_cmd))
 config.substitutions.append(('%FileCheck', filecheck))
-config.substitutions.append(('%judge', 'aig-judge'))
+config.substitutions.append(('%judge', tech_map_command))
 config.substitutions.append(('%submit', submit_cmd))
 config.substitutions.append(('%BW', bw))
 config.substitutions.append(('%PATH%', config.environment['PATH']))

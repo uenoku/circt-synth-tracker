@@ -110,6 +110,11 @@ def register_builtin_tools():
         ToolConfig(name="yosys", command="yosys", default_args=[], env_var="YOSYS")
     )
 
+    # ABC
+    _registry.register_tool(
+        ToolConfig(name="abc", command="abc", default_args=[], env_var="ABC")
+    )
+
     # FileCheck
     _registry.register_tool(
         ToolConfig(
