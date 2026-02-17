@@ -2,6 +2,7 @@
 
 [![CIRCT Nightly Integration Tests](https://github.com/uenoku/circt-synth-tracker/actions/workflows/ci-nightly.yml/badge.svg)](https://github.com/uenoku/circt-synth-tracker/actions/workflows/ci-nightly.yml)
 [![Report](https://img.shields.io/badge/report-html-blue)](https://uenoku.github.io/circt-synth-tracker/report.html)
+[![History](https://img.shields.io/badge/history-timeseries-green)](https://uenoku.github.io/circt-synth-tracker/timeseries.html)
 
 NOTE: This repository is a prototype and under active development.
 
@@ -113,6 +114,28 @@ Arithmetic benchmarks from the ELAU library. Tests are auto-generated using `gen
 ### DatapathBench (`benchmarks/comb/DatapathBench/`)
 Datapath-oriented benchmarks.
 
+## Time Series Tracking
+
+The CI runs nightly and publishes a historical report to GitHub Pages at
+[timeseries.html](https://uenoku.github.io/circt-synth-tracker/timeseries.html).
+It shows geo-mean trends for gates, depth, area (ASAP7), and delay (ASAP7)
+for both CIRCT and Yosys over the past 90 days, plus per-benchmark detail
+selectable via a dropdown.
+
+The raw history data is available at
+[history.json](https://uenoku.github.io/circt-synth-tracker/history.json).
+
+To generate a local time series report from past data:
+
+```bash
+# Build history from existing summary files (one per day)
+append-history --circt circt-summary.json --yosys yosys-summary.json \
+               -o history.json --date 2026-02-16
+
+# Generate interactive HTML report
+timeseries-report history.json -o timeseries.html
+```
+
 ## Command-Line Tools
 
 Installed via `uv sync`:
@@ -125,4 +148,6 @@ Installed via `uv sync`:
 - `aig-judge` - Evaluate AIG files (outputs JSON)
 - `submit-results` - Store benchmark results as JSON
 - `aggregate-results` - Aggregate results into summaries
-- `compare-results` - Compare results across tools
+- `compare-results` - Compare results across tools, generate HTML/Markdown/JSON reports
+- `append-history` - Append a day's summaries to a cumulative `history.json`
+- `timeseries-report` - Generate an interactive HTML time series report from `history.json`

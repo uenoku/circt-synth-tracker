@@ -22,6 +22,8 @@ build-judge = "circt_synth_tracker.utils.judge.build_judge:main"
 # Analysis tools
 aggregate-results = "circt_synth_tracker.analysis.aggregate_results:main"
 compare-results = "circt_synth_tracker.analysis.compare_results:main"
+append-history = "circt_synth_tracker.analysis.append_history:main"
+timeseries-report = "circt_synth_tracker.analysis.timeseries_report:main"
 
 [project.optional-dependencies]
 dev = [
