@@ -35,6 +35,10 @@ def main():
     parser.add_argument(
         "--export", "-o", help="Export to file (use with --format html for report)"
     )
+    parser.add_argument(
+        "--timeseries-url", default=None,
+        help="URL/path to timeseries report; adds a History nav link to the HTML report"
+    )
 
     args = parser.parse_args()
 
@@ -78,7 +82,7 @@ def main():
         )
     else:
         # Compare all benchmarks
-        compare_all(summaries, args.format, args.export)
+        compare_all(summaries, args.format, args.export, args.timeseries_url)
 
     return 0
 
@@ -128,7 +132,7 @@ def compare_benchmark(
         display_comparison(comparison, benchmark_name, format_type, metric_filter)
 
 
-def compare_all(summaries, format_type, export_path=None):
+def compare_all(summaries, format_type, export_path=None, timeseries_url=None):
     """Compare all benchmarks across all tools."""
 
     # Collect all unique benchmark names
@@ -144,7 +148,7 @@ def compare_all(summaries, format_type, export_path=None):
 
     # If HTML export requested, generate full report
     if export_path and format_type == "html":
-        generate_html_report(summaries, all_benchmarks, export_path)
+        generate_html_report(summaries, all_benchmarks, export_path, timeseries_url)
         return
 
     # If JSON export requested, generate combined JSON
@@ -170,7 +174,287 @@ def compare_all(summaries, format_type, export_path=None):
             display_comparison(comparison, benchmark_name, format_type)
 
 
-def generate_html_report(summaries, all_benchmarks, output_path):
+def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category, tool_names):
+    """Return HTML for a per-benchmark ranking table sorted by % difference."""
+    import json as _json
+
+    baseline_tool = tool_names[0]
+    compare_tool = tool_names[1]
+
+    table_metrics = [
+        ("gates",       "Gates"),
+        ("depth",       "Depth"),
+        ("area_asap7",  "Area (ASAP7)"),
+        ("delay_asap7", "Delay (ASAP7)"),
+        ("area_sky130",  "Area (Sky130)"),
+        ("delay_sky130", "Delay (Sky130)"),
+    ]
+
+    rows = []
+    for category in sorted_categories:
+        for bname in sorted(benchmarks_by_category[category]):
+            bd = summaries[baseline_tool]["benchmarks"].get(bname, {})
+            cd = summaries[compare_tool]["benchmarks"].get(bname, {})
+            if not bd or not cd:
+                continue
+            row = {"name": bname, "category": category}
+            for mk, _ in table_metrics:
+                bv, cv = bd.get(mk), cd.get(mk)
+                row[mk] = round((cv - bv) / bv * 100, 2) if bv and cv and bv > 0 else None
+            rows.append(row)
+
+    rows_json = _json.dumps(rows)
+    metrics_json = _json.dumps([{"key": mk, "label": ml} for mk, ml in table_metrics])
+    default_sort = "area_asap7"
+    b = escape(baseline_tool)
+    c = escape(compare_tool)
+
+    return f"""
+        <h2>Benchmark Ranking</h2>
+        <p style="color:#555; font-size:0.9em; margin-bottom:8px;">
+            All benchmarks sorted by <strong>{c}</strong> vs <strong>{b}</strong> difference.
+            Click a column header to re-sort.
+            <span style="color:#4CAF50; font-weight:bold">Green</span> = {c} better &nbsp;
+            <span style="color:#f44336; font-weight:bold">Red</span> = {b} better.
+        </p>
+        <div id="outlier-table-container"></div>
+        <style>
+            #outlier-table-container table {{
+                border-collapse: collapse;
+                width: 100%;
+                font-size: 13px;
+                margin-top: 8px;
+            }}
+            #outlier-table-container th, #outlier-table-container td {{
+                border: 1px solid #ddd;
+                padding: 6px 8px;
+                text-align: right;
+            }}
+            #outlier-table-container th {{
+                background: #4CAF50;
+                color: white;
+                cursor: pointer;
+                user-select: none;
+                white-space: nowrap;
+            }}
+            #outlier-table-container th:hover {{ background: #43a047; }}
+            #outlier-table-container th.sort-active {{ background: #1b5e20; }}
+            #outlier-table-container td:nth-child(2),
+            #outlier-table-container th:nth-child(2) {{ text-align: left; }}
+            #outlier-table-container td:nth-child(3),
+            #outlier-table-container th:nth-child(3) {{ text-align: left; font-size: 12px; color: #555; }}
+            #outlier-table-container tr:nth-child(even) {{ background: #f9f9f9; }}
+            #outlier-table-container tr:hover {{ background: #f0f0f0; }}
+        </style>
+        <script>
+        (function() {{
+            const ROWS = {rows_json};
+            const METRICS = {metrics_json};
+            let sortKey = '{default_sort}';
+            let sortAsc = false;
+
+            function cellBg(v) {{
+                if (v === null) return '';
+                const intensity = Math.min(Math.abs(v) / 20.0, 1.0);
+                const base = Math.round(200 - 50 * intensity);
+                return v < 0
+                    ? `rgb(${{base}},255,${{base}})`
+                    : `rgb(255,${{base}},${{base}})`;
+            }}
+
+            function render() {{
+                const sorted = [...ROWS].sort((a, b) => {{
+                    const av = a[sortKey] ?? (sortAsc ? Infinity : -Infinity);
+                    const bv = b[sortKey] ?? (sortAsc ? Infinity : -Infinity);
+                    return sortAsc ? av - bv : bv - av;
+                }});
+
+                let h = '<table><thead><tr>';
+                h += '<th onclick="void(0)">#</th>';
+                h += '<th onclick="void(0)">Benchmark</th>';
+                h += '<th onclick="void(0)">Category</th>';
+                METRICS.forEach(function(m) {{
+                    const active = m.key === sortKey ? ' class="sort-active"' : '';
+                    const arrow = m.key === sortKey ? (sortAsc ? ' ▲' : ' ▼') : '';
+                    h += `<th${{active}} data-key="${{m.key}}">${{m.label}}${{arrow}}</th>`;
+                }});
+                h += '</tr></thead><tbody>';
+
+                sorted.forEach(function(row, i) {{
+                    h += `<tr><td>${{i + 1}}</td><td>${{row.name}}</td><td>${{row.category}}</td>`;
+                    METRICS.forEach(function(m) {{
+                        const v = row[m.key];
+                        const bg = cellBg(v);
+                        const style = bg ? ` style="background:${{bg}}"` : '';
+                        const txt = v === null ? 'N/A' : (v > 0 ? '+' : '') + v.toFixed(1) + '%';
+                        h += `<td${{style}}>${{txt}}</td>`;
+                    }});
+                    h += '</tr>';
+                }});
+
+                h += '</tbody></table>';
+                const container = document.getElementById('outlier-table-container');
+                container.innerHTML = h;
+
+                container.querySelectorAll('th[data-key]').forEach(function(th) {{
+                    th.addEventListener('click', function() {{
+                        const key = this.getAttribute('data-key');
+                        if (key === sortKey) {{ sortAsc = !sortAsc; }}
+                        else {{ sortKey = key; sortAsc = false; }}
+                        render();
+                    }});
+                }});
+            }}
+
+            render();
+        }})();
+        </script>
+"""
+
+
+def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, tool_names):
+    """Return an HTML string containing bar charts comparing two tools across all benchmarks."""
+    import json as _json
+
+    baseline_tool = tool_names[0]
+    compare_tool = tool_names[1]
+
+    chart_metrics = [
+        ("gates", "Gates"),
+        ("depth", "Depth"),
+        ("area_asap7", "Area (ASAP7)"),
+        ("delay_asap7", "Delay (ASAP7)"),
+        ("area_sky130", "Area (Sky130)"),
+        ("delay_sky130", "Delay (Sky130)"),
+    ]
+
+    # Benchmarks ordered by category then name (same order as the detail table)
+    ordered = [
+        (bname, category)
+        for category in sorted_categories
+        for bname in sorted(benchmarks_by_category[category])
+        if summaries[baseline_tool]["benchmarks"].get(bname)
+        and summaries[compare_tool]["benchmarks"].get(bname)
+    ]
+    benchmarks = [b for b, _ in ordered]
+
+    metrics_data = {}
+    for metric_key, metric_label in chart_metrics:
+        values, base_vals, cmp_vals = [], [], []
+        for bname, _ in ordered:
+            bv = summaries[baseline_tool]["benchmarks"][bname].get(metric_key)
+            cv = summaries[compare_tool]["benchmarks"][bname].get(metric_key)
+            if bv and cv and bv > 0:
+                values.append(round((cv - bv) / bv * 100, 2))
+                base_vals.append(bv)
+                cmp_vals.append(cv)
+            else:
+                values.append(None)
+                base_vals.append(None)
+                cmp_vals.append(None)
+        metrics_data[metric_key] = {
+            "label": metric_label,
+            "values": values,
+            "baseline_vals": base_vals,
+            "compare_vals": cmp_vals,
+        }
+
+    chart_data_json = _json.dumps({
+        "benchmarks": benchmarks,
+        "baseline": baseline_tool,
+        "compare": compare_tool,
+        "metrics": metrics_data,
+    })
+
+    return f"""
+        <h2>Visual Comparison</h2>
+        <p style="color:#555; font-size:0.9em; margin-bottom:4px;">
+            Each bar shows <strong>{escape(compare_tool)}</strong> relative to
+            <strong>{escape(baseline_tool)}</strong> (baseline&nbsp;=&nbsp;0%).
+            <span style="color:#4CAF50; font-weight:bold">Green</span> = {escape(compare_tool)} is better &nbsp;
+            <span style="color:#f44336; font-weight:bold">Red</span> = {escape(baseline_tool)} is better.
+        </p>
+        <div class="bar-charts-grid">
+            <div class="chart-card"><canvas id="bc-gates"></canvas></div>
+            <div class="chart-card"><canvas id="bc-depth"></canvas></div>
+            <div class="chart-card"><canvas id="bc-area_asap7"></canvas></div>
+            <div class="chart-card"><canvas id="bc-delay_asap7"></canvas></div>
+            <div class="chart-card"><canvas id="bc-area_sky130"></canvas></div>
+            <div class="chart-card"><canvas id="bc-delay_sky130"></canvas></div>
+        </div>
+        <script>
+        (function() {{
+            const CD = {chart_data_json};
+            function colors(vals) {{
+                return vals.map(v =>
+                    v === null ? 'rgba(180,180,180,0.4)' :
+                    v <= 0    ? 'rgba(76,175,80,0.75)'   : 'rgba(244,67,54,0.75)');
+            }}
+            function mkChart(canvasId, metricKey) {{
+                const m = CD.metrics[metricKey];
+                const ctx = document.getElementById(canvasId);
+                if (!ctx) return;
+                new Chart(ctx, {{
+                    type: 'bar',
+                    data: {{
+                        labels: CD.benchmarks,
+                        datasets: [{{
+                            data: m.values,
+                            backgroundColor: colors(m.values),
+                            borderWidth: 0,
+                        }}],
+                    }},
+                    options: {{
+                        responsive: true,
+                        plugins: {{
+                            title: {{ display: true, text: m.label, font: {{ size: 13 }} }},
+                            legend: {{ display: false }},
+                            tooltip: {{
+                                callbacks: {{
+                                    title: (items) => CD.benchmarks[items[0].dataIndex],
+                                    label: function(ctx) {{
+                                        const i = ctx.dataIndex;
+                                        const v = m.values[i];
+                                        if (v === null) return 'N/A';
+                                        const sign = v > 0 ? '+' : '';
+                                        return [
+                                            CD.baseline + ': ' + m.baseline_vals[i],
+                                            CD.compare  + ': ' + m.compare_vals[i],
+                                            'Diff: ' + sign + v.toFixed(1) + '%',
+                                        ];
+                                    }},
+                                }},
+                            }},
+                        }},
+                        scales: {{
+                            x: {{ ticks: {{ maxRotation: 60, font: {{ size: 9 }} }} }},
+                            y: {{
+                                title: {{
+                                    display: true,
+                                    text: '% vs ' + CD.baseline + '  (negative = ' + CD.compare + ' better)',
+                                    font: {{ size: 10 }},
+                                }},
+                                grid: {{
+                                    color: (ctx) => ctx.tick.value === 0
+                                        ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.07)',
+                                }},
+                            }},
+                        }},
+                    }},
+                }});
+            }}
+            mkChart('bc-gates',       'gates');
+            mkChart('bc-depth',       'depth');
+            mkChart('bc-area_asap7',  'area_asap7');
+            mkChart('bc-delay_asap7', 'delay_asap7');
+            mkChart('bc-area_sky130', 'area_sky130');
+            mkChart('bc-delay_sky130','delay_sky130');
+        }})();
+        </script>
+"""
+
+
+def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=None):
     """Generate a comprehensive HTML report comparing all benchmarks."""
 
     tool_names = list(summaries.keys())
@@ -326,6 +610,37 @@ def generate_html_report(summaries, all_benchmarks, output_path):
         .copy-feedback.show {
             opacity: 1;
         }
+        nav {
+            margin-bottom: 24px;
+        }
+        nav a {
+            display: inline-block;
+            padding: 6px 16px;
+            margin-right: 8px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        nav a.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .bar-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin: 20px 0 30px;
+        }
+        @media (max-width: 900px) {
+            .bar-charts-grid { grid-template-columns: 1fr; }
+        }
+        .chart-card {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 16px;
+        }
     </style>
     <script>
         function copyGeomeanAsMarkdown() {
@@ -397,10 +712,19 @@ def generate_html_report(summaries, all_benchmarks, output_path):
             return md;
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Synthesis Benchmark Comparison Report</h1>
+
+        """
+        + (
+            f'<nav><a href="report.html" class="active">Latest Report</a>'
+            f'<a href="{escape(timeseries_url)}">History</a></nav>'
+            if timeseries_url else ""
+        )
+        + """
 
         <div class="summary">
             <div class="summary-line"><strong>Tools Compared:</strong> """
@@ -421,6 +745,15 @@ def generate_html_report(summaries, all_benchmarks, output_path):
         </div>
 """
     )
+
+    # Bar charts + outlier table (only for 2-tool comparison)
+    if len(tool_names) == 2:
+        html += _bar_chart_section(
+            summaries, sorted_categories, benchmarks_by_category, tool_names
+        )
+        html += _outlier_table_section(
+            summaries, sorted_categories, benchmarks_by_category, tool_names
+        )
 
     # Generate comparison table
     html += """
