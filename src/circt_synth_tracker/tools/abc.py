@@ -78,20 +78,18 @@ def main():
         epilog="This tool provides an ABC wrapper compatible with aig-judge",
     )
     parser.add_argument("input", help="Input AIGER file")
-    # parser.add_argument("-o", "--output", required=True, help="Output JSON file")
     parser.add_argument("--abc", default="abc", help="Path to abc")
 
     args = parser.parse_args()
 
     input_file = Path(args.input)
-    # output_file = Path(args.output)
 
     if not input_file.exists():
         print(f"Error: Input file not found: {input_file}", file=sys.stderr)
         sys.exit(1)
 
     # Run ABC - asap7
-    # Try project root judge-build directory
+    # Take libraries from judge-build directory
     script_dir = Path(__file__).parent
     project_root = script_dir.parent.parent.parent
     asap7_path = project_root / "judge-build" / "_deps" / "mockturtle-src" / "experiments" / "cell_libraries" / "multioutput.genlib"
