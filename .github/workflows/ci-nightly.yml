@@ -86,7 +86,7 @@ jobs:
       - name: Run CIRCT tests
         run: |
           source .venv/bin/activate
-          IFS=',' read -ra BWS <<< "${{ github.event.inputs.bitwidths || '16,32' }}"
+          IFS=',' read -ra BWS <<< "${{ github.event.inputs.bitwidths || '16,64' }}"
           for BW in "${BWS[@]}"; do
             lit -v benchmarks/ -DSYNTH_TOOL=circt -DTEST_OUTPUT_DIR=build_circt -DBW=$BW || true
           done
@@ -94,7 +94,7 @@ jobs:
       - name: Run Yosys tests
         run: |
           source .venv/bin/activate
-          IFS=',' read -ra BWS <<< "${{ github.event.inputs.bitwidths || '16,32' }}"
+          IFS=',' read -ra BWS <<< "${{ github.event.inputs.bitwidths || '16,64' }}"
           for BW in "${BWS[@]}"; do
             lit -v benchmarks/ -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys -DBW=$BW || true
           done
