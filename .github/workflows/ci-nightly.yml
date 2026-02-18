@@ -151,8 +151,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api /repos/${{ github.repository }}/contents/history.json?ref=gh-pages \
-            --header "Accept: application/vnd.github.raw+json" \
+          curl -s -f \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.raw+json" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/history.json?ref=gh-pages" \
             > history.json || echo "[]" > history.json
           echo "History entries: $(python3 -c 'import json,sys; print(len(json.load(open("history.json"))))' 2>/dev/null || echo 0)"
 
