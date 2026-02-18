@@ -40,7 +40,7 @@ def geo_mean(values):
     valid = [v for v in values if isinstance(v, (int, float)) and v > 0]
     if not valid:
         return None
-    return math.exp(sum(math.log(v) for v in valid) / len(valid))
+    return exp(sum(log(v) for v in valid) / len(valid))
 
 
 def build_chart_data(history):
