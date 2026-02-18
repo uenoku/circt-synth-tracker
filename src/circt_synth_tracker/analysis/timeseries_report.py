@@ -10,7 +10,7 @@ Usage:
 import sys
 import json
 import argparse
-from math import prod
+from math import prod, exp, log
 from pathlib import Path
 
 
@@ -40,7 +40,7 @@ def geo_mean(values):
     valid = [v for v in values if isinstance(v, (int, float)) and v > 0]
     if not valid:
         return None
-    return prod(valid) ** (1.0 / len(valid))
+    return math.exp(sum(math.log(v) for v in valid) / len(valid))
 
 
 def build_chart_data(history):
