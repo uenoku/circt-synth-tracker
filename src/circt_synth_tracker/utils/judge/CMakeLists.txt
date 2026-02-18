@@ -22,6 +22,7 @@ FetchContent_Declare(
     mockturtle
     GIT_REPOSITORY https://github.com/lsils/mockturtle.git
     GIT_TAG master
+    PATCH_COMMAND git apply --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/patches/pr683-fix-emap.patch || true
 )
 
 FetchContent_GetProperties(mockturtle)
