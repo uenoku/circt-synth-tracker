@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--name", required=True, help="Benchmark name")
     parser.add_argument("--tool", help="Tool name (default: auto-detect from env)")
     parser.add_argument("--output-dir", help="Output directory for results")
+    parser.add_argument("--bw", "--bitwidth", dest="bitwidth", type=int, help="Bit width to append to benchmark name (e.g. 16 → name_16)")
 
     args = parser.parse_args()
 
@@ -29,6 +30,11 @@ def main():
         # Fallback: treat as raw text if not JSON
         judge_data = {"raw_output": input_data}
 
+    # Append bitwidth suffix to benchmark name if provided
+    benchmark_name = args.name
+    if args.bitwidth is not None:
+        benchmark_name = f"{args.name}_{args.bitwidth}"
+
     # Determine tool name
     tool_name = args.tool or os.environ.get("synth_tool", "unknown")
     category = "unknown"
@@ -40,7 +46,7 @@ def main():
 
     # Create result record
     results = {
-        "benchmark": args.name,
+        "benchmark": benchmark_name,
         "tool": tool_name,
         "test_file": args.test_file,
         "timestamp": datetime.now().isoformat(),
@@ -58,7 +64,7 @@ def main():
     results_dir.mkdir(parents=True, exist_ok=True)
 
     # Save result file
-    results_file = results_dir / f"{args.name}.json"
+    results_file = results_dir / f"{benchmark_name}.json"
     with open(results_file, "w") as f:
         json.dump(results, f, indent=2)
 

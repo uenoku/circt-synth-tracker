@@ -11,6 +11,7 @@ Usage:
 
 import sys
 import json
+import math
 import argparse
 from html import escape
 from pathlib import Path
@@ -948,10 +949,7 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
             valid_values = [v for v in values if v and v > 0]
             if not valid_values:
                 return 0
-            product = 1
-            for v in valid_values:
-                product *= v
-            return product ** (1.0 / len(valid_values))
+            return math.exp(sum(math.log(v) for v in valid_values) / len(valid_values))
 
         # Calculate overall geometric mean across all benchmarks
         all_baseline_benchmarks = list(
