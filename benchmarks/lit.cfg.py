@@ -73,14 +73,14 @@ if tech_map == 'abc':
 else:
     tech_map_command = 'aig-judge'
 
-# Results directory (configurable via --param RESULTS_DIR=<dir>)
-results_dir = lit_config.params.get('RESULTS_DIR', '')
-submit_cmd = f'submit-results --tool {tool_name}-{tech_map}'
-if results_dir:
-    submit_cmd = f'submit-results --output-dir {results_dir}'
-
 # Bitwidth parameter (configurable via --param BW=<width>, default: 16)
 bw = lit_config.params.get('BW', '16')
+
+# Results directory (configurable via --param RESULTS_DIR=<dir>)
+results_dir = lit_config.params.get('RESULTS_DIR', '')
+submit_cmd = f'submit-results --tool {tool_name}-{tech_map} --bw {bw}'
+if results_dir:
+    submit_cmd = f'submit-results --output-dir {results_dir} --bw {bw}'
 
 # Add substitutions (order matters - more specific patterns first)
 config.substitutions.append(('%SYNTH_TOOL', tool_cmd))
