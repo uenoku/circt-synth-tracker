@@ -16254,7 +16254,7 @@
   },
   {
     "date": "2026-02-19",
-    "circt_version": "CIRCT firtool-1.140.0-88-g9f9da0678",
+    "circt_version": "CIRCT firtool-1.140.0-99-g8f953acab",
     "yosys_version": "Yosys 0.47 (git sha1 647d61dd9212365a3cd44db219660b8f90b95cbd, clang++ 17.0.6 -fPIC -O3)",
     "circt": {
       "benchmarks": {
