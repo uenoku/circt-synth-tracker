@@ -1,0 +1,317 @@
+name: CIRCT PR Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'CIRCT PR number to benchmark (e.g. 12345)'
+        required: true
+        type: string
+      bitwidths:
+        description: 'Comma-separated list of bitwidths to test'
+        required: false
+        default: '16,48'
+      issue_number:
+        description: 'Tracker issue number to post results to (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+# Keep the container image tag in sync with llvm/circt's buildAndTest.yml
+env:
+  CIRCT_CI_IMAGE: ghcr.io/circt/images/circt-ci-build:20260107030736
+
+jobs:
+  benchmark:
+    name: Benchmark CIRCT PR #${{ inputs.pr_number }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/circt/images/circt-ci-build:20260107030736
+
+    steps:
+      - name: Checkout tracker repository
+        uses: actions/checkout@v4
+        with:
+          path: tracker
+
+      - name: Get PR info from llvm/circt
+        id: pr-info
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_DATA=$(curl -sf \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/llvm/circt/pulls/${{ inputs.pr_number }}")
+          echo "base_sha=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['base']['sha'])")" >> $GITHUB_OUTPUT
+          echo "head_sha=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['head']['sha'])")" >> $GITHUB_OUTPUT
+          echo "pr_title=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")" >> $GITHUB_OUTPUT
+          echo "PR: ${{ inputs.pr_number }} - $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")"
+          echo "Base: $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['base']['sha'][:8])")"
+          echo "Head: $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['head']['sha'][:8])")"
+
+      - name: Checkout CIRCT at base SHA
+        uses: actions/checkout@v4
+        with:
+          repository: llvm/circt
+          ref: ${{ steps.pr-info.outputs.base_sha }}
+          submodules: recursive
+          path: circt-base
+
+      - name: Get LLVM submodule hash (base)
+        id: llvm-hash
+        run: |
+          echo "hash=$(git -C circt-base rev-parse HEAD:llvm)" >> $GITHUB_OUTPUT
+          echo "LLVM hash: $(git -C circt-base rev-parse HEAD:llvm)"
+
+      - name: Setup sccache (for CIRCT compilation)
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: sccache-circt-${{ runner.os }}-20260107030736
+          restore-keys: sccache-circt-${{ runner.os }}-
+          max-size: 1G
+          variant: sccache
+
+      - name: Restore LLVM install from cache
+        id: llvm-cache
+        uses: actions/cache@v4
+        with:
+          path: circt-base/llvm/install
+          key: llvm-install-${{ steps.llvm-hash.outputs.hash }}-20260107030736-dylib
+
+      - name: Build and install LLVM/MLIR (if not cached)
+        if: steps.llvm-cache.outputs.cache-hit != 'true'
+        working-directory: circt-base
+        run: |
+          utils/build-llvm.sh build install Release clang clang++ \
+            -DLLVM_BUILD_LLVM_DYLIB=ON \
+            -DLLVM_LINK_LLVM_DYLIB=ON
+          # Delete build dir after install to reclaim ~10-15 GB
+          rm -rf llvm/build
+
+      - name: Build CIRCT at base (before)
+        run: |
+          cmake -GNinja circt-base \
+            -B circt-base/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLLVM_ENABLE_ASSERTIONS=ON \
+            -DMLIR_DIR=$GITHUB_WORKSPACE/circt-base/llvm/install/lib/cmake/mlir \
+            -DLLVM_DIR=$GITHUB_WORKSPACE/circt-base/llvm/install/lib/cmake/llvm \
+            -DLLVM_USE_LINKER=lld \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
+            -DCIRCT_SLANG_FRONTEND_ENABLED=ON \
+            -DLLVM_LINK_LLVM_DYLIB=ON \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          ninja -C circt-base/build -j$(nproc) circt-synth circt-verilog circt-opt
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install Python dependencies and build aig-judge
+        run: |
+          cd tracker
+          uv sync
+          uv run build-judge
+
+      - name: Run benchmarks (before)
+        run: |
+          export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
+          BEFORE_VERSION=$(circt-synth --version | tail -1 | xargs)
+          echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
+          cd tracker
+          source .venv/bin/activate
+          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
+          for BW in "${BWS[@]}"; do
+            lit -v benchmarks/ -DSYNTH_TOOL=circt \
+              -DTEST_OUTPUT_DIR=build_before -DBW=$BW || true
+          done
+          aggregate-results --tool "base" --version "$BEFORE_VERSION" \
+            --results-dir build_before -o before-summary.json
+
+      - name: Free CIRCT base build dir
+        # Keep circt-base/llvm/install — reused by PR build if LLVM unchanged
+        run: rm -rf circt-base/build
+
+      - name: Checkout CIRCT at PR head SHA
+        uses: actions/checkout@v4
+        with:
+          repository: llvm/circt
+          ref: ${{ steps.pr-info.outputs.head_sha }}
+          submodules: recursive
+          path: circt-pr
+
+      - name: Check if LLVM submodule changed in PR
+        id: llvm-changed
+        run: |
+          PR_HASH=$(git -C circt-pr rev-parse HEAD:llvm)
+          BASE_HASH="${{ steps.llvm-hash.outputs.hash }}"
+          if [ "$PR_HASH" != "$BASE_HASH" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "pr_llvm_hash=$PR_HASH" >> $GITHUB_OUTPUT
+            echo "::warning::LLVM submodule changed in this PR: ${BASE_HASH:0:8} -> ${PR_HASH:0:8}"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "LLVM unchanged — reusing base LLVM install"
+          fi
+
+      - name: Restore PR LLVM install from cache (if LLVM changed)
+        id: llvm-cache-pr
+        if: steps.llvm-changed.outputs.changed == 'true'
+        uses: actions/cache@v4
+        with:
+          path: circt-pr/llvm/install
+          key: llvm-install-${{ steps.llvm-changed.outputs.pr_llvm_hash }}-20260107030736-dylib
+
+      - name: Build and install LLVM/MLIR for PR (if LLVM changed and not cached)
+        if: steps.llvm-changed.outputs.changed == 'true' && steps.llvm-cache-pr.outputs.cache-hit != 'true'
+        working-directory: circt-pr
+        run: |
+          utils/build-llvm.sh build install Release clang clang++ \
+            -DLLVM_BUILD_LLVM_DYLIB=ON \
+            -DLLVM_LINK_LLVM_DYLIB=ON
+          rm -rf llvm/build
+
+      - name: Set LLVM install dir for PR build
+        id: llvm-dir
+        run: |
+          if [ "${{ steps.llvm-changed.outputs.changed }}" = "true" ]; then
+            echo "dir=$GITHUB_WORKSPACE/circt-pr/llvm/install" >> $GITHUB_OUTPUT
+          else
+            echo "dir=$GITHUB_WORKSPACE/circt-base/llvm/install" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build CIRCT at PR head (after)
+        run: |
+          cmake -GNinja circt-pr \
+            -B circt-pr/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLLVM_ENABLE_ASSERTIONS=ON \
+            -DMLIR_DIR=${{ steps.llvm-dir.outputs.dir }}/lib/cmake/mlir \
+            -DLLVM_DIR=${{ steps.llvm-dir.outputs.dir }}/lib/cmake/llvm \
+            -DLLVM_USE_LINKER=lld \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
+            -DCIRCT_SLANG_FRONTEND_ENABLED=ON \
+            -DLLVM_LINK_LLVM_DYLIB=ON \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          ninja -C circt-pr/build -j$(nproc) circt-synth
+
+      - name: Run benchmarks (after)
+        run: |
+          export PATH="$GITHUB_WORKSPACE/circt-pr/build/bin:$PATH"
+          AFTER_VERSION=$(circt-synth --version | tail -1 | xargs)
+          echo "CIRCT_VERSION_AFTER=$AFTER_VERSION" >> $GITHUB_ENV
+          cd tracker
+          source .venv/bin/activate
+          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
+          for BW in "${BWS[@]}"; do
+            lit -v benchmarks/ -DSYNTH_TOOL=circt \
+              -DTEST_OUTPUT_DIR=build_after -DBW=$BW || true
+          done
+          aggregate-results --tool "pr" --version "$AFTER_VERSION" \
+            --results-dir build_after -o after-summary.json
+
+      - name: Compare before vs after
+        run: |
+          cd tracker
+          source .venv/bin/activate
+          compare-results before-summary.json after-summary.json -o pr-report.html
+          compare-results before-summary.json after-summary.json -o pr-report.md
+          compare-results before-summary.json after-summary.json -o pr-report.json --format json
+
+      - name: Post results to GitHub Actions summary
+        if: always()
+        run: |
+          {
+            echo "## CIRCT PR #${{ inputs.pr_number }} Benchmark"
+            echo ""
+            echo "**[${{ steps.pr-info.outputs.pr_title }}](https://github.com/llvm/circt/pull/${{ inputs.pr_number }})**"
+            echo ""
+            echo "| | Before | After |"
+            echo "|---|---|---|"
+            printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
+              "${{ steps.pr-info.outputs.base_sha }}" \
+              "${{ steps.pr-info.outputs.head_sha }}"
+            echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
+            echo ""
+            if [ -f tracker/pr-report.md ]; then
+              cat tracker/pr-report.md
+            fi
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Post results comment to tracker issue
+        if: always() && inputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            let reportBody = '';
+            try {
+              reportBody = fs.readFileSync('tracker/pr-report.md', 'utf8');
+            } catch (e) {
+              reportBody = '_Report not generated._';
+            }
+            const prNumber = '${{ inputs.pr_number }}';
+            const prTitle = '${{ steps.pr-info.outputs.pr_title }}';
+            const baseSha = '${{ steps.pr-info.outputs.base_sha }}'.slice(0, 8);
+            const headSha = '${{ steps.pr-info.outputs.head_sha }}'.slice(0, 8);
+            const beforeVer = process.env.CIRCT_VERSION_BEFORE || 'unknown';
+            const afterVer = process.env.CIRCT_VERSION_AFTER || 'unknown';
+
+            const body = [
+              `## Benchmark results for CIRCT PR [#${prNumber}](https://github.com/llvm/circt/pull/${prNumber})`,
+              `> **${prTitle}**`,
+              '',
+              '| | Before | After |',
+              '|---|---|---|',
+              `| Commit | \`${baseSha}\` | \`${headSha}\` |`,
+              `| Version | \`${beforeVer}\` | \`${afterVer}\` |`,
+              '',
+              reportBody,
+              '',
+              `[Full workflow run with artifacts](${runUrl})`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt('${{ inputs.issue_number }}'),
+              body,
+            });
+        env:
+          CIRCT_VERSION_BEFORE: ${{ env.CIRCT_VERSION_BEFORE }}
+          CIRCT_VERSION_AFTER: ${{ env.CIRCT_VERSION_AFTER }}
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-${{ inputs.pr_number }}-benchmark
+          retention-days: 90
+          path: |
+            tracker/pr-report.html
+            tracker/pr-report.md
+            tracker/pr-report.json
+            tracker/before-summary.json
+            tracker/after-summary.json
+
+      - name: Upload test outputs on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: pr-${{ inputs.pr_number }}-test-outputs
+          path: |
+            tracker/build_before/
+            tracker/build_after/
