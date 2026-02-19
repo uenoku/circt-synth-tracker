@@ -253,6 +253,7 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
             const METRICS = {metrics_json};
             let sortKey = '{default_sort}';
             let sortAsc = false;
+            let _firstRender = true;
 
             function cellBg(v) {{
                 if (v === null) return '';
@@ -270,9 +271,10 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
                     return sortAsc ? av - bv : bv - av;
                 }});
 
-                if (typeof window._bcReorder === 'function') {{
+                if (!_firstRender && typeof window._bcReorder === 'function') {{
                     window._bcReorder(sorted.map(function(r) {{ return r.name; }}));
                 }}
+                _firstRender = false;
 
                 let h = '<table><thead><tr>';
                 h += '<th onclick="void(0)">#</th>';
