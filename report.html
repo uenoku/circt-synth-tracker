@@ -233,7 +233,7 @@
             <div class="summary-line"><strong>Tool Versions:</strong> yosys vYosys 0.47 (git sha1 647d61dd9212365a3cd44db219660b8f90b95cbd, clang++ 17.0.6 -fPIC -O3), circt vCIRCT firtool-1.140.0-88-g9f9da0678</div>
             <div class="summary-line"><strong>Total Benchmarks:</strong> 158</div>
             <div class="summary-line"><strong>Categories:</strong> 3</div>
-            <div class="summary-line"><strong>Generated:</strong> 2026-02-19T07:43:14.303443</div>
+            <div class="summary-line"><strong>Generated:</strong> 2026-02-19T07:55:46.757523</div>
         </div>
 
         <h2>Visual Comparison</h2>
@@ -415,6 +415,7 @@
             const METRICS = [{"key": "gates", "label": "Gates"}, {"key": "depth", "label": "Depth"}, {"key": "area_asap7", "label": "Area (ASAP7)"}, {"key": "delay_asap7", "label": "Delay (ASAP7)"}, {"key": "area_sky130", "label": "Area (Sky130)"}, {"key": "delay_sky130", "label": "Delay (Sky130)"}];
             let sortKey = 'area_asap7';
             let sortAsc = false;
+            let _firstRender = true;
 
             function cellBg(v) {
                 if (v === null) return '';
@@ -432,9 +433,10 @@
                     return sortAsc ? av - bv : bv - av;
                 });
 
-                if (typeof window._bcReorder === 'function') {
+                if (!_firstRender && typeof window._bcReorder === 'function') {
                     window._bcReorder(sorted.map(function(r) { return r.name; }));
                 }
+                _firstRender = false;
 
                 let h = '<table><thead><tr>';
                 h += '<th onclick="void(0)">#</th>';
