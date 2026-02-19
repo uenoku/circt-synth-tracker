@@ -270,6 +270,10 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
                     return sortAsc ? av - bv : bv - av;
                 }});
 
+                if (typeof window._bcReorder === 'function') {{
+                    window._bcReorder(sorted.map(function(r) {{ return r.name; }}));
+                }}
+
                 let h = '<table><thead><tr>';
                 h += '<th onclick="void(0)">#</th>';
                 h += '<th onclick="void(0)">Benchmark</th>';
@@ -305,6 +309,7 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
                         render();
                     }});
                 }});
+
             }}
 
             render();
@@ -375,17 +380,46 @@ def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, too
             <span style="color:#4CAF50; font-weight:bold">Green</span> = {escape(compare_tool)} is better &nbsp;
             <span style="color:#f44336; font-weight:bold">Red</span> = {escape(baseline_tool)} is better.
         </p>
-        <div class="bar-charts-grid">
-            <div class="chart-card"><canvas id="bc-gates"></canvas></div>
-            <div class="chart-card"><canvas id="bc-depth"></canvas></div>
-            <div class="chart-card"><canvas id="bc-area_asap7"></canvas></div>
-            <div class="chart-card"><canvas id="bc-delay_asap7"></canvas></div>
-            <div class="chart-card"><canvas id="bc-area_sky130"></canvas></div>
-            <div class="chart-card"><canvas id="bc-delay_sky130"></canvas></div>
+        <div id="bc-scroll-outer" style="overflow-x:auto; margin:20px 0 30px;">
+            <div class="bar-charts-grid" id="bc-scroll-inner">
+                <div class="chart-card"><canvas id="bc-gates"></canvas></div>
+                <div class="chart-card"><canvas id="bc-depth"></canvas></div>
+                <div class="chart-card"><canvas id="bc-area_asap7"></canvas></div>
+                <div class="chart-card"><canvas id="bc-delay_asap7"></canvas></div>
+                <div class="chart-card"><canvas id="bc-area_sky130"></canvas></div>
+                <div class="chart-card"><canvas id="bc-delay_sky130"></canvas></div>
+            </div>
         </div>
         <script>
         (function() {{
             const CD = {chart_data_json};
+            const _bcInstances = {{}};
+
+            // Immutable snapshot of original data, keyed by benchmark name
+            const _bcOrigIdx = {{}};
+            CD.benchmarks.forEach(function(n, i) {{ _bcOrigIdx[n] = i; }});
+            const _bcOrig = {{}};
+            Object.keys(CD.metrics).forEach(function(mk) {{
+                const m = CD.metrics[mk];
+                _bcOrig[mk] = {{
+                    values:       m.values.slice(),
+                    baseline_vals: m.baseline_vals.slice(),
+                    compare_vals:  m.compare_vals.slice(),
+                }};
+            }});
+            const _bcMetricKeys = {{
+                'bc-gates': 'gates', 'bc-depth': 'depth',
+                'bc-area_asap7': 'area_asap7', 'bc-delay_asap7': 'delay_asap7',
+                'bc-area_sky130': 'area_sky130', 'bc-delay_sky130': 'delay_sky130',
+            }};
+
+            const MIN_BAR_PX = 8;
+            const outer = document.getElementById('bc-scroll-outer');
+            const inner = document.getElementById('bc-scroll-inner');
+            const outerW = outer.clientWidth || 900;
+            const chartW = Math.max(outerW, CD.benchmarks.length * MIN_BAR_PX);
+            inner.style.width = chartW + 'px';
+
             function colors(vals) {{
                 return vals.map(v =>
                     v === null ? 'rgba(180,180,180,0.4)' :
@@ -393,34 +427,41 @@ def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, too
             }}
             function mkChart(canvasId, metricKey) {{
                 const m = CD.metrics[metricKey];
-                const ctx = document.getElementById(canvasId);
-                if (!ctx) return;
-                new Chart(ctx, {{
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return;
+                canvas.style.width = chartW + 'px';
+                canvas.style.height = '280px';
+                _bcInstances[canvasId] = new Chart(canvas, {{
                     type: 'bar',
                     data: {{
-                        labels: CD.benchmarks,
+                        labels: CD.benchmarks.slice(),
                         datasets: [{{
-                            data: m.values,
+                            data: m.values.slice(),
                             backgroundColor: colors(m.values),
                             borderWidth: 0,
                         }}],
                     }},
                     options: {{
-                        responsive: true,
+                        responsive: false,
+                        maintainAspectRatio: false,
                         plugins: {{
                             title: {{ display: true, text: m.label, font: {{ size: 13 }} }},
                             legend: {{ display: false }},
                             tooltip: {{
                                 callbacks: {{
-                                    title: (items) => CD.benchmarks[items[0].dataIndex],
+                                    title: (items) => items[0].chart.data.labels[items[0].dataIndex],
                                     label: function(ctx) {{
                                         const i = ctx.dataIndex;
-                                        const v = m.values[i];
-                                        if (v === null) return 'N/A';
+                                        const mk2 = _bcMetricKeys[ctx.chart.canvas.id];
+                                        const orig = _bcOrig[mk2];
+                                        const name = ctx.chart.data.labels[i];
+                                        const oi = _bcOrigIdx[name];
+                                        const v = ctx.parsed.y;
+                                        if (v === null || v === undefined) return 'N/A';
                                         const sign = v > 0 ? '+' : '';
                                         return [
-                                            CD.baseline + ': ' + m.baseline_vals[i],
-                                            CD.compare  + ': ' + m.compare_vals[i],
+                                            CD.baseline + ': ' + (oi !== undefined ? orig.baseline_vals[oi] : 'N/A'),
+                                            CD.compare  + ': ' + (oi !== undefined ? orig.compare_vals[oi]  : 'N/A'),
                                             'Diff: ' + sign + v.toFixed(1) + '%',
                                         ];
                                     }},
@@ -450,6 +491,22 @@ def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, too
             mkChart('bc-delay_asap7', 'delay_asap7');
             mkChart('bc-area_sky130', 'area_sky130');
             mkChart('bc-delay_sky130','delay_sky130');
+
+            // Called by the ranking table whenever its sort order changes
+            window._bcReorder = function(newOrder) {{
+                Object.entries(_bcInstances).forEach(function([canvasId, chart]) {{
+                    const mk = _bcMetricKeys[canvasId];
+                    const orig = _bcOrig[mk];
+                    const newValues = newOrder.map(function(name) {{
+                        const i = _bcOrigIdx[name];
+                        return i !== undefined ? orig.values[i] : null;
+                    }});
+                    chart.data.labels = newOrder.slice();
+                    chart.data.datasets[0].data = newValues;
+                    chart.data.datasets[0].backgroundColor = colors(newValues);
+                    chart.update('none');
+                }});
+            }};
         }})();
         </script>
 """
@@ -629,12 +686,8 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
         }
         .bar-charts-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
-            margin: 20px 0 30px;
-        }
-        @media (max-width: 900px) {
-            .bar-charts-grid { grid-template-columns: 1fr; }
+            grid-template-columns: 1fr;
+            gap: 16px;
         }
         .chart-card {
             background: #fafafa;
