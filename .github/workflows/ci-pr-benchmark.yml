@@ -75,7 +75,8 @@ jobs:
           PR_DATA=$(curl -sf \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/llvm/circt/pulls/${{ inputs.pr_number || '9711' }}")
+            "https://api.github.com/repos/llvm/circt/pulls/${{ inputs.pr_number || '9711' }}" \
+            | LC_ALL=C tr -d '\000-\010\013\014\016-\037')
           echo "base_sha=$(echo "$PR_DATA" | jq -r '.base.sha')" >> $GITHUB_OUTPUT
           echo "head_sha=$(echo "$PR_DATA" | jq -r '.head.sha')" >> $GITHUB_OUTPUT
           echo "pr_title=$(echo "$PR_DATA" | jq -r '.title')" >> $GITHUB_OUTPUT
@@ -103,8 +104,35 @@ jobs:
           uv sync
           uv run build-judge
 
+      - name: Checkout CIRCT at PR base SHA
+        uses: actions/checkout@v4
+        with:
+          repository: llvm/circt
+          ref: ${{ steps.pr-info.outputs.base_sha }}
+          submodules: false
+          path: circt-base
+
+      - name: Build CIRCT at PR base (before)
+        run: |
+          cmake -GNinja circt-base \
+            -B circt-base/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLLVM_ENABLE_ASSERTIONS=ON \
+            -DMLIR_DIR=$GITHUB_WORKSPACE/circt-prebuilt/lib/cmake/mlir \
+            -DLLVM_DIR=$GITHUB_WORKSPACE/circt-prebuilt/lib/cmake/llvm \
+            -DLLVM_USE_LINKER=lld \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
+            -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
+            -DLLVM_LINK_LLVM_DYLIB=ON \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          ninja -C circt-base/build -j$(nproc) circt-synth
+
       - name: Run benchmarks (before)
         run: |
+          export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
           BEFORE_VERSION=$(circt-synth --version | tail -1 | xargs)
           echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
           cd tracker
