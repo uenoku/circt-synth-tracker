@@ -31,41 +31,72 @@ jobs:
     container:
       image: ghcr.io/circt/images/circt-ci-build:20260107030736
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Checkout tracker repository
         uses: actions/checkout@v4
         with:
           path: tracker
+          submodules: recursive
+
+      - name: Install gh and jq
+        run: |
+          apt-get install -y jq
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+            | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update
+          apt-get install -y gh
+
+      - name: Download pre-built CIRCT (base binaries + LLVM/MLIR install)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=$(gh run list \
+            --repo llvm/circt \
+            --workflow uploadReleaseArtifacts.yml \
+            --branch main \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          echo "Downloading circt-full-shared-linux-x64.tar.gz from run $RUN_ID"
+          gh run download "$RUN_ID" \
+            --repo llvm/circt \
+            --name "circt-full-shared-linux-x64.tar.gz" \
+            --dir .
+          mkdir -p circt-prebuilt
+          tar xzf circt-full-shared-linux-x64.tar.gz -C circt-prebuilt/
+          # Find the actual cmake dirs in case the tarball has a top-level directory
+          MLIR_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "MLIRConfig.cmake" -type f -exec dirname {} \; | head -1)
+          LLVM_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "LLVMConfig.cmake" -type f -exec dirname {} \; | head -1)
+          PREBUILT_BIN_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "circt-synth" -type f -exec dirname {} \; | head -1)
+          PREBUILT_LIB_DIR=$(dirname "$(dirname "$LLVM_CMAKE_DIR")")
+          echo "MLIR_DIR=$MLIR_CMAKE_DIR" >> $GITHUB_ENV
+          echo "LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
+          echo "$PREBUILT_BIN_DIR" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=$PREBUILT_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
       - name: Get PR info from llvm/circt
         id: pr-info
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          PR_DATA=$(curl -sf \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/llvm/circt/pulls/${{ inputs.pr_number }}")
-          echo "base_sha=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['base']['sha'])")" >> $GITHUB_OUTPUT
-          echo "head_sha=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['head']['sha'])")" >> $GITHUB_OUTPUT
-          echo "pr_title=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")" >> $GITHUB_OUTPUT
-          echo "PR: ${{ inputs.pr_number }} - $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")"
-          echo "Base: $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['base']['sha'][:8])")"
-          echo "Head: $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['head']['sha'][:8])")"
-
-      - name: Checkout CIRCT at base SHA
-        uses: actions/checkout@v4
-        with:
-          repository: llvm/circt
-          ref: ${{ steps.pr-info.outputs.base_sha }}
-          submodules: recursive
-          path: circt-base
-
-      - name: Get LLVM submodule hash (base)
-        id: llvm-hash
-        run: |
-          echo "hash=$(git -C circt-base rev-parse HEAD:llvm)" >> $GITHUB_OUTPUT
-          echo "LLVM hash: $(git -C circt-base rev-parse HEAD:llvm)"
+          PR_NUMBER="${{ inputs.pr_number }}"
+          BASE_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json baseRefOid --jq '.baseRefOid')
+          HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json headRefOid --jq '.headRefOid')
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json title --jq '.title')
+          echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "PR: $PR_NUMBER - $PR_TITLE"
+          echo "Base: ${BASE_SHA:0:8}"
+          echo "Head: ${HEAD_SHA:0:8}"
 
       - name: Setup sccache (for CIRCT compilation)
         uses: hendrikmuhs/ccache-action@v1.2
@@ -74,41 +105,6 @@ jobs:
           restore-keys: sccache-circt-${{ runner.os }}-
           max-size: 1G
           variant: sccache
-
-      - name: Restore LLVM install from cache
-        id: llvm-cache
-        uses: actions/cache@v4
-        with:
-          path: circt-base/llvm/install
-          key: llvm-install-${{ steps.llvm-hash.outputs.hash }}-20260107030736-dylib
-
-      - name: Build and install LLVM/MLIR (if not cached)
-        if: steps.llvm-cache.outputs.cache-hit != 'true'
-        working-directory: circt-base
-        run: |
-          utils/build-llvm.sh build install Release clang clang++ \
-            -DLLVM_BUILD_LLVM_DYLIB=ON \
-            -DLLVM_LINK_LLVM_DYLIB=ON
-          # Delete build dir after install to reclaim ~10-15 GB
-          rm -rf llvm/build
-
-      - name: Build CIRCT at base (before)
-        run: |
-          cmake -GNinja circt-base \
-            -B circt-base/build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DLLVM_ENABLE_ASSERTIONS=ON \
-            -DMLIR_DIR=$GITHUB_WORKSPACE/circt-base/llvm/install/lib/cmake/mlir \
-            -DLLVM_DIR=$GITHUB_WORKSPACE/circt-base/llvm/install/lib/cmake/llvm \
-            -DLLVM_USE_LINKER=lld \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
-            -DCIRCT_SLANG_FRONTEND_ENABLED=ON \
-            -DLLVM_LINK_LLVM_DYLIB=ON \
-            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-          ninja -C circt-base/build -j$(nproc) circt-synth circt-verilog circt-opt
 
       - name: Install uv
         run: |
@@ -122,6 +118,33 @@ jobs:
           uv sync
           uv run build-judge
 
+      - name: Checkout CIRCT at PR base SHA
+        uses: actions/checkout@v4
+        with:
+          repository: llvm/circt
+          ref: ${{ steps.pr-info.outputs.base_sha }}
+          submodules: false
+          path: circt-base
+
+      - name: Build CIRCT at PR base (before)
+        run: |
+          cmake -GNinja circt-base \
+            -B circt-base/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLLVM_ENABLE_ASSERTIONS=ON \
+            -DMLIR_DIR=$MLIR_DIR \
+            -DLLVM_DIR=$LLVM_DIR \
+            -DLLVM_USE_LINKER=lld \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
+            -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
+            -DBUILD_SHARED_LIBS=ON \
+            -DLLVM_LINK_LLVM_DYLIB=OFF \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          ninja -C circt-base/build -j$(nproc) circt-synth
+
       - name: Run benchmarks (before)
         run: |
           export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
@@ -129,7 +152,7 @@ jobs:
           echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
           cd tracker
           source .venv/bin/activate
-          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
+          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths || '16,48' }}"
           for BW in "${BWS[@]}"; do
             lit -v benchmarks/ -DSYNTH_TOOL=circt \
               -DTEST_OUTPUT_DIR=build_before -DBW=$BW || true
@@ -137,57 +160,13 @@ jobs:
           aggregate-results --tool "base" --version "$BEFORE_VERSION" \
             --results-dir build_before -o before-summary.json
 
-      - name: Free CIRCT base build dir
-        # Keep circt-base/llvm/install — reused by PR build if LLVM unchanged
-        run: rm -rf circt-base/build
-
       - name: Checkout CIRCT at PR head SHA
         uses: actions/checkout@v4
         with:
           repository: llvm/circt
           ref: ${{ steps.pr-info.outputs.head_sha }}
-          submodules: recursive
+          submodules: false
           path: circt-pr
-
-      - name: Check if LLVM submodule changed in PR
-        id: llvm-changed
-        run: |
-          PR_HASH=$(git -C circt-pr rev-parse HEAD:llvm)
-          BASE_HASH="${{ steps.llvm-hash.outputs.hash }}"
-          if [ "$PR_HASH" != "$BASE_HASH" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "pr_llvm_hash=$PR_HASH" >> $GITHUB_OUTPUT
-            echo "::warning::LLVM submodule changed in this PR: ${BASE_HASH:0:8} -> ${PR_HASH:0:8}"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "LLVM unchanged — reusing base LLVM install"
-          fi
-
-      - name: Restore PR LLVM install from cache (if LLVM changed)
-        id: llvm-cache-pr
-        if: steps.llvm-changed.outputs.changed == 'true'
-        uses: actions/cache@v4
-        with:
-          path: circt-pr/llvm/install
-          key: llvm-install-${{ steps.llvm-changed.outputs.pr_llvm_hash }}-20260107030736-dylib
-
-      - name: Build and install LLVM/MLIR for PR (if LLVM changed and not cached)
-        if: steps.llvm-changed.outputs.changed == 'true' && steps.llvm-cache-pr.outputs.cache-hit != 'true'
-        working-directory: circt-pr
-        run: |
-          utils/build-llvm.sh build install Release clang clang++ \
-            -DLLVM_BUILD_LLVM_DYLIB=ON \
-            -DLLVM_LINK_LLVM_DYLIB=ON
-          rm -rf llvm/build
-
-      - name: Set LLVM install dir for PR build
-        id: llvm-dir
-        run: |
-          if [ "${{ steps.llvm-changed.outputs.changed }}" = "true" ]; then
-            echo "dir=$GITHUB_WORKSPACE/circt-pr/llvm/install" >> $GITHUB_OUTPUT
-          else
-            echo "dir=$GITHUB_WORKSPACE/circt-base/llvm/install" >> $GITHUB_OUTPUT
-          fi
 
       - name: Build CIRCT at PR head (after)
         run: |
@@ -195,14 +174,15 @@ jobs:
             -B circt-pr/build \
             -DCMAKE_BUILD_TYPE=Release \
             -DLLVM_ENABLE_ASSERTIONS=ON \
-            -DMLIR_DIR=${{ steps.llvm-dir.outputs.dir }}/lib/cmake/mlir \
-            -DLLVM_DIR=${{ steps.llvm-dir.outputs.dir }}/lib/cmake/llvm \
+            -DMLIR_DIR=$MLIR_DIR \
+            -DLLVM_DIR=$LLVM_DIR \
             -DLLVM_USE_LINKER=lld \
             -DCMAKE_C_COMPILER=clang \
+            -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
-            -DCIRCT_SLANG_FRONTEND_ENABLED=ON \
-            -DLLVM_LINK_LLVM_DYLIB=ON \
+            -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
+            -DLLVM_LINK_LLVM_DYLIB=OFF \
             -DCMAKE_C_COMPILER_LAUNCHER=sccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
           ninja -C circt-pr/build -j$(nproc) circt-synth
@@ -214,7 +194,7 @@ jobs:
           echo "CIRCT_VERSION_AFTER=$AFTER_VERSION" >> $GITHUB_ENV
           cd tracker
           source .venv/bin/activate
-          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
+          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths || '16,48' }}"
           for BW in "${BWS[@]}"; do
             lit -v benchmarks/ -DSYNTH_TOOL=circt \
               -DTEST_OUTPUT_DIR=build_after -DBW=$BW || true
