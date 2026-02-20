@@ -89,6 +89,7 @@ jobs:
         working-directory: circt-base
         run: |
           utils/build-llvm.sh build install Release clang clang++ \
+            -DBUILD_SHARED_LIBS=OFF \
             -DLLVM_BUILD_LLVM_DYLIB=ON \
             -DLLVM_LINK_LLVM_DYLIB=ON
           # Delete build dir after install to reclaim ~10-15 GB
@@ -178,6 +179,7 @@ jobs:
         working-directory: circt-pr
         run: |
           utils/build-llvm.sh build install Release clang clang++ \
+            -DBUILD_SHARED_LIBS=OFF \
             -DLLVM_BUILD_LLVM_DYLIB=ON \
             -DLLVM_LINK_LLVM_DYLIB=ON
           rm -rf llvm/build
