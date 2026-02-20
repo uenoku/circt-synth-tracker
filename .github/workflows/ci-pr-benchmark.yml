@@ -33,6 +33,10 @@ jobs:
     container:
       image: ghcr.io/circt/images/circt-ci-build:20260107030736
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Checkout tracker repository
         uses: actions/checkout@v4
@@ -69,8 +73,15 @@ jobs:
             --dir .
           mkdir -p circt-prebuilt
           tar xzf circt-full-shared-linux-x64.tar.gz -C circt-prebuilt/
-          echo "$GITHUB_WORKSPACE/circt-prebuilt/bin" >> $GITHUB_PATH
-          echo "LD_LIBRARY_PATH=$GITHUB_WORKSPACE/circt-prebuilt/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          # Find the actual cmake dirs in case the tarball has a top-level directory
+          MLIR_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "MLIRConfig.cmake" -type f -exec dirname {} \; | head -1)
+          LLVM_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "LLVMConfig.cmake" -type f -exec dirname {} \; | head -1)
+          PREBUILT_BIN_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "circt-synth" -type f -exec dirname {} \; | head -1)
+          PREBUILT_LIB_DIR=$(dirname "$(dirname "$LLVM_CMAKE_DIR")")
+          echo "MLIR_DIR=$MLIR_CMAKE_DIR" >> $GITHUB_ENV
+          echo "LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
+          echo "$PREBUILT_BIN_DIR" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=$PREBUILT_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
       - name: Get PR info from llvm/circt
         id: pr-info
@@ -122,8 +133,8 @@ jobs:
             -B circt-base/build \
             -DCMAKE_BUILD_TYPE=Release \
             -DLLVM_ENABLE_ASSERTIONS=ON \
-            -DMLIR_DIR=$GITHUB_WORKSPACE/circt-prebuilt/lib/cmake/mlir \
-            -DLLVM_DIR=$GITHUB_WORKSPACE/circt-prebuilt/lib/cmake/llvm \
+            -DMLIR_DIR=$MLIR_DIR \
+            -DLLVM_DIR=$LLVM_DIR \
             -DLLVM_USE_LINKER=lld \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
@@ -163,8 +174,8 @@ jobs:
             -B circt-pr/build \
             -DCMAKE_BUILD_TYPE=Release \
             -DLLVM_ENABLE_ASSERTIONS=ON \
-            -DMLIR_DIR=$GITHUB_WORKSPACE/circt-prebuilt/lib/cmake/mlir \
-            -DLLVM_DIR=$GITHUB_WORKSPACE/circt-prebuilt/lib/cmake/llvm \
+            -DMLIR_DIR=$MLIR_DIR \
+            -DLLVM_DIR=$LLVM_DIR \
             -DLLVM_USE_LINKER=lld \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
