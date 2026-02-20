@@ -39,29 +39,34 @@ jobs:
         with:
           path: tracker
 
-      - name: Install jq
-        run: apt-get install -y jq
+      - name: Install gh and jq
+        run: |
+          apt-get install -y jq
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+            | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update
+          apt-get install -y gh
 
       - name: Download pre-built CIRCT (base binaries + LLVM/MLIR install)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          RUN_ID=$(curl -sf \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/llvm/circt/actions/workflows/uploadReleaseArtifacts.yml/runs?branch=main&status=success&per_page=1" \
-            | jq -r '.workflow_runs[0].id')
-          ARTIFACT_ID=$(curl -sf \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/llvm/circt/actions/runs/$RUN_ID/artifacts" \
-            | jq -r '.artifacts[] | select(.name == "circt-full-shared-linux-x64.tar.gz") | .id')
-          echo "Downloading circt-full-shared-linux-x64.tar.gz (artifact $ARTIFACT_ID from run $RUN_ID)"
-          curl -sL \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            "https://api.github.com/repos/llvm/circt/actions/artifacts/$ARTIFACT_ID/zip" \
-            -o circt-prebuilt.zip
-          unzip -q circt-prebuilt.zip
+          RUN_ID=$(gh run list \
+            --repo llvm/circt \
+            --workflow uploadReleaseArtifacts.yml \
+            --branch main \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          echo "Downloading circt-full-shared-linux-x64.tar.gz from run $RUN_ID"
+          gh run download "$RUN_ID" \
+            --repo llvm/circt \
+            --name "circt-full-shared-linux-x64.tar.gz" \
+            --dir .
           mkdir -p circt-prebuilt
           tar xzf circt-full-shared-linux-x64.tar.gz -C circt-prebuilt/
           echo "$GITHUB_WORKSPACE/circt-prebuilt/bin" >> $GITHUB_PATH
@@ -72,17 +77,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          PR_DATA=$(curl -sf \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/llvm/circt/pulls/${{ inputs.pr_number || '9711' }}" \
-            | LC_ALL=C tr -d '\000-\010\013\014\016-\037')
-          echo "base_sha=$(echo "$PR_DATA" | jq -r '.base.sha')" >> $GITHUB_OUTPUT
-          echo "head_sha=$(echo "$PR_DATA" | jq -r '.head.sha')" >> $GITHUB_OUTPUT
-          echo "pr_title=$(echo "$PR_DATA" | jq -r '.title')" >> $GITHUB_OUTPUT
-          echo "PR: ${{ inputs.pr_number || '9711' }} - $(echo "$PR_DATA" | jq -r '.title')"
-          echo "Base: $(echo "$PR_DATA" | jq -r '.base.sha[:8]')"
-          echo "Head: $(echo "$PR_DATA" | jq -r '.head.sha[:8]')"
+          PR_NUMBER="${{ inputs.pr_number || '9711' }}"
+          BASE_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json baseRefOid --jq '.baseRefOid')
+          HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json headRefOid --jq '.headRefOid')
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json title --jq '.title')
+          echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "PR: $PR_NUMBER - $PR_TITLE"
+          echo "Base: ${BASE_SHA:0:8}"
+          echo "Head: ${HEAD_SHA:0:8}"
 
       - name: Setup sccache (for CIRCT compilation)
         uses: hendrikmuhs/ccache-action@v1.2
