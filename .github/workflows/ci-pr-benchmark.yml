@@ -48,12 +48,12 @@ jobs:
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/llvm/circt/pulls/${{ inputs.pr_number || '9711' }}")
-          echo "base_sha=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['base']['sha'])")" >> $GITHUB_OUTPUT
-          echo "head_sha=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['head']['sha'])")" >> $GITHUB_OUTPUT
-          echo "pr_title=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")" >> $GITHUB_OUTPUT
-          echo "PR: ${{ inputs.pr_number || '9711' }} - $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")"
-          echo "Base: $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['base']['sha'][:8])")"
-          echo "Head: $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['head']['sha'][:8])")"
+          echo "base_sha=$(echo "$PR_DATA" | jq -r '.base.sha')" >> $GITHUB_OUTPUT
+          echo "head_sha=$(echo "$PR_DATA" | jq -r '.head.sha')" >> $GITHUB_OUTPUT
+          echo "pr_title=$(echo "$PR_DATA" | jq -r '.title')" >> $GITHUB_OUTPUT
+          echo "PR: ${{ inputs.pr_number || '9711' }} - $(echo "$PR_DATA" | jq -r '.title')"
+          echo "Base: $(echo "$PR_DATA" | jq -r '.base.sha[:8]')"
+          echo "Head: $(echo "$PR_DATA" | jq -r '.head.sha[:8]')"
 
       - name: Checkout CIRCT at base SHA
         uses: actions/checkout@v4
