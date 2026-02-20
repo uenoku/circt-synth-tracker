@@ -11,7 +11,7 @@ permissions:
 jobs:
   dispatch:
     # Only run when the comment contains the trigger phrase
-    if: contains(github.event.comment.body, '@tracker-bot check-pr')
+    if: contains(github.event.comment.body, '@circt-tracker-bot check-pr')
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +35,7 @@ jobs:
         if: steps.auth.outputs.authorized == 'true'
         run: |
           COMMENT="${{ github.event.comment.body }}"
-          PR_NUM=$(echo "$COMMENT" | grep -oP '@tracker-bot check-pr \K[0-9]+' | head -1)
+          PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr \K[0-9]+' | head -1)
           if [ -z "$PR_NUM" ]; then
             echo "::error::Could not parse PR number from comment"
             exit 1
