@@ -1,6 +1,8 @@
 name: CIRCT PR Benchmark
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -26,7 +28,7 @@ env:
 
 jobs:
   benchmark:
-    name: Benchmark CIRCT PR #${{ inputs.pr_number }}
+    name: Benchmark CIRCT PR #${{ inputs.pr_number || '9711' }}
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/circt/images/circt-ci-build:20260107030736
@@ -45,11 +47,11 @@ jobs:
           PR_DATA=$(curl -sf \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/llvm/circt/pulls/${{ inputs.pr_number }}")
+            "https://api.github.com/repos/llvm/circt/pulls/${{ inputs.pr_number || '9711' }}")
           echo "base_sha=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['base']['sha'])")" >> $GITHUB_OUTPUT
           echo "head_sha=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['head']['sha'])")" >> $GITHUB_OUTPUT
           echo "pr_title=$(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")" >> $GITHUB_OUTPUT
-          echo "PR: ${{ inputs.pr_number }} - $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")"
+          echo "PR: ${{ inputs.pr_number || '9711' }} - $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")"
           echo "Base: $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['base']['sha'][:8])")"
           echo "Head: $(echo "$PR_DATA" | python3 -c "import json,sys; print(json.load(sys.stdin)['head']['sha'][:8])")"
 
@@ -129,7 +131,7 @@ jobs:
           echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
           cd tracker
           source .venv/bin/activate
-          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
+          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths || '16,48' }}"
           for BW in "${BWS[@]}"; do
             lit -v benchmarks/ -DSYNTH_TOOL=circt \
               -DTEST_OUTPUT_DIR=build_before -DBW=$BW || true
@@ -214,7 +216,7 @@ jobs:
           echo "CIRCT_VERSION_AFTER=$AFTER_VERSION" >> $GITHUB_ENV
           cd tracker
           source .venv/bin/activate
-          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
+          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths || '16,48' }}"
           for BW in "${BWS[@]}"; do
             lit -v benchmarks/ -DSYNTH_TOOL=circt \
               -DTEST_OUTPUT_DIR=build_after -DBW=$BW || true
@@ -234,9 +236,9 @@ jobs:
         if: always()
         run: |
           {
-            echo "## CIRCT PR #${{ inputs.pr_number }} Benchmark"
+            echo "## CIRCT PR #${{ inputs.pr_number || '9711' }} Benchmark"
             echo ""
-            echo "**[${{ steps.pr-info.outputs.pr_title }}](https://github.com/llvm/circt/pull/${{ inputs.pr_number }})**"
+            echo "**[${{ steps.pr-info.outputs.pr_title }}](https://github.com/llvm/circt/pull/${{ inputs.pr_number || '9711' }})**"
             echo ""
             echo "| | Before | After |"
             echo "|---|---|---|"
@@ -263,7 +265,7 @@ jobs:
             } catch (e) {
               reportBody = '_Report not generated._';
             }
-            const prNumber = '${{ inputs.pr_number }}';
+            const prNumber = '${{ inputs.pr_number || '9711' }}';
             const prTitle = '${{ steps.pr-info.outputs.pr_title }}';
             const baseSha = '${{ steps.pr-info.outputs.base_sha }}'.slice(0, 8);
             const headSha = '${{ steps.pr-info.outputs.head_sha }}'.slice(0, 8);
@@ -298,7 +300,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pr-${{ inputs.pr_number }}-benchmark
+          name: pr-${{ inputs.pr_number || '9711' }}-benchmark
           retention-days: 90
           path: |
             tracker/pr-report.html
@@ -311,7 +313,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: pr-${{ inputs.pr_number }}-test-outputs
+          name: pr-${{ inputs.pr_number || '9711' }}-test-outputs
           path: |
             tracker/build_before/
             tracker/build_after/
