@@ -1,8 +1,6 @@
 name: CIRCT PR Benchmark
 
 on:
-  pull_request:
-    branches: [main]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -28,7 +26,7 @@ env:
 
 jobs:
   benchmark:
-    name: Benchmark CIRCT PR #${{ inputs.pr_number || '9711' }}
+    name: Benchmark CIRCT PR #${{ inputs.pr_number }}
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/circt/images/circt-ci-build:20260107030736
@@ -89,7 +87,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          PR_NUMBER="${{ inputs.pr_number || '9711' }}"
+          PR_NUMBER="${{ inputs.pr_number }}"
           BASE_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json baseRefOid --jq '.baseRefOid')
           HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json headRefOid --jq '.headRefOid')
           PR_TITLE=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json title --jq '.title')
@@ -216,9 +214,9 @@ jobs:
         if: always()
         run: |
           {
-            echo "## CIRCT PR #${{ inputs.pr_number || '9711' }} Benchmark"
+            echo "## CIRCT PR #${{ inputs.pr_number }} Benchmark"
             echo ""
-            echo "**[${{ steps.pr-info.outputs.pr_title }}](https://github.com/llvm/circt/pull/${{ inputs.pr_number || '9711' }})**"
+            echo "**[${{ steps.pr-info.outputs.pr_title }}](https://github.com/llvm/circt/pull/${{ inputs.pr_number }})**"
             echo ""
             echo "| | Before | After |"
             echo "|---|---|---|"
@@ -245,7 +243,7 @@ jobs:
             } catch (e) {
               reportBody = '_Report not generated._';
             }
-            const prNumber = '${{ inputs.pr_number || '9711' }}';
+            const prNumber = '${{ inputs.pr_number }}';
             const prTitle = '${{ steps.pr-info.outputs.pr_title }}';
             const baseSha = '${{ steps.pr-info.outputs.base_sha }}'.slice(0, 8);
             const headSha = '${{ steps.pr-info.outputs.head_sha }}'.slice(0, 8);
@@ -280,7 +278,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pr-${{ inputs.pr_number || '9711' }}-benchmark
+          name: pr-${{ inputs.pr_number }}-benchmark
           retention-days: 90
           path: |
             tracker/pr-report.html
@@ -293,7 +291,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: pr-${{ inputs.pr_number || '9711' }}-test-outputs
+          name: pr-${{ inputs.pr_number }}-test-outputs
           path: |
             tracker/build_before/
             tracker/build_after/
