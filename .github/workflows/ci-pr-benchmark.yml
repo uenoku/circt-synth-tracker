@@ -120,7 +120,7 @@ jobs:
         working-directory: tracker
         run: |
           uv sync
-          uv run build-judge
+          uv run prepare
 
       - name: Checkout CIRCT at PR base SHA
         uses: actions/checkout@v4

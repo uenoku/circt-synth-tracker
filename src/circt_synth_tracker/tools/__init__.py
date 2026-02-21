@@ -37,6 +37,7 @@ def run_abc_commands(
     output_file: Path,
     commands: str,
     abc_exe: str | None = None,
+    rc_file: Path | None = None,
 ) -> None:
     """Run ABC commands on an AIG file, writing the result to a separate output path.
 
@@ -46,15 +47,23 @@ def run_abc_commands(
         commands:    Semicolon-separated ABC commands to run (e.g. ``"dc2; dc2;"``).
         abc_exe:     Explicit path/name hint for the ABC executable. Falls back to
                      ``abc`` then ``yosys-abc`` when *None* or not found on PATH.
+        rc_file:     Optional ABC script file loaded via ``-F`` before ``-c`` commands,
+                     useful for pre-defining aliases.
     """
     if not commands:
         return
 
     abc_exe = find_abc(abc_exe)
 
+    cmd = [abc_exe]
+    if rc_file is not None and rc_file.exists():
+        cmd += ["-F", str(rc_file)]
+
     script = f"read {input_file}; {commands}; write {output_file};"
+    cmd += ["-c", script]
+
     print(f"Running ABC commands: {commands}", file=sys.stderr)
-    result = subprocess.run([abc_exe, "-c", script], capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print("Error during ABC optimization:", file=sys.stderr)
         print(result.stderr, file=sys.stderr)

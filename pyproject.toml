@@ -17,6 +17,7 @@ mockturtle-aig-judge = "circt_synth_tracker.utils.aig_judge:main"
 abc-aig-judge = "circt_synth_tracker.tools.abc:main"
 submit-results = "circt_synth_tracker.utils.submit:main"
 build-judge = "circt_synth_tracker.utils.judge.build_judge:main"
+prepare = "circt_synth_tracker.utils.judge.build_judge:main"
 
 # Analysis tools
 aggregate-results = "circt_synth_tracker.analysis.aggregate_results:main"
