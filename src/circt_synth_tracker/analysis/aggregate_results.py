@@ -77,9 +77,11 @@ def main():
                 if "category" in data:
                     metrics["category"] = data["category"]
 
-                # Preserve test_file if available
+                # Preserve test_file and url if available
                 if "test_file" in data and data["test_file"]:
                     metrics["test_file"] = data["test_file"]
+                if "url" in data and data["url"]:
+                    metrics["url"] = data["url"]
 
                 results[benchmark_name] = metrics
 

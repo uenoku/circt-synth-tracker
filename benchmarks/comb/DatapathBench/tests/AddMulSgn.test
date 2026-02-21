@@ -1,3 +1,3 @@
 RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/AddMulSgn/sv/AddMulSgn.sv --bw %BW -top AddMulSgn -o %t.aig
 RUN: %AIG_TOOL %t.aig -o %t.opt.aig
-RUN: %judge %t.opt.aig | %submit %s --name AddMulSgn
+RUN: %judge %t.opt.aig | %submit %s --name AddMulSgn --source-file %S/../DatapathBench/benchmarks/AddMulSgn/sv/AddMulSgn.sv

@@ -1,3 +1,3 @@
 RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/Fma/sv/Fma.sv --bw %BW -top Fma -o %t.aig
 RUN: %AIG_TOOL %t.aig -o %t.opt.aig
-RUN: %judge %t.opt.aig | %submit %s --name Fma
+RUN: %judge %t.opt.aig | %submit %s --name Fma --source-file %S/../DatapathBench/benchmarks/Fma/sv/Fma.sv

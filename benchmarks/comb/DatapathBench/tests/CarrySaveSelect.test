@@ -1,3 +1,3 @@
 RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/CarrySaveSelect/sv/CarrySaveSelect.sv --bw %BW -top CarrySaveSelect -o %t.aig
 RUN: %AIG_TOOL %t.aig -o %t.opt.aig
-RUN: %judge %t.opt.aig | %submit %s --name CarrySaveSelect
+RUN: %judge %t.opt.aig | %submit %s --name CarrySaveSelect --source-file %S/../DatapathBench/benchmarks/CarrySaveSelect/sv/CarrySaveSelect.sv

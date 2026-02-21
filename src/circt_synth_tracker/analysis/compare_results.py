@@ -203,9 +203,11 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
             cd = summaries[compare_tool]["benchmarks"].get(bname, {})
             if not bd or not cd:
                 continue
-            test_file = bd.get("test_file") or cd.get("test_file")
-            url = _test_file_url(repo_url, test_file)
-            row = {"name": bname, "category": category, "url": url}
+            source_url = bd.get("url") or cd.get("url")
+            if not source_url and repo_url:
+                test_file = bd.get("test_file") or cd.get("test_file")
+                source_url = _test_file_url(repo_url, test_file)
+            row = {"name": bname, "category": category, "url": source_url}
             for mk, _ in table_metrics:
                 bv, cv = bd.get(mk), cd.get(mk)
                 row[mk] = round((cv - bv) / bv * 100, 2) if bv and cv and bv > 0 else None
@@ -888,16 +890,24 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                 continue
 
             html += "                <tr>\n"
-            # Build optional link to original test file
-            test_file = None
+            # Build optional link to original benchmark source
+            source_url = None
             for tool_name in tool_names:
                 bdata = summaries[tool_name].get("benchmarks", {}).get(benchmark_name, {})
-                if bdata.get("test_file"):
-                    test_file = bdata["test_file"]
+                if bdata.get("url"):
+                    source_url = bdata["url"]
                     break
-            url = _test_file_url(repo_url, test_file)
-            if url:
-                bname_cell = f"<a href='{escape(url)}' target='_blank'>{escape(benchmark_name)}</a>"
+            if not source_url and repo_url:
+                # Fallback: derive URL from test_file path
+                test_file = None
+                for tool_name in tool_names:
+                    bdata = summaries[tool_name].get("benchmarks", {}).get(benchmark_name, {})
+                    if bdata.get("test_file"):
+                        test_file = bdata["test_file"]
+                        break
+                source_url = _test_file_url(repo_url, test_file)
+            if source_url:
+                bname_cell = f"<a href='{escape(source_url)}' target='_blank'>{escape(benchmark_name)}</a>"
             else:
                 bname_cell = escape(benchmark_name)
             html += f"                    <td class='benchmark-name'>{bname_cell}</td>\n"
