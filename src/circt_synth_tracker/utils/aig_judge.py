@@ -48,7 +48,7 @@ def main():
     binary = find_binary()
     if not binary:
         print(
-            "Error: aig-judge binary not found. Please run 'uv run build-judge' first.",
+            "Error: aig-judge binary not found. Please run 'uv run prepare' (or 'uv run build-judge') first.",
             file=sys.stderr,
         )
         return 1

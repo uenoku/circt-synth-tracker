@@ -17,4 +17,4 @@ runs:
 
     - name: Build aig-judge
       shell: bash
-      run: uv run build-judge
+      run: uv run prepare
