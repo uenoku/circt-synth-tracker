@@ -36,7 +36,8 @@ RUN: circt-verilog %ELAU_SRC/arith_utils.sv  %ELAU_SRC/{file_name}.sv  --libdir 
 RUN: circt-opt -export-verilog %t.sv.mlir -o /dev/null > %t.sv
 // Note: BW is not passed here since the generated verilog already has the parameter instantiated
 RUN: %SYNTH_TOOL %t.sv -top {top_module} -o %t.aig
-RUN: %judge %t.aig | %submit %s --name {top_module}
+RUN: %AIG_TOOL %t.aig -o %t.opt.aig
+RUN: %judge %t.opt.aig | %submit %s --name {top_module}
         """
 
         # Write to tests/{file_name}.test

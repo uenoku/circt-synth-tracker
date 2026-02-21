@@ -1,0 +1,156 @@
+name: Experiment
+
+on:
+  workflow_dispatch:
+    inputs:
+      # Configuration A
+      synth_tool_a:
+        description: 'Synth tool for config A'
+        required: false
+        default: 'circt'
+        type: choice
+        options: [circt, yosys]
+      abc_commands_a:
+        description: 'ABC commands for config A via %AIG_TOOL (e.g. "dc2; dc2;")'
+        required: false
+        default: ''
+      circt_synth_extra_args_a:
+        description: 'Extra circt-synth args for config A (e.g. "--pass-pipeline=...")'
+        required: false
+        default: ''
+
+      # Configuration B
+      synth_tool_b:
+        description: 'Synth tool for config B'
+        required: false
+        default: 'circt'
+        type: choice
+        options: [circt, yosys]
+      abc_commands_b:
+        description: 'ABC commands for config B via %AIG_TOOL (e.g. "dc2; dc2; dc2;")'
+        required: false
+        default: ''
+      circt_synth_extra_args_b:
+        description: 'Extra circt-synth args for config B'
+        required: false
+        default: ''
+
+      # Shared settings
+      bitwidths:
+        description: 'Comma-separated list of bitwidths to test'
+        required: false
+        default: '16,48'
+
+permissions:
+  contents: read
+
+jobs:
+  experiment:
+    name: "A=${{ inputs.synth_tool_a }} vs B=${{ inputs.synth_tool_b }}"
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/circt/images/circt-integration-test:v20
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install jq
+        run: apt-get update && apt-get install -y jq
+
+      - name: Install CIRCT nightly
+        uses: circt/install-circt@3f8dda6e1c1965537b5801a43c81c287bac4eae4 # v1.1.1
+        with:
+          version: 'nightly'
+          github-token: ${{ github.token }}
+
+      - name: Add CIRCT to PATH
+        run: echo "$GITHUB_WORKSPACE/circt/bin" >> $GITHUB_PATH
+
+      - name: Get tool versions
+        run: |
+          CIRCT_VERSION=$(circt-synth --version | tail -1 | xargs)
+          YOSYS_VERSION=$(yosys --version | head -1 | xargs)
+          echo "CIRCT_VERSION=$CIRCT_VERSION" >> $GITHUB_ENV
+          echo "YOSYS_VERSION=$YOSYS_VERSION" >> $GITHUB_ENV
+          echo "CIRCT: $CIRCT_VERSION"
+          echo "Yosys: $YOSYS_VERSION"
+
+      - name: Setup tracker
+        uses: ./.github/actions/setup-tracker
+
+      - name: Run config A
+        uses: ./.github/actions/run-benchmark
+        with:
+          synth_tool: ${{ inputs.synth_tool_a }}
+          bitwidths: ${{ inputs.bitwidths }}
+          abc_commands: ${{ inputs.abc_commands_a }}
+          circt_synth_extra_args: ${{ inputs.circt_synth_extra_args_a }}
+          output_dir: build_a
+          tool_label: a
+          tool_version: ${{ env.CIRCT_VERSION }}
+          summary_file: summary_a.json
+
+      - name: Run config B
+        uses: ./.github/actions/run-benchmark
+        with:
+          synth_tool: ${{ inputs.synth_tool_b }}
+          bitwidths: ${{ inputs.bitwidths }}
+          abc_commands: ${{ inputs.abc_commands_b }}
+          circt_synth_extra_args: ${{ inputs.circt_synth_extra_args_b }}
+          output_dir: build_b
+          tool_label: b
+          tool_version: ${{ env.CIRCT_VERSION }}
+          summary_file: summary_b.json
+
+      - name: Compare A vs B
+        run: |
+          source .venv/bin/activate
+          compare-results summary_a.json summary_b.json -o report.html
+          compare-results summary_a.json summary_b.json -o report.md
+          compare-results summary_a.json summary_b.json -o report.json --format json
+
+      - name: Post summary
+        if: always()
+        run: |
+          {
+            echo "## Experiment Results"
+            echo ""
+            echo "| | Config A | Config B |"
+            echo "|---|---|---|"
+            echo "| Synth tool | \`${{ inputs.synth_tool_a }}\` | \`${{ inputs.synth_tool_b }}\` |"
+            echo "| ABC commands | \`${{ inputs.abc_commands_a || '(none)' }}\` | \`${{ inputs.abc_commands_b || '(none)' }}\` |"
+            echo "| Extra args | \`${{ inputs.circt_synth_extra_args_a || '(none)' }}\` | \`${{ inputs.circt_synth_extra_args_b || '(none)' }}\` |"
+            echo "| CIRCT version | \`${CIRCT_VERSION}\` | \`${CIRCT_VERSION}\` |"
+            echo ""
+            if [ -f report.md ]; then
+              cat report.md
+            fi
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: experiment-results
+          retention-days: 30
+          path: |
+            report.html
+            report.md
+            report.json
+            summary_a.json
+            summary_b.json
+
+      - name: Upload test outputs on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: experiment-test-outputs
+          path: |
+            build_a/
+            build_b/

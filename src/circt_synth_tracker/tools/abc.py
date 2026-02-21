@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from typing import Optional
 import json
 
+from circt_synth_tracker.tools import find_abc
+
 
 def run_command(cmd, description, shell=False):
     """Run a command and handle errors."""
@@ -66,10 +68,10 @@ def to_json_string(r: BenchmarkResult) -> str:
         "delay_sky130": r.delay_sky,
         "success": r.success,
     }
-    
+
     if not r.success:
         data["error"] = r.error_message
-    
+
     return json.dumps(data, indent=2)
 
 def main():
@@ -78,11 +80,16 @@ def main():
         epilog="This tool provides an ABC wrapper compatible with aig-judge",
     )
     parser.add_argument("input", help="Input AIGER file")
-    parser.add_argument("--abc", default="abc", help="Path to abc")
+    parser.add_argument(
+        "--abc",
+        default=None,
+        help="Path to abc executable (default: auto-detect 'abc' or 'yosys-abc')",
+    )
 
     args = parser.parse_args()
 
     input_file = Path(args.input)
+    abc_exe = find_abc(args.abc)
 
     if not input_file.exists():
         print(f"Error: Input file not found: {input_file}", file=sys.stderr)
@@ -96,7 +103,7 @@ def main():
     sky130_path = project_root / "judge-build" / "_deps" / "mockturtle-src" / "experiments" / "cell_libraries" / "sky130.genlib"
 
     assert asap7_path.exists(), f'Need to build aig-judge first. Unable to find ASAP7 library: {asap7_path}'
-    result = run_command(["abc", "-c",  f'read_genlib {asap7_path}; read {input_file}; strash; map; print_stats;'], "ABC Tech Mapping ASAP7")
+    result = run_command([abc_exe, "-c",  f'read_genlib {asap7_path}; read {input_file}; strash; map; print_stats;'], "ABC Tech Mapping ASAP7")
     # Extract I/O counts from the output line: "i/o =   64/   32"
     io_match = re.search(r'i/o\s+=\s*(\d+)/\s*(\d+)', result.stdout)
     num_inputs = int(io_match.group(1)) if io_match else 0
@@ -108,7 +115,7 @@ def main():
 
     # Run ABC - sky130
     assert sky130_path.exists(), f'Need to build aig-judge first. Unable to find Sky130 library: {sky130_path}'
-    result = run_command(["abc", "-c",  f'read_genlib {sky130_path}; read {input_file}; strash; map; print_stats;'], "ABC Tech Mapping")
+    result = run_command([abc_exe, "-c",  f'read_genlib {sky130_path}; read {input_file}; strash; map; print_stats;'], "ABC Tech Mapping")
     area_sky = grep_stat(result.stdout, r'area\s+=\s*([0-9.]+)')
     delay_sky = grep_stat(result.stdout, r'delay\s+=\s*([0-9.]+)')
 

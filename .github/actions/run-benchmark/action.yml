@@ -1,0 +1,61 @@
+name: Run Benchmark
+description: Run lit benchmarks for one configuration and aggregate results
+
+inputs:
+  synth_tool:
+    description: 'Synthesis tool to use (circt or yosys)'
+    required: true
+  bitwidths:
+    description: 'Comma-separated list of bitwidths'
+    required: false
+    default: '16,48'
+  abc_commands:
+    description: 'ABC commands to pass as ABC_COMMANDS lit param'
+    required: false
+    default: ''
+  circt_synth_extra_args:
+    description: 'Extra circt-synth args to pass as CIRCT_SYNTH_EXTRA_ARGS lit param'
+    required: false
+    default: ''
+  output_dir:
+    description: 'Lit TEST_OUTPUT_DIR'
+    required: true
+  tool_label:
+    description: 'Label passed to aggregate-results --tool'
+    required: true
+  tool_version:
+    description: 'Version string passed to aggregate-results --version'
+    required: true
+  summary_file:
+    description: 'Output JSON summary file path'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run lit benchmarks
+      shell: bash
+      run: |
+        source .venv/bin/activate
+        ABC_PARAM=""
+        [ -n "${{ inputs.abc_commands }}" ] && ABC_PARAM="-DABC_COMMANDS=\"${{ inputs.abc_commands }}\""
+        EXTRA_PARAM=""
+        [ -n "${{ inputs.circt_synth_extra_args }}" ] && EXTRA_PARAM="-DCIRCT_SYNTH_EXTRA_ARGS=\"${{ inputs.circt_synth_extra_args }}\""
+        IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
+        for BW in "${BWS[@]}"; do
+          eval lit -v benchmarks/ \
+            -DSYNTH_TOOL=${{ inputs.synth_tool }} \
+            -DTEST_OUTPUT_DIR=${{ inputs.output_dir }} \
+            -DBW=$BW \
+            $ABC_PARAM $EXTRA_PARAM || true
+        done
+
+    - name: Aggregate results
+      shell: bash
+      run: |
+        source .venv/bin/activate
+        aggregate-results \
+          --tool "${{ inputs.tool_label }}" \
+          --version "${{ inputs.tool_version }}" \
+          --results-dir ${{ inputs.output_dir }} \
+          -o ${{ inputs.summary_file }}

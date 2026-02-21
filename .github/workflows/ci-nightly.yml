@@ -10,6 +10,10 @@ on:
         description: 'Comma-separated list of bitwidths to test (e.g. "16,32")'
         required: false
         default: '16,48'
+      abc_commands:
+        description: 'ABC commands to run on AIG after synthesis via %AIG_TOOL (e.g. "dc2; dc2;")'
+        required: false
+        default: ''
   pull_request:
     branches:
       - main
@@ -61,11 +65,6 @@ jobs:
           echo "CIRCT Version: $CIRCT_VERSION"
           echo "Yosys Version: $YOSYS_VERSION"
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
       - name: Verify environment
         run: |
           which yosys
@@ -75,39 +74,30 @@ jobs:
           yosys --version
           circt-synth --version
 
-      - name: Install Python dependencies
-        run: |
-          uv sync
-
-      - name: Build aig-judge
-        run: |
-          uv run build-judge
+      - name: Setup tracker
+        uses: ./.github/actions/setup-tracker
 
       - name: Run CIRCT tests
-        run: |
-          source .venv/bin/activate
-          IFS=',' read -ra BWS <<< "${{ github.event.inputs.bitwidths || '16,48' }}"
-          for BW in "${BWS[@]}"; do
-            lit -v benchmarks/ -DSYNTH_TOOL=circt -DTEST_OUTPUT_DIR=build_circt -DBW=$BW || true
-          done
+        uses: ./.github/actions/run-benchmark
+        with:
+          synth_tool: circt
+          bitwidths: ${{ github.event.inputs.bitwidths || '16,48' }}
+          abc_commands: ${{ github.event.inputs.abc_commands }}
+          output_dir: build_circt
+          tool_label: circt
+          tool_version: ${{ env.CIRCT_VERSION }}
+          summary_file: circt-summary.json
 
       - name: Run Yosys tests
-        run: |
-          source .venv/bin/activate
-          IFS=',' read -ra BWS <<< "${{ github.event.inputs.bitwidths || '16,48' }}"
-          for BW in "${BWS[@]}"; do
-            lit -v benchmarks/ -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys -DBW=$BW || true
-          done
-
-      - name: Aggregate CIRCT results
-        run: |
-          source .venv/bin/activate
-          aggregate-results --tool circt --version "$CIRCT_VERSION" --results-dir build_circt -o circt-summary.json
-
-      - name: Aggregate Yosys results
-        run: |
-          source .venv/bin/activate
-          aggregate-results --tool yosys --version "$YOSYS_VERSION" --results-dir build_yosys -o yosys-summary.json
+        uses: ./.github/actions/run-benchmark
+        with:
+          synth_tool: yosys
+          bitwidths: ${{ github.event.inputs.bitwidths || '16,48' }}
+          abc_commands: ${{ github.event.inputs.abc_commands }}
+          output_dir: build_yosys
+          tool_label: yosys
+          tool_version: ${{ env.YOSYS_VERSION }}
+          summary_file: yosys-summary.json
 
       - name: Compare results
         run: |

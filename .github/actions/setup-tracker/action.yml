@@ -1,0 +1,20 @@
+name: Setup Tracker
+description: Install uv, Python dependencies, and build aig-judge
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      shell: bash
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install Python dependencies
+      shell: bash
+      run: uv sync
+
+    - name: Build aig-judge
+      shell: bash
+      run: uv run build-judge

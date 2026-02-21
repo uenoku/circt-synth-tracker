@@ -1,2 +1,3 @@
 RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/AddThreeSgn/sv/AddThreeSgn.sv --bw %BW -top AddThreeSgn -o %t.aig
-RUN: %judge %t.aig | %submit %s --name AddThreeSgn
+RUN: %AIG_TOOL %t.aig -o %t.opt.aig
+RUN: %judge %t.opt.aig | %submit %s --name AddThreeSgn
