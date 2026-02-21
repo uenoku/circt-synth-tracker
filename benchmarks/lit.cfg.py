@@ -44,16 +44,23 @@ circt_synth = registry.get_tool('circt-synth').get_command()
 circt_verilog = registry.get_tool('circt-verilog').get_command()
 circt_translate = registry.get_tool('circt-translate').get_command()
 yosys = registry.get_tool('yosys').get_command()
+abc = registry.get_tool('abc').get_command()
 filecheck = registry.get_tool('FileCheck').get_command()
 
 # Build tool wrapper commands
 circt_synth_extra_args = lit_config.params.get('CIRCT_SYNTH_EXTRA_ARGS', '')
+abc_commands = lit_config.params.get('ABC_COMMANDS', '')
 
 circt_synth_wrapper = f'run-circt-synth --circt-synth {circt_synth} --circt-verilog {circt_verilog} --circt-translate {circt_translate}'
 if circt_synth_extra_args:
     circt_synth_wrapper += f' --circt-synth-extra-args=\"{circt_synth_extra_args}\"'
 
 yosys_wrapper = f'run-yosys --yosys {yosys}'
+
+# AIG optimization layer (between synthesis and judging)
+aig_tool_cmd = f'run-abc-opt --abc {abc}'
+if abc_commands:
+    aig_tool_cmd += f' --abc-commands=\"{abc_commands}\"'
 
 # Tool selection (configurable via --param SYNTH_TOOL=<tool>, default: circt)
 tool_name = lit_config.params.get('SYNTH_TOOL', 'circt')
@@ -69,9 +76,9 @@ else:  # default to circt
 tech_map = lit_config.params.get('TECH_MAP', 'mockturtle')
 config.environment['TECH_MAP'] = tech_map
 if tech_map == 'abc':
-    tech_map_command = f'run-abc'
+    tech_map_command = f'abc-aig-judge'
 else:
-    tech_map_command = 'aig-judge'
+    tech_map_command = 'mockturtle-aig-judge'
 
 # Bitwidth parameter (configurable via --param BW=<width>, default: 16)
 bw = lit_config.params.get('BW', '16')
@@ -84,6 +91,7 @@ if results_dir:
 
 # Add substitutions (order matters - more specific patterns first)
 config.substitutions.append(('%SYNTH_TOOL', tool_cmd))
+config.substitutions.append(('%AIG_TOOL', aig_tool_cmd))
 config.substitutions.append(('%FileCheck', filecheck))
 config.substitutions.append(('%judge', tech_map_command))
 config.substitutions.append(('%submit', submit_cmd))

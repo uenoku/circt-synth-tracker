@@ -4,4 +4,5 @@ RUN: circt-verilog %ELAU_SRC/arith_utils.sv  %ELAU_SRC/AddMop.sv  --libdir %ELAU
 RUN: circt-opt -export-verilog %t.sv.mlir -o /dev/null > %t.sv
 // Note: BW is not passed here since the generated verilog already has the parameter instantiated
 RUN: %SYNTH_TOOL %t.sv -top behavioural_AddMop -o %t.aig
-RUN: %judge %t.aig | %submit %s --name behavioural_AddMop
+RUN: %AIG_TOOL %t.aig -o %t.opt.aig
+RUN: %judge %t.opt.aig | %submit %s --name behavioural_AddMop

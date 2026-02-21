@@ -10,10 +10,11 @@ dependencies = ["lit>=18.0.0", "tabulate>=0.9.0"]
 # Synthesis tool wrappers
 run-circt-synth = "circt_synth_tracker.tools.circt_synth:main"
 run-yosys = "circt_synth_tracker.tools.yosys:main"
-run-abc = "circt_synth_tracker.tools.abc:main"
+run-abc-opt = "circt_synth_tracker.tools.abc_opt:main"
 
 # Utility tools
-aig-judge = "circt_synth_tracker.utils.aig_judge:main"
+mockturtle-aig-judge = "circt_synth_tracker.utils.aig_judge:main"
+abc-aig-judge = "circt_synth_tracker.tools.abc:main"
 submit-results = "circt_synth_tracker.utils.submit:main"
 build-judge = "circt_synth_tracker.utils.judge.build_judge:main"
 

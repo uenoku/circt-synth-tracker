@@ -67,7 +67,6 @@ def main():
         default="",
         help="Additional synthesis options for circt-synth",
     )
-
     args, extra_args = parser.parse_known_args()
 
     input_file = Path(args.input)
@@ -140,7 +139,6 @@ def main():
         print("Step 3: Exporting to AIG...", file=sys.stderr)
         run_command(translate_cmd, "AIG export")
 
-        print(f"  Generated AIG: {output_file}", file=sys.stderr)
         print(f"Success! Generated {output_file}", file=sys.stderr)
 
     finally:
