@@ -40,6 +40,11 @@ def main():
         "--timeseries-url", default=None,
         help="URL/path to timeseries report; adds a History nav link to the HTML report"
     )
+    parser.add_argument(
+        "--repo-url", default=None,
+        help="Base GitHub URL for the repo (e.g. https://github.com/org/repo/blob/main); "
+             "used to generate links to original test files in the HTML report"
+    )
 
     args = parser.parse_args()
 
@@ -83,7 +88,7 @@ def main():
         )
     else:
         # Compare all benchmarks
-        compare_all(summaries, args.format, args.export, args.timeseries_url)
+        compare_all(summaries, args.format, args.export, args.timeseries_url, args.repo_url)
 
     return 0
 
@@ -133,7 +138,7 @@ def compare_benchmark(
         display_comparison(comparison, benchmark_name, format_type, metric_filter)
 
 
-def compare_all(summaries, format_type, export_path=None, timeseries_url=None):
+def compare_all(summaries, format_type, export_path=None, timeseries_url=None, repo_url=None):
     """Compare all benchmarks across all tools."""
 
     # Collect all unique benchmark names
@@ -149,7 +154,7 @@ def compare_all(summaries, format_type, export_path=None, timeseries_url=None):
 
     # If HTML export requested, generate full report
     if export_path and format_type == "html":
-        generate_html_report(summaries, all_benchmarks, export_path, timeseries_url)
+        generate_html_report(summaries, all_benchmarks, export_path, timeseries_url, repo_url)
         return
 
     # If JSON export requested, generate combined JSON
@@ -175,7 +180,7 @@ def compare_all(summaries, format_type, export_path=None, timeseries_url=None):
             display_comparison(comparison, benchmark_name, format_type)
 
 
-def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category, tool_names):
+def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category, tool_names, repo_url=None):
     """Return HTML for a per-benchmark ranking table sorted by % difference."""
     import json as _json
 
@@ -198,7 +203,9 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
             cd = summaries[compare_tool]["benchmarks"].get(bname, {})
             if not bd or not cd:
                 continue
-            row = {"name": bname, "category": category}
+            test_file = bd.get("test_file") or cd.get("test_file")
+            url = _test_file_url(repo_url, test_file)
+            row = {"name": bname, "category": category, "url": url}
             for mk, _ in table_metrics:
                 bv, cv = bd.get(mk), cd.get(mk)
                 row[mk] = round((cv - bv) / bv * 100, 2) if bv and cv and bv > 0 else None
@@ -288,7 +295,10 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
                 h += '</tr></thead><tbody>';
 
                 sorted.forEach(function(row, i) {{
-                    h += `<tr><td>${{i + 1}}</td><td>${{row.name}}</td><td>${{row.category}}</td>`;
+                    const nameCell = row.url
+                        ? `<a href="${{row.url}}" target="_blank">${{row.name}}</a>`
+                        : row.name;
+                    h += `<tr><td>${{i + 1}}</td><td>${{nameCell}}</td><td>${{row.category}}</td>`;
                     METRICS.forEach(function(m) {{
                         const v = row[m.key];
                         const bg = cellBg(v);
@@ -514,7 +524,22 @@ def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, too
 """
 
 
-def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=None):
+def _test_file_url(repo_url, test_file):
+    """Convert an absolute test_file path to a GitHub URL using repo_url as base."""
+    if not repo_url or not test_file:
+        return None
+    # Try to find a 'benchmarks/' segment to make a relative path
+    from pathlib import Path
+    p = Path(test_file)
+    parts = p.parts
+    for i, part in enumerate(parts):
+        if part == "benchmarks":
+            rel = "/".join(parts[i:])
+            return repo_url.rstrip("/") + "/" + rel
+    return None
+
+
+def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=None, repo_url=None):
     """Generate a comprehensive HTML report comparing all benchmarks."""
 
     tool_names = list(summaries.keys())
@@ -808,7 +833,7 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
             summaries, sorted_categories, benchmarks_by_category, tool_names
         )
         html += _outlier_table_section(
-            summaries, sorted_categories, benchmarks_by_category, tool_names
+            summaries, sorted_categories, benchmarks_by_category, tool_names, repo_url
         )
 
     # Generate comparison table
@@ -863,7 +888,19 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                 continue
 
             html += "                <tr>\n"
-            html += f"                    <td class='benchmark-name'>{benchmark_name}</td>\n"
+            # Build optional link to original test file
+            test_file = None
+            for tool_name in tool_names:
+                bdata = summaries[tool_name].get("benchmarks", {}).get(benchmark_name, {})
+                if bdata.get("test_file"):
+                    test_file = bdata["test_file"]
+                    break
+            url = _test_file_url(repo_url, test_file)
+            if url:
+                bname_cell = f"<a href='{escape(url)}' target='_blank'>{escape(benchmark_name)}</a>"
+            else:
+                bname_cell = escape(benchmark_name)
+            html += f"                    <td class='benchmark-name'>{bname_cell}</td>\n"
 
             # Get baseline (first tool)
             baseline_tool = tool_names[0]
