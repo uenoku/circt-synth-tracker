@@ -84,6 +84,20 @@ jobs:
       - name: Setup tracker
         uses: ./.github/actions/setup-tracker
 
+      - name: Compute tool labels and versions
+        run: |
+          LABEL_A="${{ inputs.synth_tool_a }}"
+          [ -n "${{ inputs.abc_commands_a }}" ] && LABEL_A="$LABEL_A [abc: ${{ inputs.abc_commands_a }}]"
+          [ -n "${{ inputs.circt_synth_extra_args_a }}" ] && LABEL_A="$LABEL_A [args: ${{ inputs.circt_synth_extra_args_a }}]"
+          echo "LABEL_A=$LABEL_A" >> $GITHUB_ENV
+          [ "${{ inputs.synth_tool_a }}" = "yosys" ] && echo "VERSION_A=${YOSYS_VERSION}" >> $GITHUB_ENV || echo "VERSION_A=${CIRCT_VERSION}" >> $GITHUB_ENV
+
+          LABEL_B="${{ inputs.synth_tool_b }}"
+          [ -n "${{ inputs.abc_commands_b }}" ] && LABEL_B="$LABEL_B [abc: ${{ inputs.abc_commands_b }}]"
+          [ -n "${{ inputs.circt_synth_extra_args_b }}" ] && LABEL_B="$LABEL_B [args: ${{ inputs.circt_synth_extra_args_b }}]"
+          echo "LABEL_B=$LABEL_B" >> $GITHUB_ENV
+          [ "${{ inputs.synth_tool_b }}" = "yosys" ] && echo "VERSION_B=${YOSYS_VERSION}" >> $GITHUB_ENV || echo "VERSION_B=${CIRCT_VERSION}" >> $GITHUB_ENV
+
       - name: Run config A
         uses: ./.github/actions/run-benchmark
         with:
@@ -92,8 +106,8 @@ jobs:
           abc_commands: ${{ inputs.abc_commands_a }}
           circt_synth_extra_args: ${{ inputs.circt_synth_extra_args_a }}
           output_dir: build_a
-          tool_label: a
-          tool_version: ${{ env.CIRCT_VERSION }}
+          tool_label: ${{ env.LABEL_A }}
+          tool_version: ${{ env.VERSION_A }}
           summary_file: summary_a.json
 
       - name: Run config B
@@ -104,8 +118,8 @@ jobs:
           abc_commands: ${{ inputs.abc_commands_b }}
           circt_synth_extra_args: ${{ inputs.circt_synth_extra_args_b }}
           output_dir: build_b
-          tool_label: b
-          tool_version: ${{ env.CIRCT_VERSION }}
+          tool_label: ${{ env.LABEL_B }}
+          tool_version: ${{ env.VERSION_B }}
           summary_file: summary_b.json
 
       - name: Compare A vs B
