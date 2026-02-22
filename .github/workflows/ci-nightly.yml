@@ -18,7 +18,7 @@ on:
         description: 'Run equivalence check (--equiv-check) during CIRCT synthesis (always enabled for scheduled runs)'
         required: false
         type: boolean
-        default: false
+        default: true
   pull_request:
     branches:
       - main
