@@ -40,6 +40,11 @@ on:
         description: 'Comma-separated list of bitwidths to test'
         required: false
         default: '16,48'
+      equiv_check:
+        description: 'Run equivalence check (--equiv-check) on compare-results'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -125,8 +130,10 @@ jobs:
       - name: Compare A vs B
         run: |
           source .venv/bin/activate
-          compare-results summary_a.json summary_b.json -o report.html
-          compare-results summary_a.json summary_b.json -o report.md
+          EQUIV_FLAG=""
+          [ "${{ inputs.equiv_check }}" = "true" ] && EQUIV_FLAG="--equiv-check"
+          compare-results summary_a.json summary_b.json -o report.html $EQUIV_FLAG
+          compare-results summary_a.json summary_b.json -o report.md $EQUIV_FLAG
           compare-results summary_a.json summary_b.json -o report.json --format json
 
       - name: Post summary

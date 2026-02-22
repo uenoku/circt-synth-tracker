@@ -77,6 +77,28 @@ def main():
                 if "category" in data:
                     metrics["category"] = data["category"]
 
+                # Merge LEC sidecar if present (<aig>.lec next to AIG file).
+                # Also handle the case where ABC optimization added an intermediate
+                # suffix (e.g. foo.opt.aig -> sidecar is foo.aig.lec).
+                aig_path = metrics.get("filename")
+                if aig_path:
+                    p = Path(aig_path)
+                    candidates = [Path(aig_path + ".lec")]
+                    # Strip one intermediate extension: foo.opt.aig -> foo.aig.lec
+                    inner = p.stem  # e.g. "foo.opt"
+                    if "." in inner:
+                        base = inner.rsplit(".", 1)[0]  # "foo"
+                        candidates.append(p.parent / (base + p.suffix + ".lec"))
+                    for lec_sidecar in candidates:
+                        if lec_sidecar.exists():
+                            try:
+                                import json as _json
+                                lec_data = _json.loads(lec_sidecar.read_text())
+                                metrics.update(lec_data)
+                            except Exception:
+                                pass
+                            break
+
                 results[benchmark_name] = metrics
 
                 if args.verbose:

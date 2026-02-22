@@ -19,6 +19,11 @@ on:
         description: 'Tracker issue number to post results to (optional)'
         required: false
         type: string
+      equiv_check:
+        description: 'Run equivalence check (--equiv-check) during CIRCT synthesis'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -214,8 +219,10 @@ jobs:
         run: |
           cd tracker
           source .venv/bin/activate
-          compare-results before-summary.json after-summary.json -o pr-report.html
-          compare-results before-summary.json after-summary.json -o pr-report.md
+          EQUIV_FLAG=""
+          [ "${{ inputs.equiv_check }}" = "true" ] && EQUIV_FLAG="--equiv-check"
+          compare-results before-summary.json after-summary.json -o pr-report.html $EQUIV_FLAG
+          compare-results before-summary.json after-summary.json -o pr-report.md $EQUIV_FLAG
           compare-results before-summary.json after-summary.json -o pr-report.json --format json
 
       - name: Post results to GitHub Actions summary

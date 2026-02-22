@@ -14,6 +14,11 @@ on:
         description: 'ABC commands to run on AIG after synthesis via %AIG_TOOL (e.g. "dc2; dc2;")'
         required: false
         default: ''
+      equiv_check:
+        description: 'Run equivalence check (--equiv-check) during CIRCT synthesis (always enabled for scheduled runs)'
+        required: false
+        type: boolean
+        default: true
   pull_request:
     branches:
       - main
@@ -77,6 +82,14 @@ jobs:
       - name: Setup tracker
         uses: ./.github/actions/setup-tracker
 
+      - name: Determine equiv-check flag
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ inputs.equiv_check }}" = "true" ]; then
+            echo "EQUIV_CHECK=true" >> $GITHUB_ENV
+          else
+            echo "EQUIV_CHECK=false" >> $GITHUB_ENV
+          fi
+
       - name: Run CIRCT tests
         uses: ./.github/actions/run-benchmark
         with:
@@ -99,12 +112,20 @@ jobs:
           tool_version: ${{ env.YOSYS_VERSION }}
           summary_file: yosys-summary.json
 
+      - name: Run equivalence check
+        if: env.EQUIV_CHECK == 'true'
+        run: |
+          source .venv/bin/activate
+          check-cec circt-summary.json yosys-summary.json -o cec.json -j $(nproc)
+
       - name: Compare results
         run: |
           source .venv/bin/activate
-          compare-results yosys-summary.json circt-summary.json -o report.html
-          compare-results yosys-summary.json circt-summary.json -o report.md
-          compare-results yosys-summary.json circt-summary.json -o report.json --format json
+          CEC_FLAG=""
+          [ -f cec.json ] && CEC_FLAG="--cec cec.json"
+          compare-results yosys-summary.json circt-summary.json -o report.html $CEC_FLAG
+          compare-results yosys-summary.json circt-summary.json -o report.md $CEC_FLAG
+          compare-results yosys-summary.json circt-summary.json -o report.json
 
       - name: Upload comparison reports
         uses: actions/upload-artifact@v4
@@ -115,6 +136,7 @@ jobs:
             report.html
             report.md
             report.json
+            cec.json
             circt-summary.json
             yosys-summary.json
 
