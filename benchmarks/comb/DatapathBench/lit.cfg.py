@@ -38,7 +38,8 @@ test_output_dir = getattr(config, 'test_output_dir', 'test-output')
 benchmarks_root = Path(__file__).parent.parent.parent  # Points to benchmarks/
 relative_path = Path(__file__).parent.relative_to(benchmarks_root)  # Gets comb/DatapathBench
 
-config.test_exec_root = os.path.join(benchmarks_root.parent, test_output_dir, str(relative_path))
+bw = lit_config.params.get('BW', '16')
+config.test_exec_root = os.path.join(benchmarks_root.parent, test_output_dir, str(relative_path), bw)
 
 # Ensure output directory exists
 os.makedirs(config.test_exec_root, exist_ok=True)
