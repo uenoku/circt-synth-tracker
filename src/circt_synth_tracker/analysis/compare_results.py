@@ -216,7 +216,7 @@ def compare_all(summaries, format_type, export_path=None, timeseries_url=None, e
 
     # If Markdown export requested, generate combined Markdown
     if export_path and format_type == "markdown":
-        generate_markdown_report(summaries, all_benchmarks, export_path)
+        generate_markdown_report(summaries, all_benchmarks, export_path, equiv_results)
         return
 
     # Compare each benchmark
@@ -1333,79 +1333,175 @@ def generate_json_report(summaries, all_benchmarks, output_path):
     print(f"JSON report generated: {output_path}")
 
 
-def generate_markdown_report(summaries, all_benchmarks, output_path):
-    """Generate a comprehensive Markdown report comparing all benchmarks."""
+def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_results=None):
+    """Generate a Markdown report with a summary geomean table and collapsible per-benchmark details."""
+    from tabulate import tabulate
 
     tool_names = list(summaries.keys())
 
-    markdown = f"""# Synthesis Benchmark Comparison Report
+    # Helper: geometric mean
+    def geo_mean(values):
+        valid = [v for v in values if v and v > 0]
+        if not valid:
+            return None
+        return math.exp(sum(math.log(v) for v in valid) / len(valid))
 
-**Tools Compared:** {", ".join(tool_names)}\\
-**Total Benchmarks:** {len(all_benchmarks)}\\
-**Generated:** {summaries[tool_names[0]].get("timestamp", "N/A")}
+    metrics_def = [
+        ("Gates",        "gates"),
+        ("Depth",        "depth"),
+        ("Area (ASAP7)", "area_asap7"),
+        ("Delay (ASAP7)","delay_asap7"),
+        ("Area (Sky130)","area_sky130"),
+        ("Delay (Sky130)","delay_sky130"),
+    ]
 
-"""
+    # Group benchmarks by category
+    benchmarks_by_category = {}
+    for bname in all_benchmarks:
+        cat = "Other"
+        for summary in summaries.values():
+            bd = summary.get("benchmarks", {}).get(bname)
+            if bd:
+                cat = bd.get("category", "Other")
+                break
+        benchmarks_by_category.setdefault(cat, []).append(bname)
+    sorted_categories = sorted(benchmarks_by_category.keys())
 
-    for benchmark_name in sorted(all_benchmarks):
-        comparison = {}
+    if len(tool_names) == 2:
+        baseline_tool, compare_tool = tool_names[0], tool_names[1]
 
-        for tool_name, summary in summaries.items():
-            benchmarks = summary.get("benchmarks", {})
-            if benchmark_name in benchmarks:
-                comparison[tool_name] = benchmarks[benchmark_name]
+        def fmt_geo(baseline_geo, compare_geo):
+            if baseline_geo is None:
+                return "N/A", "N/A"
+            b_str = f"{baseline_geo:.2f}"
+            if compare_geo is None:
+                return b_str, "N/A"
+            ratio_pct = (compare_geo / baseline_geo - 1) * 100
+            sign = "+" if ratio_pct > 0 else ""
+            c_str = f"{compare_geo:.2f} ({sign}{ratio_pct:.1f}%)"
+            return b_str, c_str
 
-        if len(comparison) < 2:
-            continue
+        # Build geomean summary table
+        geomean_headers = ["Category", "Metric", baseline_tool, compare_tool]
+        geomean_rows = []
 
-        markdown += f"## {benchmark_name}\n\n"
+        # Overall row
+        all_base = list(summaries[baseline_tool].get("benchmarks", {}).values())
+        all_cmp  = list(summaries[compare_tool].get("benchmarks", {}).values())
+        overall_label = f"**Overall** ({len(all_base)} benchmarks)"
+        for i, (mname, mkey) in enumerate(metrics_def):
+            bg = geo_mean([b.get(mkey) for b in all_base])
+            cg = geo_mean([b.get(mkey) for b in all_cmp])
+            b_str, c_str = fmt_geo(bg, cg)
+            cat_cell = overall_label if i == 0 else ""
+            geomean_rows.append([cat_cell, mname, b_str, c_str])
 
-        # Get baseline (first tool)
+        # Per-category rows
+        for category in sorted_categories:
+            base_bds = [summaries[baseline_tool]["benchmarks"][bn]
+                        for bn in benchmarks_by_category[category]
+                        if bn in summaries[baseline_tool].get("benchmarks", {})]
+            cmp_bds  = [summaries[compare_tool]["benchmarks"][bn]
+                        for bn in benchmarks_by_category[category]
+                        if bn in summaries[compare_tool].get("benchmarks", {})]
+            if not base_bds or not cmp_bds:
+                continue
+            for i, (mname, mkey) in enumerate(metrics_def):
+                bg = geo_mean([b.get(mkey) for b in base_bds])
+                cg = geo_mean([b.get(mkey) for b in cmp_bds])
+                b_str, c_str = fmt_geo(bg, cg)
+                cat_cell = category if i == 0 else ""
+                geomean_rows.append([cat_cell, mname, b_str, c_str])
+
+        geomean_table = tabulate(geomean_rows, headers=geomean_headers, tablefmt="github")
+    else:
         baseline_tool = tool_names[0]
-        baseline_result = comparison.get(baseline_tool, {})
-        baseline_gates = baseline_result.get("gates", 0)
-        baseline_depth = baseline_result.get("depth", 0)
-        baseline_area_asap7 = baseline_result.get("area_asap7", 0)
-        baseline_delay_asap7 = baseline_result.get("delay_asap7", 0)
-        baseline_area_sky130 = baseline_result.get("area_sky130", 0)
-        baseline_delay_sky130 = baseline_result.get("delay_sky130", 0)
-        baseline_runtime = baseline_result.get("runtime_ms", 0)
+        compare_tool = None
+        geomean_table = ""
 
-        headers = ["Tool", "Gates", "Depth", "Area (ASAP7)", "Delay (ASAP7)", "Area (Sky130)", "Delay (Sky130)", "Runtime"]
-        rows = []
+    # Header
+    tool_ver_parts = []
+    for t in tool_names:
+        ver = summaries[t].get("version", "unknown")
+        tool_ver_parts.append(f"{t} `{ver}`")
+    timestamp = summaries[tool_names[0]].get("timestamp", "N/A")
+    markdown = (
+        f"**Tools:** {', '.join(tool_ver_parts)} | "
+        f"**Benchmarks:** {len(all_benchmarks)} | "
+        f"**Generated:** {timestamp}\n\n"
+    )
 
-        for tool in sorted(comparison.keys()):
-            result = comparison[tool]
+    # Geomean summary
+    if geomean_table:
+        markdown += "### Summary (Geometric Mean)\n\n"
+        markdown += geomean_table + "\n\n"
 
-            # Helper to format value with percentage
-            def fmt(value, baseline):
+    # CEC summary
+    if equiv_results:
+        n_equiv   = sum(1 for s in equiv_results.values() if s == "equiv")
+        n_nequiv  = sum(1 for s in equiv_results.values() if s == "non-equiv")
+        n_timeout = sum(1 for s in equiv_results.values() if s == "timeout")
+        n_err     = sum(1 for s in equiv_results.values() if s == "error")
+        n_miss    = sum(1 for s in equiv_results.values() if s == "missing")
+        markdown += "### Equivalence Check (CEC)\n\n"
+        markdown += f"✔ Equivalent: {n_equiv} | ✘ Non-equiv: {n_nequiv} | ⏱ Timeout: {n_timeout} | ⚠ Error: {n_err} | — Skipped: {n_miss}\n\n"
+        failed = sorted(n for n, s in equiv_results.items() if s == "non-equiv")
+        if failed:
+            markdown += "**Non-equivalent benchmarks:** " + ", ".join(f"`{n}`" for n in failed) + "\n\n"
+
+    # Per-benchmark detail inside collapsible block
+    detail_lines = []
+    for category in sorted_categories:
+        detail_lines.append(f"\n#### {category}\n")
+        for bname in sorted(benchmarks_by_category[category]):
+            comparison = {}
+            for tname, summary in summaries.items():
+                bd = summary.get("benchmarks", {}).get(bname)
+                if bd:
+                    comparison[tname] = bd
+
+            if len(comparison) < 2:
+                continue
+
+            baseline_result = comparison.get(baseline_tool, {})
+
+            def fmt(value, baseline, tool):
                 if value is None or value == "N/A":
                     return "-"
                 if not baseline or tool == baseline_tool:
                     return str(value)
-                diff = value - baseline
-                diff_pct = (diff / baseline * 100) if baseline > 0 else 0
-                if diff > 0:
-                    return f"{value} (+{diff_pct:.1f}%)"
-                elif diff < 0:
-                    return f"**{value}** ({diff_pct:.1f}%)"
-                else:
-                    return str(value)
+                diff_pct = (value - baseline) / baseline * 100 if baseline > 0 else 0
+                sign = "+" if diff_pct > 0 else ""
+                return f"{value} ({sign}{diff_pct:.1f}%)"
 
-            row = [
-                tool,
-                fmt(result.get("gates"), baseline_gates),
-                fmt(result.get("depth"), baseline_depth),
-                fmt(result.get("area_asap7"), baseline_area_asap7),
-                fmt(result.get("delay_asap7"), baseline_delay_asap7),
-                fmt(result.get("area_sky130"), baseline_area_sky130),
-                fmt(result.get("delay_sky130"), baseline_delay_sky130),
-                fmt(result.get("runtime_ms"), baseline_runtime),
-            ]
-            rows.append(row)
+            headers = ["Tool", "Gates", "Depth", "Area (ASAP7)", "Delay (ASAP7)", "Area (Sky130)", "Delay (Sky130)", "Runtime"]
+            rows = []
+            for tool in tool_names:
+                result = comparison.get(tool, {})
+                rows.append([
+                    tool,
+                    fmt(result.get("gates"),        baseline_result.get("gates"),        tool),
+                    fmt(result.get("depth"),        baseline_result.get("depth"),        tool),
+                    fmt(result.get("area_asap7"),   baseline_result.get("area_asap7"),   tool),
+                    fmt(result.get("delay_asap7"),  baseline_result.get("delay_asap7"),  tool),
+                    fmt(result.get("area_sky130"),  baseline_result.get("area_sky130"),  tool),
+                    fmt(result.get("delay_sky130"), baseline_result.get("delay_sky130"), tool),
+                    fmt(result.get("runtime_ms"),   baseline_result.get("runtime_ms"),   tool),
+                ])
 
-        # Add table using tabulate
-        from tabulate import tabulate
-        markdown += tabulate(rows, headers=headers, tablefmt="github") + "\n\n"
+            cec_status = ""
+            if equiv_results and bname in equiv_results:
+                s = equiv_results[bname]
+                icon = {"equiv": "✔", "non-equiv": "✘", "timeout": "⏱", "error": "⚠", "missing": "—"}.get(s, s)
+                cec_status = f" (CEC: {icon})"
+
+            detail_lines.append(f"\n**{bname}**{cec_status}\n\n")
+            detail_lines.append(tabulate(rows, headers=headers, tablefmt="github") + "\n")
+
+    if detail_lines:
+        markdown += "<details>\n<summary>Per-benchmark details</summary>\n"
+        markdown += "".join(detail_lines)
+        markdown += "\n</details>\n"
 
     # Write Markdown file
     with open(output_path, "w") as f:

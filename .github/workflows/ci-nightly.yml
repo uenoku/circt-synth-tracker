@@ -90,6 +90,14 @@ jobs:
             echo "EQUIV_CHECK=false" >> $GITHUB_ENV
           fi
 
+      - name: Determine equiv-check flag
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.equiv_check }}" = "true" ]; then
+            echo "EQUIV_CHECK=true" >> $GITHUB_ENV
+          else
+            echo "EQUIV_CHECK=false" >> $GITHUB_ENV
+          fi
+
       - name: Run CIRCT tests
         uses: ./.github/actions/run-benchmark
         with:
