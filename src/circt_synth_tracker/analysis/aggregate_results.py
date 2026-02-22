@@ -99,6 +99,31 @@ def main():
                                 pass
                             break
 
+                # Merge TV (translation validation) sidecar if present (<aig>.tv).
+                if aig_path:
+                    tv_candidates = [Path(aig_path + ".tv")]
+                    inner = Path(aig_path).stem
+                    if "." in inner:
+                        base = inner.rsplit(".", 1)[0]
+                        tv_candidates.append(Path(aig_path).parent / (base + Path(aig_path).suffix + ".tv"))
+                    for tv_sidecar in tv_candidates:
+                        if tv_sidecar.exists():
+                            try:
+                                import json as _json
+                                tv_data = _json.loads(tv_sidecar.read_text())
+                                if "tv_status" in tv_data:
+                                    metrics["tv_status"] = tv_data["tv_status"]
+                                tv_results = tv_data.get("tv_results", [])
+                                if tv_results:
+                                    metrics["tv_total"] = len(tv_results)
+                                    metrics["tv_verified"] = sum(
+                                        1 for r in tv_results if r.get("status") == "equiv"
+                                    )
+                                    metrics["tv_results"] = tv_results
+                            except Exception:
+                                pass
+                            break
+
                 results[benchmark_name] = metrics
 
                 if args.verbose:

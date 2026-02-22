@@ -754,6 +754,33 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
             border-radius: 6px;
             padding: 16px;
         }
+        .tv-cell {
+            position: relative;
+            text-align: center;
+            cursor: default;
+        }
+        .tv-cell .tv-tip {
+            display: none;
+            position: absolute;
+            z-index: 100;
+            left: 50%;
+            top: 100%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            padding: 6px 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            pointer-events: none;
+            min-width: 200px;
+            text-align: left;
+        }
+        .tv-cell:hover .tv-tip {
+            display: block;
+        }
     </style>
     <script>
         function copyGeomeanAsMarkdown() {
@@ -877,18 +904,18 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                     <th>Benchmark</th>
 """
 
-    # Determine which tools have LEC data
-    tools_with_lec = [
+    # Determine which tools have TV (translation validation) data
+    tools_with_tv = [
         t for t in tool_names
         if any(
-            summaries[t].get("benchmarks", {}).get(b, {}).get("lec_status")
+            summaries[t].get("benchmarks", {}).get(b, {}).get("tv_status")
             for b in all_benchmarks
         )
     ]
 
     # Add headers for each tool
     for tool in tool_names:
-        colspan = 8 if tool in tools_with_lec else 7
+        colspan = 7 if tool in tools_with_tv else 6
         html += f"                    <th class='tool-column' colspan='{colspan}'>{escape(tool)}</th>\n"
     if equiv_results is not None:
         html += "                    <th>CEC</th>\n"
@@ -901,9 +928,9 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
 
     # Sub-headers for metrics
     for tool in tool_names:
-        html += "                    <th class='metric'>Gates</th><th class='metric'>Depth</th><th class='metric'>Area (ASAP7)</th><th class='metric'>Delay (ASAP7)</th><th class='metric'>Area (Sky130)</th><th class='metric'>Delay (Sky130)</th><th class='metric'>Runtime</th>\n"
-        if tool in tools_with_lec:
-            html += "                    <th class='metric'>SMT CEC</th>\n"
+        html += "                    <th class='metric'>Gates</th><th class='metric'>Depth</th><th class='metric'>Area (ASAP7)</th><th class='metric'>Delay (ASAP7)</th><th class='metric'>Area (Sky130)</th><th class='metric'>Delay (Sky130)</th>\n"
+        if tool in tools_with_tv:
+            html += "                    <th class='metric'>SMT TV (bitwuzla)</th>\n"
     if equiv_results is not None:
         html += "                    <th></th>\n"
 
@@ -916,7 +943,7 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
     # Add rows for each benchmark, grouped by category
     for category in sorted_categories:
         # Add category header row
-        num_columns = 1 + (len(tool_names) * 7) + len(tools_with_lec)
+        num_columns = 1 + (len(tool_names) * 6) + len(tools_with_tv)
         if equiv_results is not None:
             num_columns += 1
         html += "                <tr>\n"
@@ -947,8 +974,6 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
             baseline_delay_asap7 = baseline_result.get("delay_asap7", 0)
             baseline_area_sky130 = baseline_result.get("area_sky130", 0)
             baseline_delay_sky130 = baseline_result.get("delay_sky130", 0)
-            baseline_runtime = baseline_result.get("runtime_ms", 0)
-
             for tool in tool_names:
                 result = comparison.get(tool, {})
                 gates = result.get("gates", "N/A")
@@ -957,7 +982,6 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                 delay_asap7 = result.get("delay_asap7", "N/A")
                 area_sky130 = result.get("area_sky130", "N/A")
                 delay_sky130 = result.get("delay_sky130", "N/A")
-                runtime = result.get("runtime_ms", "N/A")
 
                 # Helper function to format metric with percentage and background color
                 def format_metric(value, baseline, lower_is_better=True):
@@ -1031,31 +1055,46 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                 delay_sky130_content, delay_sky130_style = format_metric(
                     delay_sky130, baseline_delay_sky130, lower_is_better=True
                 )
-                runtime_content, runtime_style = format_metric(
-                    runtime, baseline_runtime, lower_is_better=True
-                )
-
                 html += f"                    <td class='metric'{gates_style}>{gates_content}</td>\n"
                 html += f"                    <td class='metric'{depth_style}>{depth_content}</td>\n"
                 html += f"                    <td class='metric'{area_asap7_style}>{area_asap7_content}</td>\n"
                 html += f"                    <td class='metric'{delay_asap7_style}>{delay_asap7_content}</td>\n"
                 html += f"                    <td class='metric'{area_sky130_style}>{area_sky130_content}</td>\n"
                 html += f"                    <td class='metric'{delay_sky130_style}>{delay_sky130_content}</td>\n"
-                html += f"                    <td class='metric'{runtime_style}>{runtime_content}</td>\n"
 
-                if tool in tools_with_lec:
-                    lec_status = result.get("lec_status")
-                    if lec_status == "equiv":
-                        lec_cell = "<td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>"
-                    elif lec_status == "non-equiv":
-                        lec_cell = "<td style='text-align:center; background:rgb(255,200,200)'>✘ NON-EQUIV</td>"
-                    elif lec_status == "timeout":
-                        lec_cell = "<td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>"
-                    elif lec_status == "error":
-                        lec_cell = "<td style='text-align:center; background:rgb(255,235,180)'>TOOL ERROR</td>"
+                if tool in tools_with_tv:
+                    tv_status = result.get("tv_status")
+                    tv_verified = result.get("tv_verified")
+                    tv_total = result.get("tv_total")
+                    tv_results_list = result.get("tv_results", [])
+                    frac = f" {tv_verified}/{tv_total}" if tv_verified is not None and tv_total is not None else ""
+                    has_timeout = any(r.get("status") in ("timeout", "error") for r in tv_results_list)
+
+                    def _tv_tip_span(header, results):
+                        if not results:
+                            return f"<span class='tv-tip'>{escape(header)}</span>"
+                        icons = {"equiv": "✔", "non-equiv": "✘", "timeout": "⏱", "error": "⚠"}
+                        lines = header + "\n" + "\n".join(
+                            f"{icons.get(r['status'], '?')} {r['from']} → {r['to']}"
+                            for r in results
+                        )
+                        return f"<span class='tv-tip'>{escape(lines)}</span>"
+
+                    if tv_status == "pass" and not has_timeout:
+                        header = f"All {tv_total} transformations verified equiv"
+                        tv_cell = f"<td class='tv-cell' style='background:rgb(200,255,200)'>✔{frac}{_tv_tip_span(header, tv_results_list)}</td>"
+                    elif tv_status == "pass":  # pass but with timeouts
+                        header = f"Partially verified ({tv_verified}/{tv_total} equiv, rest timed out)"
+                        tv_cell = f"<td class='tv-cell' style='background:rgb(255,235,180)'>~{frac}{_tv_tip_span(header, tv_results_list)}</td>"
+                    elif tv_status == "fail":
+                        header = f"NON-EQUIV detected ({tv_verified}/{tv_total} equiv)"
+                        tv_cell = f"<td class='tv-cell' style='background:rgb(255,200,200)'>✘ NON-EQUIV{frac}{_tv_tip_span(header, tv_results_list)}</td>"
+                    elif tv_status == "error":
+                        header = f"Tool error ({tv_verified}/{tv_total} equiv)"
+                        tv_cell = f"<td class='tv-cell' style='background:rgb(255,235,180)'>⚠{frac}{_tv_tip_span(header, tv_results_list)}</td>"
                     else:
-                        lec_cell = "<td style='text-align:center; color:#aaa'>—</td>"
-                    html += f"                    {lec_cell}\n"
+                        tv_cell = "<td style='text-align:center; color:#aaa'>—</td>"
+                    html += f"                    {tv_cell}\n"
 
             if equiv_results is not None:
                 status = equiv_results.get(benchmark_name)
@@ -1436,6 +1475,27 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
         markdown += "### Summary (Geometric Mean)\n\n"
         markdown += geomean_table + "\n\n"
 
+    # SMT TV summary
+    all_tv_statuses = [
+        summary.get("benchmarks", {}).get(bname, {}).get("tv_status")
+        for summary in summaries.values()
+        for bname in all_benchmarks
+        if summary.get("benchmarks", {}).get(bname, {}).get("tv_status") is not None
+    ]
+    if all_tv_statuses:
+        n_tv_pass  = all_tv_statuses.count("pass")
+        n_tv_fail  = all_tv_statuses.count("fail")
+        n_tv_error = all_tv_statuses.count("error")
+        markdown += "### SMT Translation Validation (bitwuzla)\n\n"
+        markdown += f"✔ Pass: {n_tv_pass} | ✘ Fail: {n_tv_fail} | ⚠ Error: {n_tv_error}\n\n"
+        failed_tv = sorted(
+            bname for summary in summaries.values()
+            for bname, bd in summary.get("benchmarks", {}).items()
+            if bd.get("tv_status") == "fail"
+        )
+        if failed_tv:
+            markdown += "**Non-equivalent (TV):** " + ", ".join(f"`{n}`" for n in failed_tv) + "\n\n"
+
     # CEC summary
     if equiv_results:
         n_equiv   = sum(1 for s in equiv_results.values() if s == "equiv")
@@ -1474,11 +1534,17 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
                 sign = "+" if diff_pct > 0 else ""
                 return f"{value} ({sign}{diff_pct:.1f}%)"
 
-            headers = ["Tool", "Gates", "Depth", "Area (ASAP7)", "Delay (ASAP7)", "Area (Sky130)", "Delay (Sky130)", "Runtime"]
+            tools_with_tv_md = [
+                t for t in tool_names
+                if comparison.get(t, {}).get("tv_status") is not None
+            ]
+            headers = ["Tool", "Gates", "Depth", "Area (ASAP7)", "Delay (ASAP7)", "Area (Sky130)", "Delay (Sky130)"]
+            if tools_with_tv_md:
+                headers.append("SMT TV (bitwuzla)")
             rows = []
             for tool in tool_names:
                 result = comparison.get(tool, {})
-                rows.append([
+                row = [
                     tool,
                     fmt(result.get("gates"),        baseline_result.get("gates"),        tool),
                     fmt(result.get("depth"),        baseline_result.get("depth"),        tool),
@@ -1486,8 +1552,12 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
                     fmt(result.get("delay_asap7"),  baseline_result.get("delay_asap7"),  tool),
                     fmt(result.get("area_sky130"),  baseline_result.get("area_sky130"),  tool),
                     fmt(result.get("delay_sky130"), baseline_result.get("delay_sky130"), tool),
-                    fmt(result.get("runtime_ms"),   baseline_result.get("runtime_ms"),   tool),
-                ])
+                ]
+                if tools_with_tv_md:
+                    tv_status = result.get("tv_status")
+                    tv_icons = {"pass": "✔", "fail": "✘", "error": "⚠", None: "—"}
+                    row.append(tv_icons.get(tv_status, tv_status or "—"))
+                rows.append(row)
 
             cec_status = ""
             if equiv_results and bname in equiv_results:
@@ -1497,6 +1567,24 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
 
             detail_lines.append(f"\n**{bname}**{cec_status}\n\n")
             detail_lines.append(tabulate(rows, headers=headers, tablefmt="github") + "\n")
+
+            # Per-transformation TV detail
+            tv_step_icons = {"equiv": "✔", "non-equiv": "✘", "timeout": "⏱", "error": "⚠"}
+            for tool in tools_with_tv_md:
+                tv_results_list = comparison.get(tool, {}).get("tv_results", [])
+                if tv_results_list:
+                    detail_lines.append(f"\n_SMT Translation Validation ({tool})_\n\n")
+                    tv_rows = [
+                        [
+                            tv_step_icons.get(r["status"], r["status"]),
+                            r["from"],
+                            r["to"],
+                        ]
+                        for r in tv_results_list
+                    ]
+                    detail_lines.append(
+                        tabulate(tv_rows, headers=["", "From", "To"], tablefmt="github") + "\n"
+                    )
 
     if detail_lines:
         markdown += "<details>\n<summary>Per-benchmark details</summary>\n"
@@ -1545,7 +1633,6 @@ def display_table(comparison, metric_filter=None):
         "Delay (ASAP7)",
         "Area (Sky130)",
         "Delay (Sky130)",
-        "Runtime (ms)",
     ]
     rows = []
 
@@ -1561,7 +1648,6 @@ def display_table(comparison, metric_filter=None):
             result.get("delay_asap7", "N/A"),
             result.get("area_sky130", "N/A"),
             result.get("delay_sky130", "N/A"),
-            result.get("runtime_ms", "N/A"),
         ]
         rows.append(row)
 
@@ -1592,7 +1678,6 @@ def display_differences(comparison):
         ("delay_asap7", "delay (ASAP7)"),
         ("area_sky130", "area (sky130)"),
         ("delay_sky130", "delay (sky130)"),
-        ("runtime_ms", "runtime_ms"),
     ]
 
     for metric_key, metric_display in metrics:
@@ -1631,7 +1716,6 @@ def display_markdown(comparison, metric_filter=None):
         "Delay (ASAP7)",
         "Area (Sky130)",
         "Delay (Sky130)",
-        "Runtime",
     ]
     rows = []
 
@@ -1644,7 +1728,6 @@ def display_markdown(comparison, metric_filter=None):
     baseline_delay_asap7 = baseline_result.get("delay_asap7", 0)
     baseline_area_sky130 = baseline_result.get("area_sky130", 0)
     baseline_delay_sky130 = baseline_result.get("delay_sky130", 0)
-    baseline_runtime = baseline_result.get("runtime_ms", 0)
 
     for tool in sorted(comparison.keys()):
         result = comparison[tool]
@@ -1672,7 +1755,6 @@ def display_markdown(comparison, metric_filter=None):
             fmt(result.get("delay_asap7"), baseline_delay_asap7),
             fmt(result.get("area_sky130"), baseline_area_sky130),
             fmt(result.get("delay_sky130"), baseline_delay_sky130),
-            fmt(result.get("runtime_ms"), baseline_runtime),
         ]
         rows.append(row)
 
@@ -1711,7 +1793,6 @@ def display_html(comparison, benchmark_name, metric_filter=None):
             <th>Delay (ASAP7)</th>
             <th>Area (Sky130)</th>
             <th>Delay (Sky130)</th>
-            <th>Runtime (ms)</th>
         </tr>
 """
 
@@ -1727,7 +1808,6 @@ def display_html(comparison, benchmark_name, metric_filter=None):
             <td>{result.get("delay_asap7", "N/A")}</td>
             <td>{result.get("area_sky130", "N/A")}</td>
             <td>{result.get("delay_sky130", "N/A")}</td>
-            <td>{result.get("runtime_ms", "N/A")}</td>
         </tr>
 """
 

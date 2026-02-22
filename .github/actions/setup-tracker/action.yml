@@ -18,3 +18,7 @@ runs:
     - name: Build aig-judge
       shell: bash
       run: uv run prepare
+
+    - name: Download Bitwuzla
+      shell: bash
+      run: bash .github/scripts/install-bitwuzla.sh
