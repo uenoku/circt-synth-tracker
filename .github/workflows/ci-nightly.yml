@@ -84,7 +84,7 @@ jobs:
 
       - name: Determine equiv-check flag
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.equiv_check }}" = "true" ]; then
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ inputs.equiv_check }}" = "true" ]; then
             echo "EQUIV_CHECK=true" >> $GITHUB_ENV
           else
             echo "EQUIV_CHECK=false" >> $GITHUB_ENV
@@ -112,14 +112,20 @@ jobs:
           tool_version: ${{ env.YOSYS_VERSION }}
           summary_file: yosys-summary.json
 
+      - name: Run equivalence check
+        if: env.EQUIV_CHECK == 'true'
+        run: |
+          source .venv/bin/activate
+          check-cec circt-summary.json yosys-summary.json -o cec.json -j $(nproc)
+
       - name: Compare results
         run: |
           source .venv/bin/activate
-          EQUIV_FLAG=""
-          [ "${{ env.EQUIV_CHECK }}" = "true" ] && EQUIV_FLAG="--equiv-check"
-          compare-results yosys-summary.json circt-summary.json -o report.html $EQUIV_FLAG
-          compare-results yosys-summary.json circt-summary.json -o report.md $EQUIV_FLAG
-          compare-results yosys-summary.json circt-summary.json -o report.json --format json
+          CEC_FLAG=""
+          [ -f cec.json ] && CEC_FLAG="--cec cec.json"
+          compare-results yosys-summary.json circt-summary.json -o report.html $CEC_FLAG
+          compare-results yosys-summary.json circt-summary.json -o report.md $CEC_FLAG
+          compare-results yosys-summary.json circt-summary.json -o report.json
 
       - name: Upload comparison reports
         uses: actions/upload-artifact@v4
@@ -130,6 +136,7 @@ jobs:
             report.html
             report.md
             report.json
+            cec.json
             circt-summary.json
             yosys-summary.json
 

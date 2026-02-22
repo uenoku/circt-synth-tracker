@@ -14,7 +14,6 @@ import json
 import math
 import argparse
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from html import escape
 from pathlib import Path
 from tabulate import tabulate
@@ -43,120 +42,10 @@ def _run_one_cec(abc, benchmark_name, aig1, aig2):
         return (benchmark_name, "error", str(e), "")
 
 
-def run_equiv_check(summaries, abc_exe=None, jobs=1):
+def run_equiv_check(summaries, abc_exe=None, jobs=None):
     """Run combinational equivalence check between AIG files across all tools."""
-    from circt_synth_tracker.tools import find_abc
-
-    try:
-        abc = find_abc(abc_exe)
-    except FileNotFoundError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return
-
-    tool_names = list(summaries.keys())
-    if len(tool_names) < 2:
-        print("Error: Need at least 2 tools for equivalence check", file=sys.stderr)
-        return
-
-    # Collect all benchmark names
-    all_benchmarks = set()
-    for summary in summaries.values():
-        all_benchmarks.update(summary.get("benchmarks", {}).keys())
-
-    print(f"\n=== Equivalence Check ({tool_names[0]} vs {tool_names[1]}) ===\n")
-
-    results = {"equivalent": [], "not_equivalent": [], "missing": [], "error": [], "timeout": []}
-
-    # Separate benchmarks into those to check and those to skip
-    to_check = []  # (benchmark_name, aig1, aig2)
-    for benchmark_name in sorted(all_benchmarks):
-        aig_files = {}
-        for tool_name in tool_names[:2]:
-            bdata = summaries[tool_name].get("benchmarks", {}).get(benchmark_name, {})
-            aig_path = bdata.get("filename")
-            if aig_path:
-                aig_files[tool_name] = aig_path
-
-        if len(aig_files) < 2:
-            missing = [t for t in tool_names[:2] if t not in aig_files]
-            print(f"  SKIP  {benchmark_name} (no AIG for: {', '.join(missing)})")
-            results["missing"].append(benchmark_name)
-            continue
-
-        aig1 = aig_files[tool_names[0]]
-        aig2 = aig_files[tool_names[1]]
-
-        missing_files = [p for p in (aig1, aig2) if not Path(p).exists()]
-        if missing_files:
-            print(f"  SKIP  {benchmark_name} (file not found: {', '.join(missing_files)})")
-            results["missing"].append(benchmark_name)
-            continue
-
-        to_check.append((benchmark_name, aig1, aig2))
-
-    # Run CEC, optionally in parallel
-    import os
-    workers = jobs if jobs is not None else (os.cpu_count() or 1)
-    workers = max(1, workers)
-    if workers == 1:
-        cec_results = [_run_one_cec(abc, name, a1, a2) for name, a1, a2 in to_check]
-    else:
-        print(f"Running {len(to_check)} checks with {workers} parallel workers...\n")
-        cec_results = [None] * len(to_check)
-        name_to_idx = {name: i for i, (name, _, _) in enumerate(to_check)}
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {
-                executor.submit(_run_one_cec, abc, name, a1, a2): name
-                for name, a1, a2 in to_check
-            }
-            for future in as_completed(futures):
-                result = future.result()
-                benchmark_name, status, detail, output = result
-                if output:
-                    print(f"[cec] {benchmark_name}:\n{output}", file=sys.stderr)
-                cec_results[name_to_idx[benchmark_name]] = result
-
-    for benchmark_name, status, detail, output in cec_results:
-        if output:
-            print(f"[cec] {benchmark_name}:\n{output}", file=sys.stderr)
-        if status == "equivalent":
-            print(f"  PASS    {benchmark_name}")
-            results["equivalent"].append(benchmark_name)
-        elif status == "not_equivalent":
-            print(f"  FAIL    {benchmark_name}")
-            results["not_equivalent"].append(benchmark_name)
-        elif status == "timeout":
-            print(f"  TIMEOUT {benchmark_name}")
-            results["timeout"].append(benchmark_name)
-        else:
-            print(f"  ERR     {benchmark_name} ({detail})")
-            results["error"].append(benchmark_name)
-
-    total = len(all_benchmarks)
-    print(f"\nSummary: {len(results['equivalent'])} equivalent, "
-          f"{len(results['not_equivalent'])} not equivalent, "
-          f"{len(results['timeout'])} timeout, "
-          f"{len(results['missing'])} skipped, "
-          f"{len(results['error'])} errors  (total {total})")
-
-    if results["not_equivalent"]:
-        print("\nNot equivalent:")
-        for name in results["not_equivalent"]:
-            print(f"  {name}")
-
-    # Return per-benchmark status map for use in reports
-    status_map = {}
-    for name in results["equivalent"]:
-        status_map[name] = "equivalent"
-    for name in results["not_equivalent"]:
-        status_map[name] = "not_equivalent"
-    for name in results["missing"]:
-        status_map[name] = "missing"
-    for name in results["timeout"]:
-        status_map[name] = "timeout"
-    for name in results["error"]:
-        status_map[name] = "error"
-    return status_map
+    from circt_synth_tracker.analysis.check_cec import run_cec
+    return run_cec(summaries, abc_exe, jobs)
 
 
 def main():
@@ -180,6 +69,10 @@ def main():
     parser.add_argument(
         "--timeseries-url", default=None,
         help="URL/path to timeseries report; adds a History nav link to the HTML report"
+    )
+    parser.add_argument(
+        "--cec", default=None, metavar="CEC_JSON",
+        help="Path to pre-computed CEC results JSON (from check-cec command)"
     )
     parser.add_argument(
         "--equiv-check", action="store_true",
@@ -230,7 +123,14 @@ def main():
     print(f"Loaded summaries for {len(summaries)} tools: {', '.join(summaries.keys())}")
 
     equiv_results = {}
-    if args.equiv_check:
+    if args.cec:
+        cec_path = Path(args.cec)
+        if not cec_path.exists():
+            print(f"Error: CEC file not found: {cec_path}", file=sys.stderr)
+            return 1
+        with open(cec_path) as f:
+            equiv_results = json.load(f).get("benchmarks", {})
+    elif args.equiv_check:
         equiv_results = run_equiv_check(summaries, args.abc, args.jobs) or {}
 
     if args.benchmark:

@@ -62,7 +62,13 @@ compare-results circt-summary.json yosys-summary.json
 compare-results circt-summary.json yosys-summary.json -o report.html
 
 # 4. Run combinational equivalence check (CEC) between AIG outputs using ABC
-#    Use -j to run CEC checks in parallel (default: number of CPU cores)
+#    Produces cec.json with per-benchmark equivalence status
+check-cec circt-summary.json yosys-summary.json -o cec.json -j 4
+
+# 5. Pass pre-computed CEC results to compare-results
+compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.json
+
+# Alternatively, run CEC inline (convenience wrapper):
 compare-results circt-summary.json yosys-summary.json -o report.html --equiv-check -j 4
 ```
 
@@ -113,11 +119,11 @@ lit -v benchmarks/ -DABC_COMMANDS="compress2rs;"
 aggregate-results --tool circt --results-dir build -o circt-summary.json
 aggregate-results --tool yosys --results-dir build_yosys -o yosys-summary.json
 
-# 2. Compare and generate a report
-compare-results circt-summary.json yosys-summary.json -o report.html
+# 2. Run combinational equivalence check (CEC) between AIG outputs
+check-cec circt-summary.json yosys-summary.json -o cec.json
 
-# Optionally run combinational equivalence check (CEC) between AIG outputs
-compare-results circt-summary.json yosys-summary.json -o report.html --equiv-check
+# 3. Compare and generate a report, annotated with CEC results
+compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.json
 ```
 
 ## Project Structure
@@ -151,7 +157,7 @@ across configured bitwidths, publishes HTML reports and time series to GitHub Pa
 
 Supports optional inputs:
 - `abc_commands`: apply ABC optimization via `%AIG_TOOL`
-- `equiv_check`: run combinational equivalence check (CEC) via `compare-results --equiv-check`; **automatically enabled on scheduled runs**
+- `equiv_check`: run combinational equivalence check (CEC) via `check-cec`
 
 ### PR Benchmark (`ci-pr-benchmark.yml`)
 Triggered manually (or via `@tracker-bot check-pr <N>` comment) to benchmark
@@ -205,7 +211,8 @@ Installed via `uv sync`:
 | `abc-aig-judge` | Evaluate AIG with ABC technology mapping (ASAP7 + Sky130) |
 | `submit-results` | Store benchmark result JSON |
 | `aggregate-results` | Aggregate per-benchmark JSONs into a summary |
-| `compare-results` | Compare two summaries; output HTML / Markdown / JSON. `--equiv-check` runs CEC via ABC |
+| `check-cec` | Run combinational equivalence check (CEC) between two summaries; outputs `cec.json` |
+| `compare-results` | Compare two summaries; output HTML / Markdown / JSON. Pass `--cec cec.json` for CEC annotations, or `--equiv-check` to run CEC inline |
 | `append-history` | Append a day's summaries to `history.json` |
 | `timeseries-report` | Generate interactive HTML time series from `history.json` |
 | `prepare` | Build `mockturtle-aig-judge` and fetch `benchmarks/abc.rc` |
