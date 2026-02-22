@@ -13,6 +13,8 @@ Usage:
 
 import sys
 import os
+import re
+import json
 import subprocess
 import argparse
 import tempfile
@@ -30,6 +32,105 @@ def run_command(cmd, description):
         sys.exit(result.returncode)
 
     return result
+
+
+def _tv_sort_key(p):
+    """Sort key for MLIR pass output files by their numeric prefix (e.g. 0_10_ → (0,10))."""
+    m = re.match(r'^(\d+)_(\d+)_', p.name)
+    if m:
+        return (int(m.group(1)), int(m.group(2)))
+    m = re.match(r'^(\d+)_', p.name)
+    if m:
+        return (int(m.group(1)), float('inf'))
+    return (float('inf'), float('inf'))
+
+
+def _run_lec_pair(args, from_file, to_file):
+    """Run circt-lec on a pair of MLIR files and return status string.
+
+    When args.tv_solver is set, emit SMT-LIB and pipe to the external solver.
+    Otherwise use circt-lec --run directly.
+    Returns one of: "equiv", "non-equiv", "error", "timeout".
+    """
+    lec_base = [args.circt_lec, str(from_file), str(to_file)]
+    if args.top:
+        lec_base.extend(["--c1", args.top, "--c2", args.top])
+
+    if args.tv_solver:
+        # Emit SMT-LIB and pipe to external solver
+        lec_cmd = lec_base + ["--emit-smtlib"]
+        solver_cmd = args.tv_solver.split()
+        try:
+            lec_proc = subprocess.run(
+                lec_cmd, capture_output=True
+            )
+            if lec_proc.returncode != 0:
+                print(f"    circt-lec error: {lec_proc.stderr.decode()[:200]}", file=sys.stderr)
+                return "error"
+            solver_result = subprocess.run(
+                solver_cmd, input=lec_proc.stdout, capture_output=True, timeout=args.tv_timeout
+            )
+            out = solver_result.stdout.decode()
+            if "unsat" in out:
+                return "equiv"
+            elif "sat" in out:
+                return "non-equiv"
+            else:
+                print(f"    Solver unexpected output: {out[:200]}", file=sys.stderr)
+                return "error"
+        except subprocess.TimeoutExpired:
+            return "timeout"
+    else:
+        lec_cmd = lec_base + ["--run"]
+        try:
+            lec_result = subprocess.run(
+                lec_cmd, capture_output=True, text=True, timeout=args.tv_timeout
+            )
+            out = lec_result.stdout + lec_result.stderr
+            if "c1 == c2" in out:
+                return "equiv"
+            elif "c1 != c2" in out:
+                return "non-equiv"
+            else:
+                print(f"    Tool error: {out[:200]}", file=sys.stderr)
+                return "error"
+        except subprocess.TimeoutExpired:
+            return "timeout"
+
+
+def run_tv(args, mlir_file, synth_mlir_file, output_file, tree_dir):
+    """Run translation validation between consecutive pass outputs using circt-lec.
+
+    Collects all .mlir files under tree_dir, sorts them by their numeric prefix,
+    then runs circt-lec between each consecutive pair in the sequence:
+        input.mlir -> 0_0_... -> 0_1_... -> ... -> synth_output.mlir
+    """
+    tree_files = sorted(Path(tree_dir).rglob("*.mlir"), key=_tv_sort_key)
+
+    sequence = [mlir_file] + tree_files + [synth_mlir_file]
+
+    tv_results = []
+    overall_status = "pass"
+
+    for from_file, to_file in zip(sequence, sequence[1:]):
+        print(f"  TV: {from_file.name} -> {to_file.name}", file=sys.stderr)
+        status = _run_lec_pair(args, from_file, to_file)
+        if status == "non-equiv":
+            overall_status = "fail"
+            print(f"    NON-EQUIV detected!", file=sys.stderr)
+        elif status == "timeout":
+            print(f"    Timeout after {args.tv_timeout}s", file=sys.stderr)
+        if status not in ("equiv", "non-equiv") and overall_status not in ("fail",):
+            overall_status = "error"
+
+        tv_results.append({"from": from_file.name, "to": to_file.name, "status": status})
+
+    tv_sidecar = Path(str(output_file) + ".tv")
+    tv_sidecar.write_text(
+        json.dumps({"tv_status": overall_status, "tv_results": tv_results}, indent=2) + "\n"
+    )
+    print(f"  TV: overall_status={overall_status}, wrote {tv_sidecar}", file=sys.stderr)
+    return overall_status
 
 
 def main():
@@ -62,6 +163,25 @@ def main():
     parser.add_argument(
         "--lec-timeout", type=int, default=10,
         help="Timeout in seconds for circt-lec (default: 10)",
+    )
+    parser.add_argument(
+        "--run-tv", action="store_true",
+        help=(
+            "Run translation validation: dump per-pass MLIR via --mlir-print-ir-tree-dir "
+            "and verify equivalence between consecutive pass outputs using circt-lec"
+        ),
+    )
+    parser.add_argument(
+        "--tv-timeout", type=int, default=10,
+        help="Timeout in seconds per circt-lec invocation during TV (default: 10)",
+    )
+    parser.add_argument(
+        "--tv-solver", default="",
+        help=(
+            "External SMT solver command for TV (e.g. 'z3 -in' or 'bitwuzla'). "
+            "When set, circt-lec --emit-smtlib output is piped to this solver. "
+            "unsat=equiv, sat=non-equiv. Default: use circt-lec --run."
+        ),
     )
     parser.add_argument(
         "--keep-mlir", action="store_true", help="Keep intermediate MLIR files"
@@ -106,6 +226,7 @@ def main():
         synth_mlir_file = Path(synth_mlir_path)
         keep_synth_mlir = args.keep_mlir
 
+    tv_tree_dir = None
     try:
         # Step 1: Convert SystemVerilog to MLIR using circt-verilog
         verilog_cmd = [args.circt_verilog, str(input_file)]
@@ -128,6 +249,15 @@ def main():
         synth_cmd = [args.circt_synth, str(mlir_file)]
         if args.circt_synth_extra_args:
             synth_cmd.extend(args.circt_synth_extra_args.split())
+
+        if args.run_tv:
+            tv_tree_dir = tempfile.mkdtemp(suffix="-tv-ir-tree")
+            synth_cmd.extend([
+                f"--mlir-print-ir-tree-dir={tv_tree_dir}",
+                "-mlir-print-ir-after-all",
+                "-mlir-print-ir-after-change",
+            ])
+            print(f"  TV: dumping per-pass IR to {tv_tree_dir}", file=sys.stderr)
 
         print("Step 2: Synthesizing MLIR...", file=sys.stderr)
         result = run_command(synth_cmd, "MLIR synthesis")
@@ -172,6 +302,11 @@ def main():
                 print(f"  LEC: TIMEOUT after {args.lec_timeout}s.", file=sys.stderr)
                 lec_sidecar.write_text('{"lec_status": "timeout"}\n')
 
+        # Step 2c: Run translation validation if requested
+        if args.run_tv and tv_tree_dir:
+            print("Step 2c: Running translation validation (TV)...", file=sys.stderr)
+            run_tv(args, mlir_file, synth_mlir_file, output_file, tv_tree_dir)
+
         # Step 3: Export to AIG using circt-translate
         translate_cmd = [
             args.circt_translate,
@@ -192,6 +327,10 @@ def main():
             mlir_file.unlink()
         if not keep_synth_mlir and synth_mlir_file.exists():
             synth_mlir_file.unlink()
+        # Clean up TV tree dir
+        if tv_tree_dir is not None:
+            import shutil
+            shutil.rmtree(tv_tree_dir, ignore_errors=True)
 
     return 0
 

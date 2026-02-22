@@ -52,12 +52,18 @@ filecheck = registry.get_tool('FileCheck').get_command()
 circt_synth_extra_args = lit_config.params.get('CIRCT_SYNTH_EXTRA_ARGS', '')
 abc_commands = lit_config.params.get('ABC_COMMANDS', '')
 run_lec = lit_config.params.get('RUN_LEC', '')
+run_tv = lit_config.params.get('RUN_TV', '')
+tv_solver = lit_config.params.get('TV_SOLVER', '')
 
 circt_synth_wrapper = f'run-circt-synth --circt-synth {circt_synth} --circt-verilog {circt_verilog} --circt-translate {circt_translate} --circt-lec {circt_lec}'
 if circt_synth_extra_args:
     circt_synth_wrapper += f' --circt-synth-extra-args=\"{circt_synth_extra_args}\"'
 if run_lec:
     circt_synth_wrapper += ' --run-lec'
+if run_tv:
+    circt_synth_wrapper += ' --run-tv'
+if tv_solver:
+    circt_synth_wrapper += f' --tv-solver=\"{tv_solver}\"'
 
 yosys_wrapper = f'run-yosys --yosys {yosys}'
 

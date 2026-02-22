@@ -45,6 +45,10 @@ lit -v benchmarks/ -DSYNTH_TOOL=circt -DCIRCT_SYNTH_EXTRA_ARGS="--disable-datapa
 # Apply ABC optimization between synthesis and judging
 lit -v benchmarks/ -DABC_COMMANDS="resyn"
 
+# Run SMT Translation Validation (TV) with Bitwuzla
+# TV verifies each CIRCT synthesis pass preserves circuit semantics using circt-lec + Bitwuzla
+lit -v benchmarks/ -DRUN_TV=1 -DTV_SOLVER=bitwuzla
+
 # Run specific circt-synth version
 export CIRCT_SYNTH=/path/to/circt-synth
 lit -v benchmarks/
@@ -82,6 +86,8 @@ compare-results circt-summary.json yosys-summary.json -o report.html --equiv-che
 | `BW` | `16` | Bitwidth for parameterized benchmarks |
 | `TEST_OUTPUT_DIR` | `build` | Directory for lit test outputs |
 | `CIRCT_SYNTH_EXTRA_ARGS` | _(empty)_ | Extra flags passed to `circt-synth` |
+| `RUN_TV` | _(empty)_ | Enable SMT Translation Validation; set to `1` to enable |
+| `TV_SOLVER` | _(empty)_ | SMT solver command for TV (e.g. `bitwuzla`, `z3 -in`); uses `circt-lec --run` if unset |
 
 ### Lit Substitutions
 
@@ -126,6 +132,35 @@ check-cec circt-summary.json yosys-summary.json -o cec.json
 compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.json
 ```
 
+## SMT Translation Validation
+
+Translation Validation (TV) uses `circt-lec` to verify that each CIRCT synthesis pass preserves the circuit's logical equivalence. When enabled, `circt-synth` dumps per-pass MLIR snapshots and `circt-lec` checks each consecutive pair in the transformation sequence:
+
+```
+input.mlir → pass_0 → pass_1 → … → synth_output.mlir
+```
+
+Each step is checked independently. Results are recorded as a `.tv` sidecar file alongside the AIG output and aggregated into the summary JSON under `tv_status` (`pass` / `fail` / `error`) and `tv_results` (per-step status).
+
+### Running TV locally
+
+TV requires `circt-lec` in PATH. Use [Bitwuzla](https://bitwuzla.github.io/) as the SMT solver for best performance:
+
+```bash
+# Download Bitwuzla (static binary, Linux x86_64)
+curl -fsSL https://github.com/bitwuzla/bitwuzla/releases/latest/download/Bitwuzla-Linux-x86_64-static.zip \
+  | unzip -j - '*/bin/bitwuzla' -d ~/.local/bin/
+
+# Run benchmarks with TV
+lit -v benchmarks/ -DSYNTH_TOOL=circt -DRUN_TV=1 -DTV_SOLVER=bitwuzla
+```
+
+TV results appear in the HTML report as an **SMT TV (bitwuzla)** column and in the Markdown report under a **SMT Translation Validation (bitwuzla)** summary section with per-benchmark pass/fail counts and a per-transformation step table in the details.
+
+### TV in CI
+
+TV runs automatically for all CIRCT benchmark runs in CI (nightly, PR benchmark, and experiment workflows). Bitwuzla is downloaded as a static binary during setup.
+
 ## Project Structure
 
 ```
@@ -159,6 +194,8 @@ Supports optional inputs:
 - `abc_commands`: apply ABC optimization via `%AIG_TOOL`
 - `equiv_check`: run combinational equivalence check (CEC) via `check-cec`
 
+SMT Translation Validation runs automatically for CIRCT using Bitwuzla.
+
 ### PR Benchmark (`ci-pr-benchmark.yml`)
 Triggered manually (or via `@tracker-bot check-pr <N>` comment) to benchmark
 a specific CIRCT PR. Builds CIRCT from source at the PR base and head SHAs,
@@ -167,6 +204,8 @@ runs benchmarks, and posts a before/after comparison.
 Supports optional inputs:
 - `abc_commands`: apply ABC optimization
 - `equiv_check`: run CEC between the before/after AIG outputs
+
+SMT Translation Validation runs automatically on both the base and head builds using Bitwuzla.
 
 ### Experiment (`ci-experiment.yml`)
 Triggered manually to compare two arbitrary configurations side by side.
