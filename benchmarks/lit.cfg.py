@@ -43,6 +43,7 @@ registry = get_registry()
 circt_synth = registry.get_tool('circt-synth').get_command()
 circt_verilog = registry.get_tool('circt-verilog').get_command()
 circt_translate = registry.get_tool('circt-translate').get_command()
+circt_lec = registry.get_tool('circt-lec').get_command()
 yosys = registry.get_tool('yosys').get_command()
 abc = registry.get_tool('abc').get_command()
 filecheck = registry.get_tool('FileCheck').get_command()
@@ -50,10 +51,13 @@ filecheck = registry.get_tool('FileCheck').get_command()
 # Build tool wrapper commands
 circt_synth_extra_args = lit_config.params.get('CIRCT_SYNTH_EXTRA_ARGS', '')
 abc_commands = lit_config.params.get('ABC_COMMANDS', '')
+run_lec = lit_config.params.get('RUN_LEC', '')
 
-circt_synth_wrapper = f'run-circt-synth --circt-synth {circt_synth} --circt-verilog {circt_verilog} --circt-translate {circt_translate}'
+circt_synth_wrapper = f'run-circt-synth --circt-synth {circt_synth} --circt-verilog {circt_verilog} --circt-translate {circt_translate} --circt-lec {circt_lec}'
 if circt_synth_extra_args:
     circt_synth_wrapper += f' --circt-synth-extra-args=\"{circt_synth_extra_args}\"'
+if run_lec:
+    circt_synth_wrapper += ' --run-lec'
 
 yosys_wrapper = f'run-yosys --yosys {yosys}'
 

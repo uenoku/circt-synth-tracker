@@ -30,9 +30,9 @@ def _run_one_cec(abc, benchmark_name, aig1, aig2):
         )
         output = proc.stdout + proc.stderr
         if "Networks are equivalent" in output:
-            return (benchmark_name, "equivalent", None, output)
+            return (benchmark_name, "equiv", None, output)
         elif "Networks are NOT" in output or "not equivalent" in output.lower():
-            return (benchmark_name, "not_equivalent", None, output)
+            return (benchmark_name, "non-equiv", None, output)
         else:
             detail = "\n".join(output.strip().splitlines()[-3:]) if output.strip() else ""
             return (benchmark_name, "error", f"unexpected output: {detail}", output)
@@ -877,11 +877,21 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                     <th>Benchmark</th>
 """
 
+    # Determine which tools have LEC data
+    tools_with_lec = [
+        t for t in tool_names
+        if any(
+            summaries[t].get("benchmarks", {}).get(b, {}).get("lec_status")
+            for b in all_benchmarks
+        )
+    ]
+
     # Add headers for each tool
     for tool in tool_names:
-        html += f"                    <th class='tool-column' colspan='7'>{escape(tool)}</th>\n"
+        colspan = 8 if tool in tools_with_lec else 7
+        html += f"                    <th class='tool-column' colspan='{colspan}'>{escape(tool)}</th>\n"
     if equiv_results is not None:
-        html += "                    <th>Equiv</th>\n"
+        html += "                    <th>CEC</th>\n"
 
     html += """
                 </tr>
@@ -890,8 +900,10 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
 """
 
     # Sub-headers for metrics
-    for _ in tool_names:
+    for tool in tool_names:
         html += "                    <th class='metric'>Gates</th><th class='metric'>Depth</th><th class='metric'>Area (ASAP7)</th><th class='metric'>Delay (ASAP7)</th><th class='metric'>Area (Sky130)</th><th class='metric'>Delay (Sky130)</th><th class='metric'>Runtime</th>\n"
+        if tool in tools_with_lec:
+            html += "                    <th class='metric'>SMT CEC</th>\n"
     if equiv_results is not None:
         html += "                    <th></th>\n"
 
@@ -904,9 +916,7 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
     # Add rows for each benchmark, grouped by category
     for category in sorted_categories:
         # Add category header row
-        num_columns = 1 + (
-            len(tool_names) * 7
-        )  # 1 for benchmark name + 7 metrics per tool
+        num_columns = 1 + (len(tool_names) * 7) + len(tools_with_lec)
         if equiv_results is not None:
             num_columns += 1
         html += "                <tr>\n"
@@ -1033,12 +1043,26 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                 html += f"                    <td class='metric'{delay_sky130_style}>{delay_sky130_content}</td>\n"
                 html += f"                    <td class='metric'{runtime_style}>{runtime_content}</td>\n"
 
+                if tool in tools_with_lec:
+                    lec_status = result.get("lec_status")
+                    if lec_status == "equiv":
+                        lec_cell = "<td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>"
+                    elif lec_status == "non-equiv":
+                        lec_cell = "<td style='text-align:center; background:rgb(255,200,200)'>✘ NON-EQUIV</td>"
+                    elif lec_status == "timeout":
+                        lec_cell = "<td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>"
+                    elif lec_status == "error":
+                        lec_cell = "<td style='text-align:center; background:rgb(255,235,180)'>TOOL ERROR</td>"
+                    else:
+                        lec_cell = "<td style='text-align:center; color:#aaa'>—</td>"
+                    html += f"                    {lec_cell}\n"
+
             if equiv_results is not None:
                 status = equiv_results.get(benchmark_name)
-                if status == "equivalent":
-                    equiv_cell = "<td style='text-align:center; background:rgb(200,255,200)'>✔ PASS</td>"
-                elif status == "not_equivalent":
-                    equiv_cell = "<td style='text-align:center; background:rgb(255,200,200)'>✘ FAIL</td>"
+                if status == "equiv":
+                    equiv_cell = "<td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>"
+                elif status == "non-equiv":
+                    equiv_cell = "<td style='text-align:center; background:rgb(255,200,200)'>✘ NON-EQUIV</td>"
                 elif status == "timeout":
                     equiv_cell = "<td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>"
                 elif status == "error":
@@ -1056,24 +1080,24 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
 
     # Add equivalence check summary section
     if equiv_results:
-        n_pass    = sum(1 for s in equiv_results.values() if s == "equivalent")
-        n_fail    = sum(1 for s in equiv_results.values() if s == "not_equivalent")
+        n_pass    = sum(1 for s in equiv_results.values() if s == "equiv")
+        n_fail    = sum(1 for s in equiv_results.values() if s == "non-equiv")
         n_timeout = sum(1 for s in equiv_results.values() if s == "timeout")
         n_err     = sum(1 for s in equiv_results.values() if s == "error")
         n_skip    = sum(1 for s in equiv_results.values() if s == "missing")
-        failed_names = [n for n, s in equiv_results.items() if s == "not_equivalent"]
+        failed_names = [n for n, s in equiv_results.items() if s == "non-equiv"]
         html += f"""
         <h2>Equivalence Check Summary</h2>
         <div class="summary">
             <div class="summary-line">✔ <strong>Equivalent:</strong> {n_pass}</div>
-            <div class="summary-line">✘ <strong>Not equivalent:</strong> {n_fail}</div>
+            <div class="summary-line">✘ <strong>Non-equiv:</strong> {n_fail}</div>
             <div class="summary-line">⏱ <strong>Timeout:</strong> {n_timeout}</div>
             <div class="summary-line">⚠ <strong>Errors:</strong> {n_err}</div>
             <div class="summary-line">— <strong>Skipped (no AIG):</strong> {n_skip}</div>
         </div>
 """
         if failed_names:
-            html += "        <p><strong>Not equivalent benchmarks:</strong></p><ul>\n"
+            html += "        <p><strong>Non-equiv benchmarks:</strong></p><ul>\n"
             for name in sorted(failed_names):
                 html += f"            <li>{escape(name)}</li>\n"
             html += "        </ul>\n"

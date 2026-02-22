@@ -37,7 +37,7 @@ def run_cec(summaries, abc_exe=None, jobs=None):
 
     print(f"\n=== Equivalence Check ({tool_names[0]} vs {tool_names[1]}) ===\n")
 
-    results = {"equivalent": [], "not_equivalent": [], "missing": [], "error": [], "timeout": []}
+    results = {"equiv": [], "non-equiv": [], "missing": [], "error": [], "timeout": []}
 
     to_check = []
     for benchmark_name in sorted(all_benchmarks):
@@ -82,19 +82,19 @@ def run_cec(summaries, abc_exe=None, jobs=None):
             for future in as_completed(futures):
                 result = future.result()
                 benchmark_name, status, detail, output = result
-                if output and status != "equivalent":
+                if output and status != "equiv":
                     print(f"[cec] {benchmark_name}:\n{output}", file=sys.stderr)
                 cec_results[name_to_idx[benchmark_name]] = result
 
     for benchmark_name, status, detail, output in cec_results:
-        if output and status != "equivalent":
+        if output and status != "equiv":
             print(f"[cec] {benchmark_name}:\n{output}", file=sys.stderr)
-        if status == "equivalent":
-            print(f"  PASS    {benchmark_name}")
-            results["equivalent"].append(benchmark_name)
-        elif status == "not_equivalent":
-            print(f"  FAIL    {benchmark_name}")
-            results["not_equivalent"].append(benchmark_name)
+        if status == "equiv":
+            print(f"  EQUIV     {benchmark_name}")
+            results["equiv"].append(benchmark_name)
+        elif status == "non-equiv":
+            print(f"  NON-EQUIV {benchmark_name}")
+            results["non-equiv"].append(benchmark_name)
         elif status == "timeout":
             print(f"  TIMEOUT {benchmark_name}")
             results["timeout"].append(benchmark_name)
@@ -104,16 +104,16 @@ def run_cec(summaries, abc_exe=None, jobs=None):
 
     total = len(all_benchmarks)
     print(
-        f"\nSummary: {len(results['equivalent'])} equivalent, "
-        f"{len(results['not_equivalent'])} not equivalent, "
+        f"\nSummary: {len(results['equiv'])} equiv, "
+        f"{len(results['non-equiv'])} non-equiv, "
         f"{len(results['timeout'])} timeout, "
         f"{len(results['missing'])} skipped, "
         f"{len(results['error'])} errors  (total {total})"
     )
 
-    if results["not_equivalent"]:
-        print("\nNot equivalent:")
-        for name in results["not_equivalent"]:
+    if results["non-equiv"]:
+        print("\nNon-equiv:")
+        for name in results["non-equiv"]:
             print(f"  {name}")
 
     status_map = {}

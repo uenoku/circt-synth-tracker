@@ -105,6 +105,16 @@ def register_builtin_tools():
         )
     )
 
+    # CIRCT LEC
+    _registry.register_tool(
+        ToolConfig(
+            name="circt-lec",
+            command="circt-lec",
+            default_args=[],
+            env_var="CIRCT_LEC",
+        )
+    )
+
     # Yosys
     _registry.register_tool(
         ToolConfig(name="yosys", command="yosys", default_args=[], env_var="YOSYS")

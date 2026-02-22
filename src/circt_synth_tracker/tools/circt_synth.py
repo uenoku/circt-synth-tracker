@@ -53,6 +53,17 @@ def main():
         "--circt-translate", default="circt-translate", help="Path to circt-translate"
     )
     parser.add_argument(
+        "--circt-lec", default="circt-lec", help="Path to circt-lec"
+    )
+    parser.add_argument(
+        "--run-lec", action="store_true",
+        help="Run circt-lec to verify equivalence between pre-synth and post-synth MLIR",
+    )
+    parser.add_argument(
+        "--lec-timeout", type=int, default=10,
+        help="Timeout in seconds for circt-lec (default: 10)",
+    )
+    parser.add_argument(
         "--keep-mlir", action="store_true", help="Keep intermediate MLIR files"
     )
     parser.add_argument(
@@ -126,6 +137,40 @@ def main():
             f.write(result.stdout)
 
         print(f"  Generated synthesized MLIR: {synth_mlir_file}", file=sys.stderr)
+
+        # Step 2b: Run LEC if requested
+        if args.run_lec:
+            lec_cmd = [
+                args.circt_lec,
+                str(mlir_file),
+                str(synth_mlir_file),
+                "--run",
+            ]
+            if args.top:
+                lec_cmd.extend(["--c1", args.top, "--c2", args.top])
+
+            print("Step 2b: Running LEC (circt-lec)...", file=sys.stderr)
+            lec_sidecar = Path(str(output_file) + ".lec")
+            try:
+                lec_result = subprocess.run(
+                    lec_cmd, capture_output=True, text=True, timeout=args.lec_timeout
+                )
+                output = lec_result.stdout + lec_result.stderr
+                if "c1 == c2" in output:
+                    lec_status = "equiv"
+                    print("  LEC: EQUIV.", file=sys.stderr)
+                elif "c1 != c2" in output:
+                    lec_status = "non-equiv"
+                    print("  LEC: NON-EQUIV.", file=sys.stderr)
+                    print(output, file=sys.stderr)
+                else:
+                    lec_status = "error"
+                    print("  LEC: TOOL ERROR.", file=sys.stderr)
+                    print(output, file=sys.stderr)
+                lec_sidecar.write_text(f'{{"lec_status": "{lec_status}"}}\n')
+            except subprocess.TimeoutExpired:
+                print(f"  LEC: TIMEOUT after {args.lec_timeout}s.", file=sys.stderr)
+                lec_sidecar.write_text('{"lec_status": "timeout"}\n')
 
         # Step 3: Export to AIG using circt-translate
         translate_cmd = [
