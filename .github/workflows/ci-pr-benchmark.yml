@@ -23,7 +23,7 @@ on:
         description: 'Run equivalence check (--equiv-check) during CIRCT synthesis'
         required: false
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: read
