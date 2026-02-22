@@ -127,10 +127,14 @@ jobs:
           check-cec circt-summary.json yosys-summary.json -o cec.json -j $(nproc)
 
       - name: Compare results
+        # report.html generated here is used for artifacts and non-push/schedule runs.
+        # For push/schedule, "Generate time series report" overwrites it with --timeseries-url.
+        # CEC_FLAG is exported to GITHUB_ENV so that step can include CEC data too.
         run: |
           source .venv/bin/activate
           CEC_FLAG=""
           [ -f cec.json ] && CEC_FLAG="--cec cec.json"
+          echo "CEC_FLAG=${CEC_FLAG}" >> $GITHUB_ENV
           compare-results yosys-summary.json circt-summary.json -o report.html $CEC_FLAG
           compare-results yosys-summary.json circt-summary.json -o report.md $CEC_FLAG
           compare-results yosys-summary.json circt-summary.json -o report.json
@@ -195,7 +199,7 @@ jobs:
         run: |
           source .venv/bin/activate
           timeseries-report history.json -o timeseries.html
-          compare-results yosys-summary.json circt-summary.json -o report.html --timeseries-url timeseries.html
+          compare-results yosys-summary.json circt-summary.json -o report.html --timeseries-url timeseries.html $CEC_FLAG
 
       - name: Prepare deployment files
         if: (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && always()
