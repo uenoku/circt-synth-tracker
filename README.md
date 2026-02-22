@@ -60,6 +60,10 @@ compare-results circt-summary.json yosys-summary.json
 
 # 3. Generate HTML report
 compare-results circt-summary.json yosys-summary.json -o report.html
+
+# 4. Run combinational equivalence check (CEC) between AIG outputs using ABC
+#    Use -j to run CEC checks in parallel (default: number of CPU cores)
+compare-results circt-summary.json yosys-summary.json -o report.html --equiv-check -j 4
 ```
 
 ### Available Lit Parameters
@@ -111,6 +115,9 @@ aggregate-results --tool yosys --results-dir build_yosys -o yosys-summary.json
 
 # 2. Compare and generate a report
 compare-results circt-summary.json yosys-summary.json -o report.html
+
+# Optionally run combinational equivalence check (CEC) between AIG outputs
+compare-results circt-summary.json yosys-summary.json -o report.html --equiv-check
 ```
 
 ## Project Structure
@@ -142,14 +149,18 @@ circt-synth-tracker/
 Runs daily against the latest CIRCT nightly build. Compares CIRCT vs Yosys
 across configured bitwidths, publishes HTML reports and time series to GitHub Pages.
 
-Supports optional `abc_commands` input to apply ABC optimization via `%AIG_TOOL`.
+Supports optional inputs:
+- `abc_commands`: apply ABC optimization via `%AIG_TOOL`
+- `equiv_check`: run combinational equivalence check (CEC) via `compare-results --equiv-check`; **automatically enabled on scheduled runs**
 
 ### PR Benchmark (`ci-pr-benchmark.yml`)
 Triggered manually (or via `@tracker-bot check-pr <N>` comment) to benchmark
 a specific CIRCT PR. Builds CIRCT from source at the PR base and head SHAs,
 runs benchmarks, and posts a before/after comparison.
 
-Supports optional `abc_commands` input.
+Supports optional inputs:
+- `abc_commands`: apply ABC optimization
+- `equiv_check`: run CEC between the before/after AIG outputs
 
 ### Experiment (`ci-experiment.yml`)
 Triggered manually to compare two arbitrary configurations side by side.
@@ -157,6 +168,9 @@ Each configuration independently specifies:
 - `synth_tool`: `circt` or `yosys`
 - `abc_commands`: ABC optimization script
 - `circt_synth_extra_args`: extra flags for `circt-synth`
+
+Shared optional input:
+- `equiv_check`: run CEC between the two configurations' AIG outputs
 
 Useful for evaluating the effect of ABC passes, synthesis options, or tool choice.
 
@@ -191,7 +205,7 @@ Installed via `uv sync`:
 | `abc-aig-judge` | Evaluate AIG with ABC technology mapping (ASAP7 + Sky130) |
 | `submit-results` | Store benchmark result JSON |
 | `aggregate-results` | Aggregate per-benchmark JSONs into a summary |
-| `compare-results` | Compare two summaries; output HTML / Markdown / JSON |
+| `compare-results` | Compare two summaries; output HTML / Markdown / JSON. `--equiv-check` runs CEC via ABC |
 | `append-history` | Append a day's summaries to `history.json` |
 | `timeseries-report` | Generate interactive HTML time series from `history.json` |
 | `prepare` | Build `mockturtle-aig-judge` and fetch `benchmarks/abc.rc` |

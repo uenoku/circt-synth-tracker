@@ -13,9 +13,150 @@ import sys
 import json
 import math
 import argparse
+import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from html import escape
 from pathlib import Path
 from tabulate import tabulate
+
+
+def _run_one_cec(abc, benchmark_name, aig1, aig2):
+    """Run CEC on a single benchmark pair. Returns (benchmark_name, status, detail, output)."""
+    try:
+        proc = subprocess.run(
+            [abc, "-c", f"cec -T 20 -n {aig1} {aig2}"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        output = proc.stdout + proc.stderr
+        if "Networks are equivalent" in output:
+            return (benchmark_name, "equivalent", None, output)
+        elif "Networks are NOT" in output or "not equivalent" in output.lower():
+            return (benchmark_name, "not_equivalent", None, output)
+        else:
+            detail = "\n".join(output.strip().splitlines()[-3:]) if output.strip() else ""
+            return (benchmark_name, "error", f"unexpected output: {detail}", output)
+    except subprocess.TimeoutExpired:
+        return (benchmark_name, "timeout", "timeout", "")
+    except Exception as e:
+        return (benchmark_name, "error", str(e), "")
+
+
+def run_equiv_check(summaries, abc_exe=None, jobs=1):
+    """Run combinational equivalence check between AIG files across all tools."""
+    from circt_synth_tracker.tools import find_abc
+
+    try:
+        abc = find_abc(abc_exe)
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return
+
+    tool_names = list(summaries.keys())
+    if len(tool_names) < 2:
+        print("Error: Need at least 2 tools for equivalence check", file=sys.stderr)
+        return
+
+    # Collect all benchmark names
+    all_benchmarks = set()
+    for summary in summaries.values():
+        all_benchmarks.update(summary.get("benchmarks", {}).keys())
+
+    print(f"\n=== Equivalence Check ({tool_names[0]} vs {tool_names[1]}) ===\n")
+
+    results = {"equivalent": [], "not_equivalent": [], "missing": [], "error": [], "timeout": []}
+
+    # Separate benchmarks into those to check and those to skip
+    to_check = []  # (benchmark_name, aig1, aig2)
+    for benchmark_name in sorted(all_benchmarks):
+        aig_files = {}
+        for tool_name in tool_names[:2]:
+            bdata = summaries[tool_name].get("benchmarks", {}).get(benchmark_name, {})
+            aig_path = bdata.get("filename")
+            if aig_path:
+                aig_files[tool_name] = aig_path
+
+        if len(aig_files) < 2:
+            missing = [t for t in tool_names[:2] if t not in aig_files]
+            print(f"  SKIP  {benchmark_name} (no AIG for: {', '.join(missing)})")
+            results["missing"].append(benchmark_name)
+            continue
+
+        aig1 = aig_files[tool_names[0]]
+        aig2 = aig_files[tool_names[1]]
+
+        missing_files = [p for p in (aig1, aig2) if not Path(p).exists()]
+        if missing_files:
+            print(f"  SKIP  {benchmark_name} (file not found: {', '.join(missing_files)})")
+            results["missing"].append(benchmark_name)
+            continue
+
+        to_check.append((benchmark_name, aig1, aig2))
+
+    # Run CEC, optionally in parallel
+    import os
+    workers = jobs if jobs is not None else (os.cpu_count() or 1)
+    workers = max(1, workers)
+    if workers == 1:
+        cec_results = [_run_one_cec(abc, name, a1, a2) for name, a1, a2 in to_check]
+    else:
+        print(f"Running {len(to_check)} checks with {workers} parallel workers...\n")
+        cec_results = [None] * len(to_check)
+        name_to_idx = {name: i for i, (name, _, _) in enumerate(to_check)}
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {
+                executor.submit(_run_one_cec, abc, name, a1, a2): name
+                for name, a1, a2 in to_check
+            }
+            for future in as_completed(futures):
+                result = future.result()
+                benchmark_name, status, detail, output = result
+                if output:
+                    print(f"[cec] {benchmark_name}:\n{output}", file=sys.stderr)
+                cec_results[name_to_idx[benchmark_name]] = result
+
+    for benchmark_name, status, detail, output in cec_results:
+        if output:
+            print(f"[cec] {benchmark_name}:\n{output}", file=sys.stderr)
+        if status == "equivalent":
+            print(f"  PASS    {benchmark_name}")
+            results["equivalent"].append(benchmark_name)
+        elif status == "not_equivalent":
+            print(f"  FAIL    {benchmark_name}")
+            results["not_equivalent"].append(benchmark_name)
+        elif status == "timeout":
+            print(f"  TIMEOUT {benchmark_name}")
+            results["timeout"].append(benchmark_name)
+        else:
+            print(f"  ERR     {benchmark_name} ({detail})")
+            results["error"].append(benchmark_name)
+
+    total = len(all_benchmarks)
+    print(f"\nSummary: {len(results['equivalent'])} equivalent, "
+          f"{len(results['not_equivalent'])} not equivalent, "
+          f"{len(results['timeout'])} timeout, "
+          f"{len(results['missing'])} skipped, "
+          f"{len(results['error'])} errors  (total {total})")
+
+    if results["not_equivalent"]:
+        print("\nNot equivalent:")
+        for name in results["not_equivalent"]:
+            print(f"  {name}")
+
+    # Return per-benchmark status map for use in reports
+    status_map = {}
+    for name in results["equivalent"]:
+        status_map[name] = "equivalent"
+    for name in results["not_equivalent"]:
+        status_map[name] = "not_equivalent"
+    for name in results["missing"]:
+        status_map[name] = "missing"
+    for name in results["timeout"]:
+        status_map[name] = "timeout"
+    for name in results["error"]:
+        status_map[name] = "error"
+    return status_map
 
 
 def main():
@@ -39,6 +180,18 @@ def main():
     parser.add_argument(
         "--timeseries-url", default=None,
         help="URL/path to timeseries report; adds a History nav link to the HTML report"
+    )
+    parser.add_argument(
+        "--equiv-check", action="store_true",
+        help="Run combinational equivalence check (CEC) on AIG output files using ABC"
+    )
+    parser.add_argument(
+        "--abc", default=None,
+        help="Path to ABC executable for equivalence checking (default: auto-detect 'abc' or 'yosys-abc')"
+    )
+    parser.add_argument(
+        "-j", "--jobs", type=int, default=None,
+        help="Number of parallel equivalence checks (default: number of available CPU cores)"
     )
 
     args = parser.parse_args()
@@ -76,6 +229,10 @@ def main():
 
     print(f"Loaded summaries for {len(summaries)} tools: {', '.join(summaries.keys())}")
 
+    equiv_results = {}
+    if args.equiv_check:
+        equiv_results = run_equiv_check(summaries, args.abc, args.jobs) or {}
+
     if args.benchmark:
         # Compare specific benchmark across tools
         compare_benchmark(
@@ -83,7 +240,7 @@ def main():
         )
     else:
         # Compare all benchmarks
-        compare_all(summaries, args.format, args.export, args.timeseries_url)
+        compare_all(summaries, args.format, args.export, args.timeseries_url, equiv_results)
 
     return 0
 
@@ -133,7 +290,7 @@ def compare_benchmark(
         display_comparison(comparison, benchmark_name, format_type, metric_filter)
 
 
-def compare_all(summaries, format_type, export_path=None, timeseries_url=None):
+def compare_all(summaries, format_type, export_path=None, timeseries_url=None, equiv_results=None):
     """Compare all benchmarks across all tools."""
 
     # Collect all unique benchmark names
@@ -149,7 +306,7 @@ def compare_all(summaries, format_type, export_path=None, timeseries_url=None):
 
     # If HTML export requested, generate full report
     if export_path and format_type == "html":
-        generate_html_report(summaries, all_benchmarks, export_path, timeseries_url)
+        generate_html_report(summaries, all_benchmarks, export_path, timeseries_url, equiv_results)
         return
 
     # If JSON export requested, generate combined JSON
@@ -514,7 +671,7 @@ def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, too
 """
 
 
-def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=None):
+def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=None, equiv_results=None):
     """Generate a comprehensive HTML report comparing all benchmarks."""
 
     tool_names = list(summaries.keys())
@@ -823,6 +980,8 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
     # Add headers for each tool
     for tool in tool_names:
         html += f"                    <th class='tool-column' colspan='7'>{escape(tool)}</th>\n"
+    if equiv_results is not None:
+        html += "                    <th>Equiv</th>\n"
 
     html += """
                 </tr>
@@ -833,6 +992,8 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
     # Sub-headers for metrics
     for _ in tool_names:
         html += "                    <th class='metric'>Gates</th><th class='metric'>Depth</th><th class='metric'>Area (ASAP7)</th><th class='metric'>Delay (ASAP7)</th><th class='metric'>Area (Sky130)</th><th class='metric'>Delay (Sky130)</th><th class='metric'>Runtime</th>\n"
+    if equiv_results is not None:
+        html += "                    <th></th>\n"
 
     html += """
                 </tr>
@@ -846,6 +1007,8 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
         num_columns = 1 + (
             len(tool_names) * 7
         )  # 1 for benchmark name + 7 metrics per tool
+        if equiv_results is not None:
+            num_columns += 1
         html += "                <tr>\n"
         html += f"                    <td colspan='{num_columns}' class='category-header'>📁 {category}</td>\n"
         html += "                </tr>\n"
@@ -970,12 +1133,50 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                 html += f"                    <td class='metric'{delay_sky130_style}>{delay_sky130_content}</td>\n"
                 html += f"                    <td class='metric'{runtime_style}>{runtime_content}</td>\n"
 
+            if equiv_results is not None:
+                status = equiv_results.get(benchmark_name)
+                if status == "equivalent":
+                    equiv_cell = "<td style='text-align:center; background:rgb(200,255,200)'>✔ PASS</td>"
+                elif status == "not_equivalent":
+                    equiv_cell = "<td style='text-align:center; background:rgb(255,200,200)'>✘ FAIL</td>"
+                elif status == "timeout":
+                    equiv_cell = "<td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>"
+                elif status == "error":
+                    equiv_cell = "<td style='text-align:center; background:rgb(255,235,180)'>ERR</td>"
+                else:
+                    equiv_cell = "<td style='text-align:center; color:#aaa'>—</td>"
+                html += f"                    {equiv_cell}\n"
+
             html += "                </tr>\n"
 
     html += """
             </tbody>
         </table>
 """
+
+    # Add equivalence check summary section
+    if equiv_results:
+        n_pass    = sum(1 for s in equiv_results.values() if s == "equivalent")
+        n_fail    = sum(1 for s in equiv_results.values() if s == "not_equivalent")
+        n_timeout = sum(1 for s in equiv_results.values() if s == "timeout")
+        n_err     = sum(1 for s in equiv_results.values() if s == "error")
+        n_skip    = sum(1 for s in equiv_results.values() if s == "missing")
+        failed_names = [n for n, s in equiv_results.items() if s == "not_equivalent"]
+        html += f"""
+        <h2>Equivalence Check Summary</h2>
+        <div class="summary">
+            <div class="summary-line">✔ <strong>Equivalent:</strong> {n_pass}</div>
+            <div class="summary-line">✘ <strong>Not equivalent:</strong> {n_fail}</div>
+            <div class="summary-line">⏱ <strong>Timeout:</strong> {n_timeout}</div>
+            <div class="summary-line">⚠ <strong>Errors:</strong> {n_err}</div>
+            <div class="summary-line">— <strong>Skipped (no AIG):</strong> {n_skip}</div>
+        </div>
+"""
+        if failed_names:
+            html += "        <p><strong>Not equivalent benchmarks:</strong></p><ul>\n"
+            for name in sorted(failed_names):
+                html += f"            <li>{escape(name)}</li>\n"
+            html += "        </ul>\n"
 
     # Add geometric mean comparison table
     if len(tool_names) == 2:
