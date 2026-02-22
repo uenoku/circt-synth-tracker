@@ -128,7 +128,7 @@ def generate_yosys_script(input_file, output_file, top_module, bitwidth):
     # Output as AIG
     script.append("# Write AIG output")
     script.append("aigmap")
-    script.append(f"write_aiger {output_file}")
+    script.append(f"write_aiger -symbols {output_file}")
 
     return "\n".join(script)
 

@@ -23,7 +23,7 @@ def _run_one_cec(abc, benchmark_name, aig1, aig2):
     """Run CEC on a single benchmark pair. Returns (benchmark_name, status, detail, output)."""
     try:
         proc = subprocess.run(
-            [abc, "-c", f"cec -T 20 -n {aig1} {aig2}"],
+            [abc, "-c", f"cec -T 20 {aig1} {aig2}"],
             capture_output=True,
             text=True,
             timeout=30,
