@@ -9,7 +9,9 @@ from pathlib import Path
 # Pinned to a specific commit for reproducibility.
 # To update: check https://github.com/berkeley-abc/abc/commits/master/abc.rc
 ABC_RC_COMMIT = "daf3313ce6c122e8fada8b14b089222d17aecd8e"
-ABC_RC_URL = f"https://raw.githubusercontent.com/berkeley-abc/abc/{ABC_RC_COMMIT}/abc.rc"
+ABC_RC_URL = (
+    f"https://raw.githubusercontent.com/berkeley-abc/abc/{ABC_RC_COMMIT}/abc.rc"
+)
 
 
 def main():
@@ -67,7 +69,7 @@ def main():
 
     # Fetch abc.rc from the ABC repository
     abc_rc_path = project_root / "benchmarks" / "abc.rc"
-    print(f"\n[4/4] Fetching abc.rc from ABC repository...")
+    print("\n[4/4] Fetching abc.rc from ABC repository...")
     try:
         urllib.request.urlretrieve(ABC_RC_URL, abc_rc_path)
         print(f"abc.rc saved to: {abc_rc_path}")

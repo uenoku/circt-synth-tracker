@@ -7,22 +7,23 @@ Usage:
     aggregate-results --tool yosys --results-dir output/results -o yosys-summary.json
 """
 
-import sys
-import json
 import argparse
-from pathlib import Path
+import json
+import sys
 from datetime import datetime
+from pathlib import Path
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Aggregate synthesis benchmark results into JSON summary"
     )
+    parser.add_argument("--tool", required=True, help="Tool name (circt, yosys, etc.)")
     parser.add_argument(
-        "--tool", required=True, help="Tool name (circt, yosys, etc.)"
-    )
-    parser.add_argument(
-        "--version", required=False, help="Tool version (e.g., nightly, v1.0, etc.)", default="unknown"
+        "--version",
+        required=False,
+        help="Tool version (e.g., nightly, v1.0, etc.)",
+        default="unknown",
     )
     parser.add_argument(
         "--results-dir", required=True, help="Directory containing result files"
@@ -93,6 +94,7 @@ def main():
                         if lec_sidecar.exists():
                             try:
                                 import json as _json
+
                                 lec_data = _json.loads(lec_sidecar.read_text())
                                 metrics.update(lec_data)
                             except Exception:
@@ -105,11 +107,15 @@ def main():
                     inner = Path(aig_path).stem
                     if "." in inner:
                         base = inner.rsplit(".", 1)[0]
-                        tv_candidates.append(Path(aig_path).parent / (base + Path(aig_path).suffix + ".tv"))
+                        tv_candidates.append(
+                            Path(aig_path).parent
+                            / (base + Path(aig_path).suffix + ".tv")
+                        )
                     for tv_sidecar in tv_candidates:
                         if tv_sidecar.exists():
                             try:
                                 import json as _json
+
                                 tv_data = _json.loads(tv_sidecar.read_text())
                                 if "tv_status" in tv_data:
                                     metrics["tv_status"] = tv_data["tv_status"]
@@ -117,7 +123,9 @@ def main():
                                 if tv_results:
                                     metrics["tv_total"] = len(tv_results)
                                     metrics["tv_verified"] = sum(
-                                        1 for r in tv_results if r.get("status") == "equiv"
+                                        1
+                                        for r in tv_results
+                                        if r.get("status") == "equiv"
                                     )
                                     metrics["tv_results"] = tv_results
                             except Exception:

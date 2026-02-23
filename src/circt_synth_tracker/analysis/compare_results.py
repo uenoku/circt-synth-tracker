@@ -9,13 +9,14 @@ Usage:
     compare-results *.json --export report.html
 """
 
-import sys
+import argparse
 import json
 import math
-import argparse
 import subprocess
+import sys
 from html import escape
 from pathlib import Path
+
 from tabulate import tabulate
 
 
@@ -34,7 +35,9 @@ def _run_one_cec(abc, benchmark_name, aig1, aig2):
         elif "Networks are NOT" in output or "not equivalent" in output.lower():
             return (benchmark_name, "non-equiv", None, output)
         else:
-            detail = "\n".join(output.strip().splitlines()[-3:]) if output.strip() else ""
+            detail = (
+                "\n".join(output.strip().splitlines()[-3:]) if output.strip() else ""
+            )
             return (benchmark_name, "error", f"unexpected output: {detail}", output)
     except subprocess.TimeoutExpired:
         return (benchmark_name, "timeout", "timeout", "")
@@ -45,6 +48,7 @@ def _run_one_cec(abc, benchmark_name, aig1, aig2):
 def run_equiv_check(summaries, abc_exe=None, jobs=None):
     """Run combinational equivalence check between AIG files across all tools."""
     from circt_synth_tracker.analysis.check_cec import run_cec
+
     return run_cec(summaries, abc_exe, jobs)
 
 
@@ -67,24 +71,32 @@ def main():
         "--export", "-o", help="Export to file (use with --format html for report)"
     )
     parser.add_argument(
-        "--timeseries-url", default=None,
-        help="URL/path to timeseries report; adds a History nav link to the HTML report"
+        "--timeseries-url",
+        default=None,
+        help="URL/path to timeseries report; adds a History nav link to the HTML report",
     )
     parser.add_argument(
-        "--cec", default=None, metavar="CEC_JSON",
-        help="Path to pre-computed CEC results JSON (from check-cec command)"
+        "--cec",
+        default=None,
+        metavar="CEC_JSON",
+        help="Path to pre-computed CEC results JSON (from check-cec command)",
     )
     parser.add_argument(
-        "--equiv-check", action="store_true",
-        help="Run combinational equivalence check (CEC) on AIG output files using ABC"
+        "--equiv-check",
+        action="store_true",
+        help="Run combinational equivalence check (CEC) on AIG output files using ABC",
     )
     parser.add_argument(
-        "--abc", default=None,
-        help="Path to ABC executable for equivalence checking (default: auto-detect 'abc' or 'yosys-abc')"
+        "--abc",
+        default=None,
+        help="Path to ABC executable for equivalence checking (default: auto-detect 'abc' or 'yosys-abc')",
     )
     parser.add_argument(
-        "-j", "--jobs", type=int, default=None,
-        help="Number of parallel equivalence checks (default: number of available CPU cores)"
+        "-j",
+        "--jobs",
+        type=int,
+        default=None,
+        help="Number of parallel equivalence checks (default: number of available CPU cores)",
     )
 
     args = parser.parse_args()
@@ -140,7 +152,9 @@ def main():
         )
     else:
         # Compare all benchmarks
-        compare_all(summaries, args.format, args.export, args.timeseries_url, equiv_results)
+        compare_all(
+            summaries, args.format, args.export, args.timeseries_url, equiv_results
+        )
 
     return 0
 
@@ -190,7 +204,9 @@ def compare_benchmark(
         display_comparison(comparison, benchmark_name, format_type, metric_filter)
 
 
-def compare_all(summaries, format_type, export_path=None, timeseries_url=None, equiv_results=None):
+def compare_all(
+    summaries, format_type, export_path=None, timeseries_url=None, equiv_results=None
+):
     """Compare all benchmarks across all tools."""
 
     # Collect all unique benchmark names
@@ -206,7 +222,9 @@ def compare_all(summaries, format_type, export_path=None, timeseries_url=None, e
 
     # If HTML export requested, generate full report
     if export_path and format_type == "html":
-        generate_html_report(summaries, all_benchmarks, export_path, timeseries_url, equiv_results)
+        generate_html_report(
+            summaries, all_benchmarks, export_path, timeseries_url, equiv_results
+        )
         return
 
     # If JSON export requested, generate combined JSON
@@ -232,7 +250,9 @@ def compare_all(summaries, format_type, export_path=None, timeseries_url=None, e
             display_comparison(comparison, benchmark_name, format_type)
 
 
-def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category, tool_names):
+def _outlier_table_section(
+    summaries, sorted_categories, benchmarks_by_category, tool_names
+):
     """Return HTML for a per-benchmark ranking table sorted by % difference."""
     import json as _json
 
@@ -240,11 +260,11 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
     compare_tool = tool_names[1]
 
     table_metrics = [
-        ("gates",       "Gates"),
-        ("depth",       "Depth"),
-        ("area_asap7",  "Area (ASAP7)"),
+        ("gates", "Gates"),
+        ("depth", "Depth"),
+        ("area_asap7", "Area (ASAP7)"),
         ("delay_asap7", "Delay (ASAP7)"),
-        ("area_sky130",  "Area (Sky130)"),
+        ("area_sky130", "Area (Sky130)"),
         ("delay_sky130", "Delay (Sky130)"),
     ]
 
@@ -258,7 +278,9 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
             row = {"name": bname, "category": category}
             for mk, _ in table_metrics:
                 bv, cv = bd.get(mk), cd.get(mk)
-                row[mk] = round((cv - bv) / bv * 100, 2) if bv and cv and bv > 0 else None
+                row[mk] = (
+                    round((cv - bv) / bv * 100, 2) if bv and cv and bv > 0 else None
+                )
             rows.append(row)
 
     rows_json = _json.dumps(rows)
@@ -377,7 +399,9 @@ def _outlier_table_section(summaries, sorted_categories, benchmarks_by_category,
 """
 
 
-def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, tool_names):
+def _bar_chart_section(
+    summaries, sorted_categories, benchmarks_by_category, tool_names
+):
     """Return an HTML string containing bar charts comparing two tools across all benchmarks."""
     import json as _json
 
@@ -424,12 +448,14 @@ def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, too
             "compare_vals": cmp_vals,
         }
 
-    chart_data_json = _json.dumps({
-        "benchmarks": benchmarks,
-        "baseline": baseline_tool,
-        "compare": compare_tool,
-        "metrics": metrics_data,
-    })
+    chart_data_json = _json.dumps(
+        {
+            "benchmarks": benchmarks,
+            "baseline": baseline_tool,
+            "compare": compare_tool,
+            "metrics": metrics_data,
+        }
+    )
 
     return f"""
         <h2>Visual Comparison</h2>
@@ -571,7 +597,9 @@ def _bar_chart_section(summaries, sorted_categories, benchmarks_by_category, too
 """
 
 
-def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=None, equiv_results=None):
+def generate_html_report(
+    summaries, all_benchmarks, output_path, timeseries_url=None, equiv_results=None
+):
     """Generate a comprehensive HTML report comparing all benchmarks."""
 
     tool_names = list(summaries.keys())
@@ -862,7 +890,8 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
         + (
             f'<nav><a href="report.html" class="active">Latest Report</a>'
             f'<a href="{escape(timeseries_url)}">History</a></nav>'
-            if timeseries_url else ""
+            if timeseries_url
+            else ""
         )
         + """
 
@@ -871,7 +900,14 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
         + escape(", ".join(tool_names))
         + """</div>
             <div class="summary-line"><strong>Tool Versions:</strong> """
-        + escape(", ".join([f"{tool} v{summaries[tool].get('version', 'unknown')}" for tool in tool_names]))
+        + escape(
+            ", ".join(
+                [
+                    f"{tool} v{summaries[tool].get('version', 'unknown')}"
+                    for tool in tool_names
+                ]
+            )
+        )
         + """</div>
             <div class="summary-line"><strong>Total Benchmarks:</strong> """
         + str(len(all_benchmarks))
@@ -906,7 +942,8 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
 
     # Determine which tools have TV (translation validation) data
     tools_with_tv = [
-        t for t in tool_names
+        t
+        for t in tool_names
         if any(
             summaries[t].get("benchmarks", {}).get(b, {}).get("tv_status")
             for b in all_benchmarks
@@ -1067,16 +1104,31 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
                     tv_verified = result.get("tv_verified")
                     tv_total = result.get("tv_total")
                     tv_results_list = result.get("tv_results", [])
-                    frac = f" {tv_verified}/{tv_total}" if tv_verified is not None and tv_total is not None else ""
-                    has_timeout = any(r.get("status") in ("timeout", "error") for r in tv_results_list)
+                    frac = (
+                        f" {tv_verified}/{tv_total}"
+                        if tv_verified is not None and tv_total is not None
+                        else ""
+                    )
+                    has_timeout = any(
+                        r.get("status") in ("timeout", "error") for r in tv_results_list
+                    )
 
                     def _tv_tip_span(header, results):
                         if not results:
                             return f"<span class='tv-tip'>{escape(header)}</span>"
-                        icons = {"equiv": "✔", "non-equiv": "✘", "timeout": "⏱", "error": "⚠"}
-                        lines = header + "\n" + "\n".join(
-                            f"{icons.get(r['status'], '?')} {r['from']} → {r['to']}"
-                            for r in results
+                        icons = {
+                            "equiv": "✔",
+                            "non-equiv": "✘",
+                            "timeout": "⏱",
+                            "error": "⚠",
+                        }
+                        lines = (
+                            header
+                            + "\n"
+                            + "\n".join(
+                                f"{icons.get(r['status'], '?')} {r['from']} → {r['to']}"
+                                for r in results
+                            )
                         )
                         return f"<span class='tv-tip'>{escape(lines)}</span>"
 
@@ -1119,11 +1171,11 @@ def generate_html_report(summaries, all_benchmarks, output_path, timeseries_url=
 
     # Add equivalence check summary section
     if equiv_results:
-        n_pass    = sum(1 for s in equiv_results.values() if s == "equiv")
-        n_fail    = sum(1 for s in equiv_results.values() if s == "non-equiv")
+        n_pass = sum(1 for s in equiv_results.values() if s == "equiv")
+        n_fail = sum(1 for s in equiv_results.values() if s == "non-equiv")
         n_timeout = sum(1 for s in equiv_results.values() if s == "timeout")
-        n_err     = sum(1 for s in equiv_results.values() if s == "error")
-        n_skip    = sum(1 for s in equiv_results.values() if s == "missing")
+        n_err = sum(1 for s in equiv_results.values() if s == "error")
+        n_skip = sum(1 for s in equiv_results.values() if s == "missing")
         failed_names = [n for n, s in equiv_results.items() if s == "non-equiv"]
         html += f"""
         <h2>Equivalence Check Summary</h2>
@@ -1349,9 +1401,9 @@ def generate_json_report(summaries, all_benchmarks, output_path):
         "metadata": {
             "tools_compared": tool_names,
             "total_benchmarks": len(all_benchmarks),
-            "generated": summaries[tool_names[0]].get("timestamp", "N/A")
+            "generated": summaries[tool_names[0]].get("timestamp", "N/A"),
         },
-        "benchmarks": {}
+        "benchmarks": {},
     }
 
     for benchmark_name in sorted(all_benchmarks):
@@ -1372,7 +1424,9 @@ def generate_json_report(summaries, all_benchmarks, output_path):
     print(f"JSON report generated: {output_path}")
 
 
-def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_results=None):
+def generate_markdown_report(
+    summaries, all_benchmarks, output_path, equiv_results=None
+):
     """Generate a Markdown report with a summary geomean table and collapsible per-benchmark details."""
     from tabulate import tabulate
 
@@ -1386,12 +1440,12 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
         return math.exp(sum(math.log(v) for v in valid) / len(valid))
 
     metrics_def = [
-        ("Gates",        "gates"),
-        ("Depth",        "depth"),
+        ("Gates", "gates"),
+        ("Depth", "depth"),
         ("Area (ASAP7)", "area_asap7"),
-        ("Delay (ASAP7)","delay_asap7"),
-        ("Area (Sky130)","area_sky130"),
-        ("Delay (Sky130)","delay_sky130"),
+        ("Delay (ASAP7)", "delay_asap7"),
+        ("Area (Sky130)", "area_sky130"),
+        ("Delay (Sky130)", "delay_sky130"),
     ]
 
     # Group benchmarks by category
@@ -1426,7 +1480,7 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
 
         # Overall row
         all_base = list(summaries[baseline_tool].get("benchmarks", {}).values())
-        all_cmp  = list(summaries[compare_tool].get("benchmarks", {}).values())
+        all_cmp = list(summaries[compare_tool].get("benchmarks", {}).values())
         overall_label = f"**Overall** ({len(all_base)} benchmarks)"
         for i, (mname, mkey) in enumerate(metrics_def):
             bg = geo_mean([b.get(mkey) for b in all_base])
@@ -1437,12 +1491,16 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
 
         # Per-category rows
         for category in sorted_categories:
-            base_bds = [summaries[baseline_tool]["benchmarks"][bn]
-                        for bn in benchmarks_by_category[category]
-                        if bn in summaries[baseline_tool].get("benchmarks", {})]
-            cmp_bds  = [summaries[compare_tool]["benchmarks"][bn]
-                        for bn in benchmarks_by_category[category]
-                        if bn in summaries[compare_tool].get("benchmarks", {})]
+            base_bds = [
+                summaries[baseline_tool]["benchmarks"][bn]
+                for bn in benchmarks_by_category[category]
+                if bn in summaries[baseline_tool].get("benchmarks", {})
+            ]
+            cmp_bds = [
+                summaries[compare_tool]["benchmarks"][bn]
+                for bn in benchmarks_by_category[category]
+                if bn in summaries[compare_tool].get("benchmarks", {})
+            ]
             if not base_bds or not cmp_bds:
                 continue
             for i, (mname, mkey) in enumerate(metrics_def):
@@ -1452,7 +1510,9 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
                 cat_cell = category if i == 0 else ""
                 geomean_rows.append([cat_cell, mname, b_str, c_str])
 
-        geomean_table = tabulate(geomean_rows, headers=geomean_headers, tablefmt="github")
+        geomean_table = tabulate(
+            geomean_rows, headers=geomean_headers, tablefmt="github"
+        )
     else:
         baseline_tool = tool_names[0]
         compare_tool = None
@@ -1483,31 +1543,42 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
         if summary.get("benchmarks", {}).get(bname, {}).get("tv_status") is not None
     ]
     if all_tv_statuses:
-        n_tv_pass  = all_tv_statuses.count("pass")
-        n_tv_fail  = all_tv_statuses.count("fail")
+        n_tv_pass = all_tv_statuses.count("pass")
+        n_tv_fail = all_tv_statuses.count("fail")
         n_tv_error = all_tv_statuses.count("error")
         markdown += "### SMT Translation Validation (bitwuzla)\n\n"
-        markdown += f"✔ Pass: {n_tv_pass} | ✘ Fail: {n_tv_fail} | ⚠ Error: {n_tv_error}\n\n"
+        markdown += (
+            f"✔ Pass: {n_tv_pass} | ✘ Fail: {n_tv_fail} | ⚠ Error: {n_tv_error}\n\n"
+        )
         failed_tv = sorted(
-            bname for summary in summaries.values()
+            bname
+            for summary in summaries.values()
             for bname, bd in summary.get("benchmarks", {}).items()
             if bd.get("tv_status") == "fail"
         )
         if failed_tv:
-            markdown += "**Non-equivalent (TV):** " + ", ".join(f"`{n}`" for n in failed_tv) + "\n\n"
+            markdown += (
+                "**Non-equivalent (TV):** "
+                + ", ".join(f"`{n}`" for n in failed_tv)
+                + "\n\n"
+            )
 
     # CEC summary
     if equiv_results:
-        n_equiv   = sum(1 for s in equiv_results.values() if s == "equiv")
-        n_nequiv  = sum(1 for s in equiv_results.values() if s == "non-equiv")
+        n_equiv = sum(1 for s in equiv_results.values() if s == "equiv")
+        n_nequiv = sum(1 for s in equiv_results.values() if s == "non-equiv")
         n_timeout = sum(1 for s in equiv_results.values() if s == "timeout")
-        n_err     = sum(1 for s in equiv_results.values() if s == "error")
-        n_miss    = sum(1 for s in equiv_results.values() if s == "missing")
+        n_err = sum(1 for s in equiv_results.values() if s == "error")
+        n_miss = sum(1 for s in equiv_results.values() if s == "missing")
         markdown += "### Equivalence Check (CEC)\n\n"
         markdown += f"✔ Equivalent: {n_equiv} | ✘ Non-equiv: {n_nequiv} | ⏱ Timeout: {n_timeout} | ⚠ Error: {n_err} | — Skipped: {n_miss}\n\n"
         failed = sorted(n for n, s in equiv_results.items() if s == "non-equiv")
         if failed:
-            markdown += "**Non-equivalent benchmarks:** " + ", ".join(f"`{n}`" for n in failed) + "\n\n"
+            markdown += (
+                "**Non-equivalent benchmarks:** "
+                + ", ".join(f"`{n}`" for n in failed)
+                + "\n\n"
+            )
 
     # Per-benchmark detail inside collapsible block
     detail_lines = []
@@ -1535,10 +1606,19 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
                 return f"{value} ({sign}{diff_pct:.1f}%)"
 
             tools_with_tv_md = [
-                t for t in tool_names
+                t
+                for t in tool_names
                 if comparison.get(t, {}).get("tv_status") is not None
             ]
-            headers = ["Tool", "Gates", "Depth", "Area (ASAP7)", "Delay (ASAP7)", "Area (Sky130)", "Delay (Sky130)"]
+            headers = [
+                "Tool",
+                "Gates",
+                "Depth",
+                "Area (ASAP7)",
+                "Delay (ASAP7)",
+                "Area (Sky130)",
+                "Delay (Sky130)",
+            ]
             if tools_with_tv_md:
                 headers.append("SMT TV (bitwuzla)")
             rows = []
@@ -1546,12 +1626,28 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
                 result = comparison.get(tool, {})
                 row = [
                     tool,
-                    fmt(result.get("gates"),        baseline_result.get("gates"),        tool),
-                    fmt(result.get("depth"),        baseline_result.get("depth"),        tool),
-                    fmt(result.get("area_asap7"),   baseline_result.get("area_asap7"),   tool),
-                    fmt(result.get("delay_asap7"),  baseline_result.get("delay_asap7"),  tool),
-                    fmt(result.get("area_sky130"),  baseline_result.get("area_sky130"),  tool),
-                    fmt(result.get("delay_sky130"), baseline_result.get("delay_sky130"), tool),
+                    fmt(result.get("gates"), baseline_result.get("gates"), tool),
+                    fmt(result.get("depth"), baseline_result.get("depth"), tool),
+                    fmt(
+                        result.get("area_asap7"),
+                        baseline_result.get("area_asap7"),
+                        tool,
+                    ),
+                    fmt(
+                        result.get("delay_asap7"),
+                        baseline_result.get("delay_asap7"),
+                        tool,
+                    ),
+                    fmt(
+                        result.get("area_sky130"),
+                        baseline_result.get("area_sky130"),
+                        tool,
+                    ),
+                    fmt(
+                        result.get("delay_sky130"),
+                        baseline_result.get("delay_sky130"),
+                        tool,
+                    ),
                 ]
                 if tools_with_tv_md:
                     tv_status = result.get("tv_status")
@@ -1562,14 +1658,27 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
             cec_status = ""
             if equiv_results and bname in equiv_results:
                 s = equiv_results[bname]
-                icon = {"equiv": "✔", "non-equiv": "✘", "timeout": "⏱", "error": "⚠", "missing": "—"}.get(s, s)
+                icon = {
+                    "equiv": "✔",
+                    "non-equiv": "✘",
+                    "timeout": "⏱",
+                    "error": "⚠",
+                    "missing": "—",
+                }.get(s, s)
                 cec_status = f" (CEC: {icon})"
 
             detail_lines.append(f"\n**{bname}**{cec_status}\n\n")
-            detail_lines.append(tabulate(rows, headers=headers, tablefmt="github") + "\n")
+            detail_lines.append(
+                tabulate(rows, headers=headers, tablefmt="github") + "\n"
+            )
 
             # Per-transformation TV detail
-            tv_step_icons = {"equiv": "✔", "non-equiv": "✘", "timeout": "⏱", "error": "⚠"}
+            tv_step_icons = {
+                "equiv": "✔",
+                "non-equiv": "✘",
+                "timeout": "⏱",
+                "error": "⚠",
+            }
             for tool in tools_with_tv_md:
                 tv_results_list = comparison.get(tool, {}).get("tv_results", [])
                 if tv_results_list:
@@ -1583,7 +1692,8 @@ def generate_markdown_report(summaries, all_benchmarks, output_path, equiv_resul
                         for r in tv_results_list
                     ]
                     detail_lines.append(
-                        tabulate(tv_rows, headers=["", "From", "To"], tablefmt="github") + "\n"
+                        tabulate(tv_rows, headers=["", "From", "To"], tablefmt="github")
+                        + "\n"
                     )
 
     if detail_lines:

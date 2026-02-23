@@ -4,10 +4,10 @@ AIG judge tool - wrapper for the C++ aig-judge binary.
 Performs technology mapping using mockturtle's emap algorithm.
 """
 
-import sys
-import json
 import argparse
+import json
 import subprocess
+import sys
 from pathlib import Path
 
 

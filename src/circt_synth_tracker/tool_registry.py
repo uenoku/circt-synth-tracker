@@ -6,8 +6,8 @@ different synthesis tools (circt-synth, yosys, abc, etc.) in the test framework.
 """
 
 import os
-from typing import Dict, Callable, Optional, List
 from dataclasses import dataclass
+from typing import Callable, Dict, List, Optional
 
 
 @dataclass

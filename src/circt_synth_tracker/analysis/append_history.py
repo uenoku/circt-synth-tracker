@@ -7,9 +7,9 @@ Usage:
     append-history --circt circt-summary.json --yosys yosys-summary.json -o history.json --max-days 90
 """
 
-import sys
-import json
 import argparse
+import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,14 +21,18 @@ def main():
     parser.add_argument("--circt", required=True, help="CIRCT summary JSON file")
     parser.add_argument("--yosys", required=True, help="Yosys summary JSON file")
     parser.add_argument(
-        "-o", "--output", required=True, help="History JSON file (read and updated in-place)"
+        "-o",
+        "--output",
+        required=True,
+        help="History JSON file (read and updated in-place)",
     )
     parser.add_argument(
-        "--max-days", type=int, default=0, help="Maximum entries to retain (0 = unlimited)"
+        "--max-days",
+        type=int,
+        default=0,
+        help="Maximum entries to retain (0 = unlimited)",
     )
-    parser.add_argument(
-        "--date", help="Override date (YYYY-MM-DD, default: today UTC)"
-    )
+    parser.add_argument("--date", help="Override date (YYYY-MM-DD, default: today UTC)")
 
     args = parser.parse_args()
 

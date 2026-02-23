@@ -39,5 +39,12 @@ packages = ["src/circt_synth_tracker"]
 [tool.ruff]
 exclude = ["benchmarks/", "tests/"]
 
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+# use ruff defaults
+
 [dependency-groups]
 dev = ["lit>=18.0.0", "ruff>=0.14.1"]

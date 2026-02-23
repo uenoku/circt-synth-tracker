@@ -2,12 +2,12 @@
 Submit tool for DatapathBench results.
 """
 
-import sys
-import os
-import json
 import argparse
-from pathlib import Path
+import json
+import os
+import sys
 from datetime import datetime
+from pathlib import Path
 
 
 def main():
@@ -16,7 +16,13 @@ def main():
     parser.add_argument("--name", required=True, help="Benchmark name")
     parser.add_argument("--tool", help="Tool name (default: auto-detect from env)")
     parser.add_argument("--output-dir", help="Output directory for results")
-    parser.add_argument("--bw", "--bitwidth", dest="bitwidth", type=int, help="Bit width to append to benchmark name (e.g. 16 → name_16)")
+    parser.add_argument(
+        "--bw",
+        "--bitwidth",
+        dest="bitwidth",
+        type=int,
+        help="Bit width to append to benchmark name (e.g. 16 → name_16)",
+    )
 
     args = parser.parse_args()
 

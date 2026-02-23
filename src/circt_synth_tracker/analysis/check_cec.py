@@ -6,9 +6,9 @@ Usage:
     check-cec circt-summary.json yosys-summary.json -o cec.json
 """
 
-import sys
-import json
 import argparse
+import json
+import sys
 from pathlib import Path
 
 from circt_synth_tracker.analysis.compare_results import _run_one_cec
@@ -59,7 +59,9 @@ def run_cec(summaries, abc_exe=None, jobs=None):
 
         missing_files = [p for p in (aig1, aig2) if not Path(p).exists()]
         if missing_files:
-            print(f"  SKIP  {benchmark_name} (file not found: {', '.join(missing_files)})")
+            print(
+                f"  SKIP  {benchmark_name} (file not found: {', '.join(missing_files)})"
+            )
             results["missing"].append(benchmark_name)
             continue
 
@@ -131,12 +133,16 @@ def main():
     parser.add_argument("summaries", nargs=2, help="Two JSON summary files to compare")
     parser.add_argument("-o", "--output", help="Output CEC results to JSON file")
     parser.add_argument(
-        "--abc", default=None,
-        help="Path to ABC executable (default: auto-detect 'abc' or 'yosys-abc')"
+        "--abc",
+        default=None,
+        help="Path to ABC executable (default: auto-detect 'abc' or 'yosys-abc')",
     )
     parser.add_argument(
-        "-j", "--jobs", type=int, default=None,
-        help="Number of parallel checks (default: number of available CPU cores)"
+        "-j",
+        "--jobs",
+        type=int,
+        default=None,
+        help="Number of parallel checks (default: number of available CPU cores)",
     )
 
     args = parser.parse_args()

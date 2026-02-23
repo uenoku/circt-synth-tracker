@@ -27,8 +27,7 @@ def find_abc(explicit: str | None = None) -> str:
         if shutil.which(candidate):
             return candidate
     raise FileNotFoundError(
-        "No ABC executable found. Install 'abc' or 'yosys-abc', "
-        "or pass --abc <path>."
+        "No ABC executable found. Install 'abc' or 'yosys-abc', or pass --abc <path>."
     )
 
 

@@ -13,9 +13,9 @@ Usage:
     run-abc-opt input.aig -o output.aig [--abc-commands "compress2rs;"] [--abc abc]
 """
 
+import argparse
 import shutil
 import sys
-import argparse
 from pathlib import Path
 
 from circt_synth_tracker.tools import run_abc_commands
@@ -65,8 +65,13 @@ def main():
         rc_file = None
 
     if args.abc_commands:
-        run_abc_commands(input_file, output_file, args.abc_commands,
-                         abc_exe=args.abc, rc_file=rc_file)
+        run_abc_commands(
+            input_file,
+            output_file,
+            args.abc_commands,
+            abc_exe=args.abc,
+            rc_file=rc_file,
+        )
     else:
         shutil.copy2(input_file, output_file)
 

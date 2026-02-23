@@ -7,12 +7,11 @@ Usage:
     timeseries-report history.json -o timeseries.html --max-days 90
 """
 
-import sys
-import json
 import argparse
-from math import prod, exp, log
+import json
+import sys
+from math import exp, log
 from pathlib import Path
-
 
 METRICS = [
     ("gates", "Gates"),
@@ -25,14 +24,14 @@ METRICS = [
 
 # Palette for category coloring in the all-benchmarks chart
 _CATEGORY_PALETTE = [
-    (33,  150, 243),   # blue
-    (255, 152,   0),   # orange
-    (76,  175,  80),   # green
-    (156,  39, 176),   # purple
-    (233,  30,  99),   # pink
-    (0,   188, 212),   # cyan
-    (255,  87,  34),   # deep-orange
-    (96,  125, 139),   # blue-grey
+    (33, 150, 243),  # blue
+    (255, 152, 0),  # orange
+    (76, 175, 80),  # green
+    (156, 39, 176),  # purple
+    (233, 30, 99),  # pink
+    (0, 188, 212),  # cyan
+    (255, 87, 34),  # deep-orange
+    (96, 125, 139),  # blue-grey
 ]
 
 
@@ -95,8 +94,18 @@ def build_chart_data(history):
         for metric_key, _ in METRICS:
             pcts = []
             for entry in history:
-                cv = entry.get("circt", {}).get("benchmarks", {}).get(bname, {}).get(metric_key)
-                yv = entry.get("yosys", {}).get("benchmarks", {}).get(bname, {}).get(metric_key)
+                cv = (
+                    entry.get("circt", {})
+                    .get("benchmarks", {})
+                    .get(bname, {})
+                    .get(metric_key)
+                )
+                yv = (
+                    entry.get("yosys", {})
+                    .get("benchmarks", {})
+                    .get(bname, {})
+                    .get(metric_key)
+                )
                 if cv and yv and yv > 0:
                     pcts.append(round((cv - yv) / yv * 100, 2))
                 else:
@@ -108,7 +117,12 @@ def build_chart_data(history):
     benchmark_categories = {}
     for bname in all_benchmarks:
         for entry in reversed(history):
-            cat = entry.get("circt", {}).get("benchmarks", {}).get(bname, {}).get("category")
+            cat = (
+                entry.get("circt", {})
+                .get("benchmarks", {})
+                .get(bname, {})
+                .get("category")
+            )
             if cat:
                 benchmark_categories[bname] = cat
                 break
@@ -124,7 +138,7 @@ def build_chart_data(history):
         "benchmark_data": benchmark_data,
         "benchmark_pct": benchmark_pct,
         "benchmark_categories": benchmark_categories,
-        "metrics": [{"key": k, "label": l} for k, l in METRICS],
+        "metrics": [{"key": k, "label": label} for k, label in METRICS],
     }
 
 
@@ -273,7 +287,7 @@ def generate_html(history, chart_data):
 <body>
   <div class="container">
     <h1>CIRCT Synth Tracker – History</h1>
-    <p class="meta">Last updated: {last_date} &nbsp;·&nbsp; {n} data point{'s' if n != 1 else ''}</p>
+    <p class="meta">Last updated: {last_date} &nbsp;·&nbsp; {n} data point{"s" if n != 1 else ""}</p>
 
     <nav>
       <a href="report.html">Latest Report</a>
@@ -554,8 +568,10 @@ def main():
     )
     parser.add_argument("history", help="History JSON file")
     parser.add_argument(
-        "-o", "--output", default="timeseries.html",
-        help="Output HTML file (default: timeseries.html)"
+        "-o",
+        "--output",
+        default="timeseries.html",
+        help="Output HTML file (default: timeseries.html)",
     )
     parser.add_argument(
         "--max-days", type=int, default=0, help="Use only the last N entries (0 = all)"

@@ -6,10 +6,10 @@ This tool provides a unified interface for Yosys synthesis, compatible
 with the circt-synth interface. It generates AIG output from SystemVerilog input.
 """
 
-import sys
+import argparse
 import os
 import subprocess
-import argparse
+import sys
 import tempfile
 from pathlib import Path
 
