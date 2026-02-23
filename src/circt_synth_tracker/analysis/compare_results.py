@@ -275,7 +275,11 @@ def _outlier_table_section(
             cd = summaries[compare_tool]["benchmarks"].get(bname, {})
             if not bd or not cd:
                 continue
-            row = {"name": bname, "category": category}
+            row = {
+                "name": bname,
+                "category": category,
+                "url": _benchmark_source_url(bname, category),
+            }
             for mk, _ in table_metrics:
                 bv, cv = bd.get(mk), cd.get(mk)
                 row[mk] = (
@@ -367,7 +371,10 @@ def _outlier_table_section(
                 h += '</tr></thead><tbody>';
 
                 sorted.forEach(function(row, i) {{
-                    h += `<tr><td>${{i + 1}}</td><td>${{row.name}}</td><td>${{row.category}}</td>`;
+                    const nameCell = row.url
+                        ? `<a href="${{row.url}}" target="_blank" style="color:inherit">${{row.name}}</a>`
+                        : row.name;
+                    h += `<tr><td>${{i + 1}}</td><td>${{nameCell}}</td><td>${{row.category}}</td>`;
                     METRICS.forEach(function(m) {{
                         const v = row[m.key];
                         const bg = cellBg(v);
@@ -595,6 +602,64 @@ def _bar_chart_section(
         }})();
         </script>
 """
+
+
+_REPO_ROOT = Path(__file__).parent.parent.parent.parent
+
+_CATEGORY_INFO = {
+    "DatapathBench": {
+        "local": _REPO_ROOT / "benchmarks/comb/DatapathBench/DatapathBench",
+        "github": "https://github.com/cowardsa/DatapathBench",
+        "branch": "main",
+        "name_strip_prefix": None,
+    },
+    "ELAU": {
+        "local": _REPO_ROOT / "benchmarks/comb/ELAU/ELAU",
+        "github": "https://github.com/pulp-platform/ELAU",
+        "branch": "master",
+        "name_strip_prefix": "behavioural_",
+    },
+    "microbenchmarks": {
+        "local": _REPO_ROOT / "benchmarks/comb/microbenchmarks",
+        "github": "https://github.com/uenoku/circt-synth-tracker",
+        "branch": "main",
+        "name_strip_prefix": None,
+        "relative_to": _REPO_ROOT,
+    },
+}
+
+
+def _benchmark_source_url(benchmark_name, category):
+    """Return a URL to the original source file for a benchmark, or None.
+
+    Strips a trailing bitwidth suffix (e.g. ``add_16`` -> ``add``) and searches
+    the local submodule/directory for the ``.sv`` file.
+    """
+    import re
+
+    info = _CATEGORY_INFO.get(category)
+    if not info:
+        return None
+
+    local_dir = info["local"]
+    if not local_dir.exists():
+        return None
+
+    # Strip trailing bitwidth suffix (e.g. "add_16" -> "add")
+    name = re.sub(r"_\d+$", "", benchmark_name)
+
+    # Strip category-specific name prefix (e.g. "behavioural_AbsVal" -> "AbsVal")
+    prefix = info["name_strip_prefix"]
+    if prefix and name.startswith(prefix):
+        name = name[len(prefix):]
+
+    matches = list(local_dir.rglob(f"{name}.sv"))
+    if not matches:
+        return None
+
+    relative_to = info.get("relative_to", local_dir)
+    rel_path = matches[0].relative_to(relative_to)
+    return f"{info['github']}/blob/{info['branch']}/{rel_path}"
 
 
 def generate_html_report(
@@ -1008,8 +1073,15 @@ def generate_html_report(
             if len(comparison) < 2:
                 continue
 
+            src_url = _benchmark_source_url(benchmark_name, category)
+            if src_url:
+                bname_cell = f'<a href="{escape(src_url)}" target="_blank" style="color:inherit">{escape(benchmark_name)}</a>'
+            else:
+                bname_cell = escape(benchmark_name)
             html += "                <tr>\n"
-            html += f"                    <td class='benchmark-name'>{benchmark_name}</td>\n"
+            html += (
+                f"                    <td class='benchmark-name'>{bname_cell}</td>\n"
+            )
 
             # Get baseline (first tool)
             baseline_tool = tool_names[0]
@@ -1135,7 +1207,7 @@ def generate_html_report(
                             header
                             + "\n"
                             + "\n".join(
-                                f"{icons.get(r['status'], '?')} {r['from']} → {r['to']}"
+                                f"{icons.get(r['status'], '?')} {r['from']} -> {r['to']}"
                                 for r in results
                             )
                         )
@@ -1676,7 +1748,9 @@ def generate_markdown_report(
                 }.get(s, s)
                 cec_status = f" (CEC: {icon})"
 
-            detail_lines.append(f"\n**{bname}**{cec_status}\n\n")
+            src_url = _benchmark_source_url(bname, category)
+            bname_md = f"[{bname}]({src_url})" if src_url else bname
+            detail_lines.append(f"\n**{bname_md}**{cec_status}\n\n")
             detail_lines.append(
                 tabulate(rows, headers=headers, tablefmt="github") + "\n"
             )

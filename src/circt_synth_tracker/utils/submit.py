@@ -21,7 +21,7 @@ def main():
         "--bitwidth",
         dest="bitwidth",
         type=int,
-        help="Bit width to append to benchmark name (e.g. 16 → name_16)",
+        help="Bit width to append to benchmark name (e.g. 16 -> name_16)",
     )
 
     args = parser.parse_args()
