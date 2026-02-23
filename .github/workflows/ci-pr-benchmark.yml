@@ -170,7 +170,7 @@ jobs:
           for BW in "${BWS[@]}"; do
             lit -v benchmarks/ -DSYNTH_TOOL=circt \
               -DTEST_OUTPUT_DIR=build_before -DBW=$BW $ABC_PARAM \
-              -DRUN_TV=1 -DTV_SOLVER=bitwuzla || true
+              -DTV_SOLVER=bitwuzla || true
           done
           aggregate-results --tool "base" --version "$BEFORE_VERSION" \
             --results-dir build_before -o before-summary.json
@@ -215,7 +215,7 @@ jobs:
           for BW in "${BWS[@]}"; do
             lit -v benchmarks/ -DSYNTH_TOOL=circt \
               -DTEST_OUTPUT_DIR=build_after -DBW=$BW $ABC_PARAM \
-              -DRUN_TV=1 -DTV_SOLVER=bitwuzla || true
+              -DTV_SOLVER=bitwuzla || true
           done
           aggregate-results --tool "pr" --version "$AFTER_VERSION" \
             --results-dir build_after -o after-summary.json
@@ -306,6 +306,16 @@ jobs:
             tracker/pr-report.json
             tracker/before-summary.json
             tracker/after-summary.json
+
+      - name: Archive failed TV MLIR files
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-${{ inputs.pr_number }}-failed-tv-mlir
+          path: |
+            tracker/build_before/**/*.tv-pairs/
+            tracker/build_after/**/*.tv-pairs/
+          if-no-files-found: ignore
 
       - name: Upload test outputs on failure
         uses: actions/upload-artifact@v4

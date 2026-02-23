@@ -47,7 +47,7 @@ lit -v benchmarks/ -DABC_COMMANDS="resyn"
 
 # Run SMT Translation Validation (TV) with Bitwuzla
 # TV verifies each CIRCT synthesis pass preserves circuit semantics using circt-lec + Bitwuzla
-lit -v benchmarks/ -DRUN_TV=1 -DTV_SOLVER=bitwuzla
+lit -v benchmarks/ -DTV_SOLVER=bitwuzla
 
 # Run specific circt-synth version
 export CIRCT_SYNTH=/path/to/circt-synth
@@ -86,8 +86,7 @@ compare-results circt-summary.json yosys-summary.json -o report.html --equiv-che
 | `BW` | `16` | Bitwidth for parameterized benchmarks |
 | `TEST_OUTPUT_DIR` | `build` | Directory for lit test outputs |
 | `CIRCT_SYNTH_EXTRA_ARGS` | _(empty)_ | Extra flags passed to `circt-synth` |
-| `RUN_TV` | _(empty)_ | Enable SMT Translation Validation; set to `1` to enable |
-| `TV_SOLVER` | _(empty)_ | SMT solver command for TV (e.g. `bitwuzla`, `z3 -in`); uses `circt-lec --run` if unset |
+| `TV_SOLVER` | _(empty)_ | SMT solver command for TV (e.g. `bitwuzla`, `z3 -in`); when set, TV is automatically enabled |
 
 ### Lit Substitutions
 
@@ -134,13 +133,22 @@ compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.j
 
 ## SMT Translation Validation
 
-Translation Validation (TV) uses `circt-lec` to verify that each CIRCT synthesis pass preserves the circuit's logical equivalence. When enabled, `circt-synth` dumps per-pass MLIR snapshots and `circt-lec` checks each consecutive pair in the transformation sequence:
+Translation Validation (TV) uses `circt-lec` to verify that each CIRCT synthesis pass preserves the circuit's logical equivalence. When enabled, `circt-synth` dumps per-pass MLIR snapshots and `circt-lec --emit-smtlib` is piped to an external SMT solver (Bitwuzla or Z3) for each consecutive pair in the transformation sequence:
 
 ```
 input.mlir → pass_0 → pass_1 → … → synth_output.mlir
 ```
 
 Each step is checked independently. Results are recorded as a `.tv` sidecar file alongside the AIG output and aggregated into the summary JSON under `tv_status` (`pass` / `fail` / `error`) and `tv_results` (per-step status).
+
+When a non-equivalence is detected, the failing MLIR pair(s) are saved to a `.tv-pairs/` directory alongside the AIG output, together with a `reproduce.sh` script:
+
+```bash
+# Inside .tv-pairs/
+./reproduce.sh
+# which runs e.g.:
+# circt-lec 0_from_0_3_SomePass.mlir 0_to_0_4_NextPass.mlir --emit-smtlib | bitwuzla
+```
 
 ### Running TV locally
 
@@ -152,7 +160,7 @@ curl -fsSL https://github.com/bitwuzla/bitwuzla/releases/latest/download/Bitwuzl
   | unzip -j - '*/bin/bitwuzla' -d ~/.local/bin/
 
 # Run benchmarks with TV
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DRUN_TV=1 -DTV_SOLVER=bitwuzla
+lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla
 ```
 
 TV results appear in the HTML report as an **SMT TV (bitwuzla)** column and in the Markdown report under a **SMT Translation Validation (bitwuzla)** summary section with per-benchmark pass/fail counts and a per-transformation step table in the details.

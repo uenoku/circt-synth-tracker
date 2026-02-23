@@ -43,7 +43,7 @@ runs:
         [ -n "${{ inputs.circt_synth_extra_args }}" ] && EXTRA_PARAM="-DCIRCT_SYNTH_EXTRA_ARGS=\"${{ inputs.circt_synth_extra_args }}\""
         TV_PARAM=""
         if [ "${{ inputs.synth_tool }}" = "circt" ]; then
-          TV_PARAM="-DRUN_TV=1 -DTV_SOLVER=bitwuzla"
+          TV_PARAM="-DTV_SOLVER=bitwuzla"
         fi
         IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
         for BW in "${BWS[@]}"; do

@@ -144,6 +144,16 @@ jobs:
             circt-summary.json
             yosys-summary.json
 
+      - name: Archive failed TV MLIR files
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: failed-tv-mlir-files
+          path: |
+            build_circt/**/*.tv-pairs/
+            build_yosys/**/*.tv-pairs/
+          if-no-files-found: ignore
+
       - name: Upload test outputs
         uses: actions/upload-artifact@v4
         if: failure()
