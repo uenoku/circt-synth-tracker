@@ -54,6 +54,16 @@
             font-weight: bold;
             position: sticky;
             top: 0;
+            z-index: 10;
+        }
+        th:first-child, td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+        }
+        th:first-child {
+            background-color: #4CAF50;
+            z-index: 12;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
@@ -260,7 +270,7 @@
             <div class="summary-line"><strong>Tool Versions:</strong> yosys vYosys 0.47 (git sha1 647d61dd9212365a3cd44db219660b8f90b95cbd, clang++ 17.0.6 -fPIC -O3), circt vCIRCT firtool-1.140.0-132-ge089efd1f</div>
             <div class="summary-line"><strong>Total Benchmarks:</strong> 158</div>
             <div class="summary-line"><strong>Categories:</strong> 3</div>
-            <div class="summary-line"><strong>Generated:</strong> 2026-02-23T00:27:19.715196</div>
+            <div class="summary-line"><strong>Generated:</strong> 2026-02-23T00:50:02.306270</div>
         </div>
 
         <h2>Visual Comparison</h2>
@@ -545,7 +555,7 @@
                     <td class='metric' style='background-color: rgb(255,190,190);'>2107 <span class='diff'>(+3.7%)</span></td>
                     <td class='metric' style='background-color: rgb(191,255,191);'>1861 <span class='diff'>(-3.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmps_asp1mfAddMop.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp23qc1pv_AddMop.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -560,7 +570,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpki2jlv6a.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpy9itd_5x.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -578,7 +588,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>8726 <span class='diff'>(+32.1%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2188 <span class='diff'>(-24.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmpvwo2pexkAddMop.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpy3zrrcokAddMop.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -593,7 +603,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmp1_lwrzvm.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmp_cepfzxr.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -611,7 +621,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>19732 <span class='diff'>(+23.4%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4088 <span class='diff'>(-21.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpluk7cqhdAddMulSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpz9t5vffrAddMulSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -630,7 +640,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmp83j_0e7z.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpirjxhpx3.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -648,7 +658,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>180592 <span class='diff'>(+43.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>5554 <span class='diff'>(-28.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/20<span class='tv-tip'>Tool error (4/20 equiv)
-✔ tmp4yv7bd3gAddMulSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp4f1kjl94AddMulSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ⏱ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -667,7 +677,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmp68rmx9ty.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpsrp5kerj.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -685,7 +695,7 @@
                     <td class='metric' style='background-color: rgb(190,255,190);'>13811 <span class='diff'>(-3.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>3807 <span class='diff'>(-28.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpwi94emmvAddMulUns.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp0wkhjj6zAddMulUns.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -704,7 +714,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmp3syiplvh.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpa688p977.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -722,7 +732,7 @@
                     <td class='metric' style='background-color: rgb(255,186,186);'>123992 <span class='diff'>(+5.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4852 <span class='diff'>(-37.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpyojhk59oAddMulUns.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpzlm6b16gAddMulUns.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -741,7 +751,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpitci6fog.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmp3sbf3e41.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -759,7 +769,7 @@
                     <td class='metric' style='background-color: rgb(255,194,194);'>1501 <span class='diff'>(+2.1%)</span></td>
                     <td class='metric' style='background-color: rgb(161,255,161);'>1605 <span class='diff'>(-15.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmpe4zor_sfAddThreeSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpt_xcl1snAddThreeSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -774,7 +784,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmp82lyuzh3.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpvhysst6f.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -792,7 +802,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>6875 <span class='diff'>(+48.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1839 <span class='diff'>(-25.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmpn41pt7x9AddThreeSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp_rxeuk59AddThreeSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -807,7 +817,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmprz1w6j2l.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmp7shgmai8.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -825,7 +835,7 @@
                     <td class='metric' style='background-color: rgb(255,182,182);'>1506 <span class='diff'>(+7.1%)</span></td>
                     <td class='metric' style='background-color: rgb(194,255,194);'>1688 <span class='diff'>(-2.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/15<span class='tv-tip'>Tool error (6/15 equiv)
-✔ tmpl2ux5z5dAddThree.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpkq9_6527AddThree.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -839,7 +849,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmpd3jsc5sd.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmp9fxmrasn.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -857,7 +867,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>6956 <span class='diff'>(+51.1%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1928 <span class='diff'>(-22.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/15<span class='tv-tip'>Tool error (6/15 equiv)
-✔ tmp75uja6pxAddThree.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp9n0gkpkbAddThree.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -871,7 +881,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmp7u0hpgh9.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmpgwx895y9.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -889,7 +899,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>22353 <span class='diff'>(-20.3%)</span></td>
                     <td class='metric' style='background-color: rgb(160,255,160);'>4381 <span class='diff'>(-15.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/21<span class='tv-tip'>Tool error (5/21 equiv)
-⏱ tmp3apb198cAlphaBlend.mlir → 0_0_convert-comb-to-datapath.mlir
+⏱ tmp5evh3h9cAlphaBlend.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -909,7 +919,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpyhkrwgcz.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmp_m1x6vta.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -927,7 +937,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>161793 <span class='diff'>(-31.5%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>5634 <span class='diff'>(-25.4%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/21<span class='tv-tip'>Tool error (5/21 equiv)
-⏱ tmp94jjmj8zAlphaBlend.mlir → 0_0_convert-comb-to-datapath.mlir
+⏱ tmpd2lv3zbrAlphaBlend.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -947,7 +957,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpao6ivru6.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpja5pplji.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -965,7 +975,7 @@
                     <td class='metric' style='background-color: rgb(167,255,167);'>12579 <span class='diff'>(-12.9%)</span></td>
                     <td class='metric' style='background-color: rgb(170,255,170);'>3984 <span class='diff'>(-11.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/19<span class='tv-tip'>Tool error (6/19 equiv)
-✔ tmph7vif3ipCarrySaveCompare.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmppu7luc0uCarrySaveCompare.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -983,7 +993,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpoohvlh52.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmpf76dwj67.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1001,7 +1011,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>85793 <span class='diff'>(-30.1%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>5547 <span class='diff'>(-23.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpgo5yga1qCarrySaveCompare.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpltwzqojkCarrySaveCompare.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1021,7 +1031,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpho4rv_vz.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpntadst3y.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1039,7 +1049,7 @@
                     <td class='metric' style='background-color: rgb(161,255,161);'>10686 <span class='diff'>(-15.5%)</span></td>
                     <td class='metric' style='background-color: rgb(162,255,162);'>3249 <span class='diff'>(-15.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpqal99r32CarrySaveSelect.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpk0bis93vCarrySaveSelect.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_datapath-reduce-delay.mlir
 ⏱ 0_1_datapath-reduce-delay.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1058,7 +1068,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmp0b96jkzc.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpt6dg5xzu.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1076,7 +1086,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>74323 <span class='diff'>(-35.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4505 <span class='diff'>(-26.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpan63adm9CarrySaveSelect.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmptru5vinqCarrySaveSelect.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_datapath-reduce-delay.mlir
 ⏱ 0_1_datapath-reduce-delay.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1096,7 +1106,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp87i7q13g.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpx8_mhrv3.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1114,7 +1124,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>23135 <span class='diff'>(-25.3%)</span></td>
                     <td class='metric' style='background-color: rgb(153,255,153);'>3814 <span class='diff'>(-18.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/20<span class='tv-tip'>Tool error (6/20 equiv)
-✔ tmp66bgx88lDotProductSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpbd0w54qmDotProductSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1133,7 +1143,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpq2aryq9t.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpqrj6a9lh.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1151,7 +1161,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>157011 <span class='diff'>(-37.8%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>5244 <span class='diff'>(-21.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/22<span class='tv-tip'>Tool error (7/22 equiv)
-✔ tmp_tqa1d96DotProductSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp8po0_6a3DotProductSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1172,7 +1182,7 @@
 ⚠ 0_17_canonicalize.mlir → 0_18_synth-maximum-and-cover.mlir
 ⚠ 0_18_synth-maximum-and-cover.mlir → 0_19_synth-lower-variadic.mlir
 ⚠ 0_19_synth-lower-variadic.mlir → 0_20_synth-structural-hash.mlir
-⚠ 0_20_synth-structural-hash.mlir → tmp8dp_mtwf.synth.mlir</span></td>
+⚠ 0_20_synth-structural-hash.mlir → tmp3d085yc2.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1190,7 +1200,7 @@
                     <td class='metric' style='background-color: rgb(166,255,166);'>23117 <span class='diff'>(-13.4%)</span></td>
                     <td class='metric' style='background-color: rgb(156,255,156);'>3731 <span class='diff'>(-17.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmp5gbfg8duDotProduct.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp4mmt7hwkDotProduct.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1209,7 +1219,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpya8mxtj6.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmp4s2_h75l.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1227,7 +1237,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>157318 <span class='diff'>(-32.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>5177 <span class='diff'>(-22.4%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmp43x__7uxDotProduct.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpmtpeefu8DotProduct.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1247,7 +1257,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp6h93nta8.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpdl9w9742.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1265,7 +1275,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>12000 <span class='diff'>(-20.4%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>3239 <span class='diff'>(-20.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/19<span class='tv-tip'>Tool error (5/19 equiv)
-✔ tmpo5f3i3nqFmaSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp4pjmewuxFmaSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1283,7 +1293,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpunjsg64i.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmp73blj5us.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1301,7 +1311,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>83540 <span class='diff'>(-33.0%)</span></td>
                     <td class='metric' style='background-color: rgb(151,255,151);'>4522 <span class='diff'>(-19.4%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/21<span class='tv-tip'>Tool error (7/21 equiv)
-✔ tmp0mtlc6bwFmaSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpt3kqp72hFmaSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1321,7 +1331,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpq2z932rp.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmphj1skjsy.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1339,7 +1349,7 @@
                     <td class='metric' style='background-color: rgb(172,255,172);'>15698 <span class='diff'>(-11.1%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>3535 <span class='diff'>(-23.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/21<span class='tv-tip'>Tool error (7/21 equiv)
-✔ tmpszovpdvmFmaShareSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp1bj1s6enFmaShareSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_datapath-reduce-delay.mlir
 ⏱ 0_2_datapath-reduce-delay.mlir → 0_3_convert-datapath-to-comb.mlir
@@ -1359,7 +1369,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp2s0yk0su.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpa2u4abkf.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1377,7 +1387,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>99614 <span class='diff'>(-25.1%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4937 <span class='diff'>(-35.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/22<span class='tv-tip'>Tool error (8/22 equiv)
-✔ tmp18xgyjndFmaShareSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmppaxxr2enFmaShareSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_datapath-reduce-delay.mlir
 ⏱ 0_2_datapath-reduce-delay.mlir → 0_3_convert-datapath-to-comb.mlir
@@ -1398,7 +1408,7 @@
 ⚠ 0_17_canonicalize.mlir → 0_18_synth-maximum-and-cover.mlir
 ⚠ 0_18_synth-maximum-and-cover.mlir → 0_19_synth-lower-variadic.mlir
 ⚠ 0_19_synth-lower-variadic.mlir → 0_20_synth-structural-hash.mlir
-⚠ 0_20_synth-structural-hash.mlir → tmpux_k8prd.synth.mlir</span></td>
+⚠ 0_20_synth-structural-hash.mlir → tmpsjeedu2p.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1416,7 +1426,7 @@
                     <td class='metric' style='background-color: rgb(187,255,187);'>14201 <span class='diff'>(-5.2%)</span></td>
                     <td class='metric' style='background-color: rgb(154,255,154);'>3466 <span class='diff'>(-18.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmp15o80ipmFmaShare.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp_iw3xllvFmaShare.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_datapath-reduce-delay.mlir
 ⏱ 0_2_datapath-reduce-delay.mlir → 0_3_convert-datapath-to-comb.mlir
@@ -1436,7 +1446,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp014thx51.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpntx0t6pt.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1454,7 +1464,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>92986 <span class='diff'>(-23.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4801 <span class='diff'>(-27.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 9/22<span class='tv-tip'>Tool error (9/22 equiv)
-✔ tmpig285d9rFmaShare.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpxxqtpskzFmaShare.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_datapath-reduce-delay.mlir
 ⏱ 0_2_datapath-reduce-delay.mlir → 0_3_convert-datapath-to-comb.mlir
@@ -1475,7 +1485,7 @@
 ⚠ 0_17_canonicalize.mlir → 0_18_synth-maximum-and-cover.mlir
 ⚠ 0_18_synth-maximum-and-cover.mlir → 0_19_synth-lower-variadic.mlir
 ⚠ 0_19_synth-lower-variadic.mlir → 0_20_synth-structural-hash.mlir
-⚠ 0_20_synth-structural-hash.mlir → tmp678cnxaw.synth.mlir</span></td>
+⚠ 0_20_synth-structural-hash.mlir → tmpecdzknlq.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1493,7 +1503,7 @@
                     <td class='metric' style='background-color: rgb(169,255,169);'>11917 <span class='diff'>(-12.2%)</span></td>
                     <td class='metric' style='background-color: rgb(158,255,158);'>3284 <span class='diff'>(-16.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/19<span class='tv-tip'>Tool error (6/19 equiv)
-✔ tmpsommuaisFma.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpw9cwb3h7Fma.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1511,7 +1521,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpkxskri5u.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmp_6o6spet.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1529,7 +1539,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>83478 <span class='diff'>(-28.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4416 <span class='diff'>(-30.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpaem633ysFma.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpohcs13i0Fma.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1549,7 +1559,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpqodksdxm.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpor8xbjzf.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1567,7 +1577,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>17407 <span class='diff'>(-21.7%)</span></td>
                     <td class='metric' style='background-color: rgb(152,255,152);'>3313 <span class='diff'>(-19.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/20<span class='tv-tip'>Tool error (6/20 equiv)
-✔ tmpqf1s_hxrFmaaSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpkkqhh2hzFmaaSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1586,7 +1596,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpc8q4ce7q.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpwvvbo9la.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1604,7 +1614,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>97673 <span class='diff'>(-33.8%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4735 <span class='diff'>(-20.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,200,200)'>✘ NON-EQUIV 7/21<span class='tv-tip'>NON-EQUIV detected (7/21 equiv)
-✔ tmpxpoputkzFmaaSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp3loinuauFmaaSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✘ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1624,7 +1634,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp7p2cva13.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpfr0xnmyo.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,200,200)'>✘ NON-EQUIV</td>
                 </tr>
                 <tr>
@@ -1642,7 +1652,7 @@
                     <td class='metric' style='background-color: rgb(168,255,168);'>16672 <span class='diff'>(-12.5%)</span></td>
                     <td class='metric' style='background-color: rgb(170,255,170);'>3333 <span class='diff'>(-11.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpzannh86cFmaa.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp3cq7o6wxFmaa.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1661,7 +1671,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmp3mapx6fy.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmp0hnbqjui.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1679,7 +1689,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>97743 <span class='diff'>(-29.5%)</span></td>
                     <td class='metric' style='background-color: rgb(154,255,154);'>4796 <span class='diff'>(-18.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmp9004gnuxFmaa.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpujg7d2qlFmaa.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1699,7 +1709,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpommyjsbt.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmp7ji1hzp3.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1717,7 +1727,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>12511 <span class='diff'>(-25.0%)</span></td>
                     <td class='metric' style='background-color: rgb(155,255,155);'>3271 <span class='diff'>(-17.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/20<span class='tv-tip'>Tool error (6/20 equiv)
-✔ tmpgg7bl2hsMulAddSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpt2wtzr7dMulAddSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1736,7 +1746,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpjzu7yn9d.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmp_3da8l0t.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1754,7 +1764,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>85341 <span class='diff'>(-36.0%)</span></td>
                     <td class='metric' style='background-color: rgb(162,255,162);'>4585 <span class='diff'>(-15.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/21<span class='tv-tip'>Tool error (7/21 equiv)
-✔ tmp7irfo4bxMulAddSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpj5bavchaMulAddSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1774,7 +1784,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpv5b4fgmx.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmp1oktco2g.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1792,7 +1802,7 @@
                     <td class='metric' style='background-color: rgb(175,255,175);'>12570 <span class='diff'>(-9.7%)</span></td>
                     <td class='metric' style='background-color: rgb(154,255,154);'>3175 <span class='diff'>(-18.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpe2p4kfo5MulAddUns.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpj2os7ep8MulAddUns.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -1811,7 +1821,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpxe_6ecym.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpotvsk_1g.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1829,7 +1839,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>85206 <span class='diff'>(-27.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4498 <span class='diff'>(-28.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpu4d4qpexMulAddUns.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpz5lu3my4MulAddUns.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -1849,7 +1859,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpj0gslaow.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpuwo8zftd.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1867,7 +1877,7 @@
                     <td class='metric' style='background-color: rgb(179,255,179);'>10777 <span class='diff'>(-8.2%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4376 <span class='diff'>(-21.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpymr2s8veMulThreeSgn.mlir → 0_0_synth-lower-variadic.mlir
+✔ tmp0fgeo0riMulThreeSgn.mlir → 0_0_synth-lower-variadic.mlir
 ✔ 0_0_synth-lower-variadic.mlir → 0_1_convert-comb-to-datapath.mlir
 ✔ 0_1_convert-comb-to-datapath.mlir → 0_2_canonicalize.mlir
 ⏱ 0_2_canonicalize.mlir → 0_3_convert-datapath-to-comb.mlir
@@ -1887,7 +1897,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp4ac74nl6.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmp8_owrlxm.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1905,7 +1915,7 @@
                     <td class='metric' style='background-color: rgb(155,255,155);'>93178 <span class='diff'>(-17.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>6645 <span class='diff'>(-27.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/22<span class='tv-tip'>Tool error (7/22 equiv)
-✔ tmpm0_zrrozMulThreeSgn.mlir → 0_0_synth-lower-variadic.mlir
+✔ tmpb6hdemmaMulThreeSgn.mlir → 0_0_synth-lower-variadic.mlir
 ✔ 0_0_synth-lower-variadic.mlir → 0_1_convert-comb-to-datapath.mlir
 ✔ 0_1_convert-comb-to-datapath.mlir → 0_2_canonicalize.mlir
 ⏱ 0_2_canonicalize.mlir → 0_3_convert-datapath-to-comb.mlir
@@ -1926,7 +1936,7 @@
 ⚠ 0_17_canonicalize.mlir → 0_18_synth-maximum-and-cover.mlir
 ⚠ 0_18_synth-maximum-and-cover.mlir → 0_19_synth-lower-variadic.mlir
 ⚠ 0_19_synth-lower-variadic.mlir → 0_20_synth-structural-hash.mlir
-⚠ 0_20_synth-structural-hash.mlir → tmpjj5olsy7.synth.mlir</span></td>
+⚠ 0_20_synth-structural-hash.mlir → tmpeua3_ey0.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1944,7 +1954,7 @@
                     <td class='metric' style='background-color: rgb(180,255,180);'>10777 <span class='diff'>(-7.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4376 <span class='diff'>(-21.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpitekm7klMulThree.mlir → 0_0_synth-lower-variadic.mlir
+✔ tmp02sv38wgMulThree.mlir → 0_0_synth-lower-variadic.mlir
 ✔ 0_0_synth-lower-variadic.mlir → 0_1_convert-comb-to-datapath.mlir
 ✔ 0_1_convert-comb-to-datapath.mlir → 0_2_canonicalize.mlir
 ⏱ 0_2_canonicalize.mlir → 0_3_convert-datapath-to-comb.mlir
@@ -1964,7 +1974,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpf7ymabi0.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpb96lobps.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -1982,7 +1992,7 @@
                     <td class='metric' style='background-color: rgb(155,255,155);'>93178 <span class='diff'>(-17.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>6645 <span class='diff'>(-26.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/22<span class='tv-tip'>Tool error (7/22 equiv)
-✔ tmpm7dqz7xnMulThree.mlir → 0_0_synth-lower-variadic.mlir
+✔ tmp2gxayg72MulThree.mlir → 0_0_synth-lower-variadic.mlir
 ✔ 0_0_synth-lower-variadic.mlir → 0_1_convert-comb-to-datapath.mlir
 ✔ 0_1_convert-comb-to-datapath.mlir → 0_2_canonicalize.mlir
 ⏱ 0_2_canonicalize.mlir → 0_3_convert-datapath-to-comb.mlir
@@ -2003,7 +2013,7 @@
 ⚠ 0_17_canonicalize.mlir → 0_18_synth-maximum-and-cover.mlir
 ⚠ 0_18_synth-maximum-and-cover.mlir → 0_19_synth-lower-variadic.mlir
 ⚠ 0_19_synth-lower-variadic.mlir → 0_20_synth-structural-hash.mlir
-⚠ 0_20_synth-structural-hash.mlir → tmpns7fcohl.synth.mlir</span></td>
+⚠ 0_20_synth-structural-hash.mlir → tmp3_wzmzqi.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -2021,7 +2031,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>9348 <span class='diff'>(-25.6%)</span></td>
                     <td class='metric' style='background-color: rgb(179,255,179);'>3483 <span class='diff'>(-8.4%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpg2tnfa28SqrSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpg1pq_xhcSqrSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -2040,7 +2050,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpidm02fsr.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmphtgoqfdl.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -2058,7 +2068,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>78817 <span class='diff'>(-29.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4570 <span class='diff'>(-29.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/21<span class='tv-tip'>Tool error (7/21 equiv)
-✔ tmpnfynct5mSqrSgn.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp2pm8pv39SqrSgn.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -2078,7 +2088,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpmnwlx24x.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpiudsp4ep.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -2096,7 +2106,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>5585 <span class='diff'>(-47.8%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2562 <span class='diff'>(-38.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/16<span class='tv-tip'>Tool error (6/16 equiv)
-✔ tmp4ru5_1hvSqrUns.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpvsab9tlhSqrUns.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -2111,7 +2121,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpnx37fwyr.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpqmstciuz.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -2129,7 +2139,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>56217 <span class='diff'>(-45.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4112 <span class='diff'>(-31.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/16<span class='tv-tip'>Tool error (6/16 equiv)
-✔ tmpnbbiktj4SqrUns.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpnmln7z3pSqrUns.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -2144,7 +2154,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmp3in4z2gn.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmp0f57_3pz.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -2165,7 +2175,7 @@
                     <td class='metric' style='background-color: rgb(255,185,185);'>483 <span class='diff'>(+5.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>990 <span class='diff'>(-22.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/17<span class='tv-tip'>Tool error (5/17 equiv)
-✔ tmpq00q1t6fAbsVal.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpe4rwatnoAbsVal.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ✔ 0_2_convert-comb-to-synth.mlir → 0_3_cse.mlir
@@ -2181,7 +2191,7 @@
 ⚠ 0_12_canonicalize.mlir → 0_13_synth-maximum-and-cover.mlir
 ⚠ 0_13_synth-maximum-and-cover.mlir → 0_14_synth-lower-variadic.mlir
 ⚠ 0_14_synth-lower-variadic.mlir → 0_15_synth-structural-hash.mlir
-⚠ 0_15_synth-structural-hash.mlir → tmprrxkg_0w.synth.mlir</span></td>
+⚠ 0_15_synth-structural-hash.mlir → tmp1e5wcq2y.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2199,7 +2209,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>2152 <span class='diff'>(+42.0%)</span></td>
                     <td class='metric' style='background-color: rgb(255,197,197);'>1601 <span class='diff'>(+1.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/17<span class='tv-tip'>Tool error (5/17 equiv)
-✔ tmpjkrdyk35AbsVal.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpn7qw2p5_AbsVal.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ✔ 0_2_convert-comb-to-synth.mlir → 0_3_cse.mlir
@@ -2215,7 +2225,7 @@
 ⚠ 0_12_canonicalize.mlir → 0_13_synth-maximum-and-cover.mlir
 ⚠ 0_13_synth-maximum-and-cover.mlir → 0_14_synth-lower-variadic.mlir
 ⚠ 0_14_synth-lower-variadic.mlir → 0_15_synth-structural-hash.mlir
-⚠ 0_15_synth-structural-hash.mlir → tmplrwgp7xx.synth.mlir</span></td>
+⚠ 0_15_synth-structural-hash.mlir → tmp3qwmo8gl.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2233,7 +2243,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1096 <span class='diff'>(+42.3%)</span></td>
                     <td class='metric' style='background-color: rgb(154,255,154);'>1403 <span class='diff'>(-18.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/15<span class='tv-tip'>Tool error (6/15 equiv)
-✔ tmp8axm6klnAddC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp6kcq6r36AddC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2247,7 +2257,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmp4wxb2gqu.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmp3w7b5r56.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2265,7 +2275,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5291 <span class='diff'>(+113.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1548 <span class='diff'>(-55.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/15<span class='tv-tip'>Tool error (6/15 equiv)
-✔ tmpbhy4slcjAddC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp63v0bkzwAddC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2279,7 +2289,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmpzj9o_9im.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmp9qw7m1pb.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2297,7 +2307,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1096 <span class='diff'>(+42.3%)</span></td>
                     <td class='metric' style='background-color: rgb(154,255,154);'>1403 <span class='diff'>(-18.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/15<span class='tv-tip'>Tool error (6/15 equiv)
-✔ tmpbv_r49ruAddCfast.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpsjtx5e67AddCfast.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2311,7 +2321,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmpmm4480po.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmppvtaukr6.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2329,7 +2339,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5291 <span class='diff'>(+113.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1548 <span class='diff'>(-55.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/15<span class='tv-tip'>Tool error (6/15 equiv)
-✔ tmporhxg2z5AddCfast.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpdia_y017AddCfast.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2343,7 +2353,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmpf5s5djkw.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmp6pka5csu.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2361,7 +2371,7 @@
                     <td class='metric' style='background-color: rgb(255,193,193);'>705 <span class='diff'>(+2.6%)</span></td>
                     <td class='metric' style='background-color: rgb(255,161,161);'>371 <span class='diff'>(+15.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 1/11<span class='tv-tip'>Tool error (1/11 equiv)
-✔ tmp22yg3p6qAddCsv.test.tmp.mlir → 0_0_synth-lower-variadic.mlir
+✔ tmpupaje99cAddCsv.test.tmp.mlir → 0_0_synth-lower-variadic.mlir
 ⚠ 0_0_synth-lower-variadic.mlir → 0_1_convert-comb-to-synth.mlir
 ⚠ 0_1_convert-comb-to-synth.mlir → 0_2_synth-lower-word-to-bits.mlir
 ⚠ 0_2_synth-lower-word-to-bits.mlir → 0_3_cse.mlir
@@ -2371,7 +2381,7 @@
 ⚠ 0_6_canonicalize.mlir → 0_7_synth-maximum-and-cover.mlir
 ⚠ 0_7_synth-maximum-and-cover.mlir → 0_8_synth-lower-variadic.mlir
 ⚠ 0_8_synth-lower-variadic.mlir → 0_9_synth-structural-hash.mlir
-⚠ 0_9_synth-structural-hash.mlir → tmp4qa_g39p.synth.mlir</span></td>
+⚠ 0_9_synth-structural-hash.mlir → tmp9ip0l0j4.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2389,7 +2399,7 @@
                     <td class='metric' style='background-color: rgb(255,192,192);'>2147 <span class='diff'>(+2.8%)</span></td>
                     <td class='metric' style='background-color: rgb(255,161,161);'>371 <span class='diff'>(+15.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 1/11<span class='tv-tip'>Tool error (1/11 equiv)
-✔ tmpgb2ux_avAddCsv.test.tmp.mlir → 0_0_synth-lower-variadic.mlir
+✔ tmp8_4ij6juAddCsv.test.tmp.mlir → 0_0_synth-lower-variadic.mlir
 ⚠ 0_0_synth-lower-variadic.mlir → 0_1_convert-comb-to-synth.mlir
 ⚠ 0_1_convert-comb-to-synth.mlir → 0_2_synth-lower-word-to-bits.mlir
 ⚠ 0_2_synth-lower-word-to-bits.mlir → 0_3_cse.mlir
@@ -2399,7 +2409,7 @@
 ⚠ 0_6_canonicalize.mlir → 0_7_synth-maximum-and-cover.mlir
 ⚠ 0_7_synth-maximum-and-cover.mlir → 0_8_synth-lower-variadic.mlir
 ⚠ 0_8_synth-lower-variadic.mlir → 0_9_synth-structural-hash.mlir
-⚠ 0_9_synth-structural-hash.mlir → tmpbcph1mlo.synth.mlir</span></td>
+⚠ 0_9_synth-structural-hash.mlir → tmplhja2p0x.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2417,7 +2427,7 @@
                     <td class='metric' style='background-color: rgb(255,174,174);'>1345 <span class='diff'>(+10.1%)</span></td>
                     <td class='metric' style='background-color: rgb(255,188,188);'>2283 <span class='diff'>(+4.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/14<span class='tv-tip'>Tool error (3/14 equiv)
-✔ tmpt3katlqvAddMod2Nm1.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpzz9nvdetAddMod2Nm1.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2430,7 +2440,7 @@
 ⚠ 0_9_synth-structural-hash.mlir → 0_10_synth-maximum-and-cover.mlir
 ⚠ 0_10_synth-maximum-and-cover.mlir → 0_11_synth-lower-variadic.mlir
 ⚠ 0_11_synth-lower-variadic.mlir → 0_12_synth-structural-hash.mlir
-⚠ 0_12_synth-structural-hash.mlir → tmps6jcv4df.synth.mlir</span></td>
+⚠ 0_12_synth-structural-hash.mlir → tmpz4hbrk6b.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2448,7 +2458,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>7556 <span class='diff'>(+74.1%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2529 <span class='diff'>(-32.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/15<span class='tv-tip'>Tool error (4/15 equiv)
-✔ tmpdymayqspAddMod2Nm1.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmp40hrfxc7AddMod2Nm1.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -2462,7 +2472,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmp3cyxhgiy.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmpj6m2f1m5.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2480,7 +2490,7 @@
                     <td class='metric' style='background-color: rgb(255,161,161);'>1466 <span class='diff'>(+15.3%)</span></td>
                     <td class='metric' style='background-color: rgb(196,255,196);'>2240 <span class='diff'>(-1.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/15<span class='tv-tip'>Tool error (3/15 equiv)
-✔ tmp7lm0rseoAddMod2Nm1s0.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmplw8zu6x5AddMod2Nm1s0.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2494,7 +2504,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmpxeva6wjx.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmpmyvefjwe.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2512,7 +2522,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>7641 <span class='diff'>(+85.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2766 <span class='diff'>(-30.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/15<span class='tv-tip'>Tool error (4/15 equiv)
-✔ tmp5wirxlsqAddMod2Nm1s0.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpswivk85nAddMod2Nm1s0.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -2526,7 +2536,7 @@
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmpwh0y7ed6.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmprunsrlsr.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2544,7 +2554,7 @@
                     <td class='metric' style='background-color: rgb(255,190,190);'>2107 <span class='diff'>(+3.7%)</span></td>
                     <td class='metric' style='background-color: rgb(191,255,191);'>1861 <span class='diff'>(-3.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmpwephj4jkAddMop.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpr17kdku0AddMop.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2559,7 +2569,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmp3kg_qhp2.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpetaorp_r.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2577,7 +2587,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>8726 <span class='diff'>(+32.1%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2188 <span class='diff'>(-24.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmpcunbokbuAddMop.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpsw2hxop5AddMop.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2592,7 +2602,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmp5lrrtfgv.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmp9ezc57dj.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2610,7 +2620,7 @@
                     <td class='metric' style='background-color: rgb(190,255,190);'>13811 <span class='diff'>(-3.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>3807 <span class='diff'>(-28.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpv4uow_78AddMulUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpbmvxcbrhAddMulUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -2629,7 +2639,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpoorv_0b3.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpk_wd_il0.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -2647,7 +2657,7 @@
                     <td class='metric' style='background-color: rgb(255,186,186);'>123992 <span class='diff'>(+5.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4852 <span class='diff'>(-37.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpplbg0kvjAddMulUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpflic6ph_AddMulUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -2666,7 +2676,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmp5ehlvtfz.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmplmcpi8c1.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -2684,7 +2694,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>2531 <span class='diff'>(+36.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1592 <span class='diff'>(-25.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 9/21<span class='tv-tip'>Tool error (9/21 equiv)
-✔ tmpxhv05npzAddSubC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpshuthm55AddSubC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -2704,7 +2714,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp5x48sxqh.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmppup8bp6_.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2722,7 +2732,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>11704 <span class='diff'>(+102.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1786 <span class='diff'>(-39.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 9/21<span class='tv-tip'>Tool error (9/21 equiv)
-✔ tmp0_3v4pgjAddSubC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpz3mpcc5mAddSubC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -2742,7 +2752,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp1w7xldg5.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpel9n_kvs.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2760,7 +2770,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>2515 <span class='diff'>(+22.7%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2041 <span class='diff'>(-28.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmp3v2agbyxAddSubV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpkvt1vj6kAddSubV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -2780,7 +2790,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpcncpz7fg.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpkf7bhlpj.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2798,7 +2808,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>11450 <span class='diff'>(+96.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1786 <span class='diff'>(-25.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/20<span class='tv-tip'>Tool error (8/20 equiv)
-✔ tmpweu7vdruAddSubV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp2ojc2lskAddSubV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -2817,7 +2827,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpu39y95f4.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmphub0mobg.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2835,7 +2845,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>2081 <span class='diff'>(+55.6%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1586 <span class='diff'>(-32.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/19<span class='tv-tip'>Tool error (7/19 equiv)
-✔ tmpq7p8fzjjAddSub.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpfw2s20cnAddSub.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2853,7 +2863,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpsub3b_pd.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmp90oydy1p.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2871,7 +2881,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>10794 <span class='diff'>(+142.4%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1605 <span class='diff'>(-53.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/19<span class='tv-tip'>Tool error (7/19 equiv)
-✔ tmphgmr2kquAddSub.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmprxj111srAddSub.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_convert-comb-to-synth.mlir
@@ -2889,7 +2899,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpznyh9hgw.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmp_qp42nye.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2907,7 +2917,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1092 <span class='diff'>(+20.1%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1708 <span class='diff'>(-26.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmp5kupe8upAddV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpfz39lwbuAddV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -2922,7 +2932,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpjujhvygk.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpmjris9yy.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2940,7 +2950,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5171 <span class='diff'>(+122.5%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1500 <span class='diff'>(-23.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmpx8hh_fydAddV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpax_3ddnaAddV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -2955,7 +2965,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpeansqi9r.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpuqos8xmr.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -2973,7 +2983,7 @@
                     <td class='metric' style='background-color: rgb(255,162,162);'>782 <span class='diff'>(+15.0%)</span></td>
                     <td class='metric' style='background-color: rgb(180,255,180);'>1564 <span class='diff'>(-7.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/13<span class='tv-tip'>Tool error (4/13 equiv)
-✔ tmp_41ktdg_Add.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpbsuiscs9Add.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -2985,7 +2995,7 @@
 ⚠ 0_8_synth-structural-hash.mlir → 0_9_synth-maximum-and-cover.mlir
 ⚠ 0_9_synth-maximum-and-cover.mlir → 0_10_synth-lower-variadic.mlir
 ⚠ 0_10_synth-lower-variadic.mlir → 0_11_synth-structural-hash.mlir
-⚠ 0_11_synth-structural-hash.mlir → tmpiqi9vgsh.synth.mlir</span></td>
+⚠ 0_11_synth-structural-hash.mlir → tmpj_qv730i.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3003,7 +3013,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>4581 <span class='diff'>(+91.6%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1356 <span class='diff'>(-49.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/13<span class='tv-tip'>Tool error (4/13 equiv)
-✔ tmp9pl_f78xAdd.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmptws6cwhaAdd.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -3015,7 +3025,7 @@
 ⚠ 0_8_synth-structural-hash.mlir → 0_9_synth-maximum-and-cover.mlir
 ⚠ 0_9_synth-maximum-and-cover.mlir → 0_10_synth-lower-variadic.mlir
 ⚠ 0_10_synth-lower-variadic.mlir → 0_11_synth-structural-hash.mlir
-⚠ 0_11_synth-structural-hash.mlir → tmp2fjqbwk7.synth.mlir</span></td>
+⚠ 0_11_synth-structural-hash.mlir → tmpp6v_xlqc.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3033,14 +3043,14 @@
                     <td class='metric'>50</td>
                     <td class='metric'>390</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/8<span class='tv-tip'>Tool error (0/8 equiv)
-⚠ tmpn1jr1kf6AllOneDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpxmhg1vo5AllOneDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_synth-lower-word-to-bits.mlir
 ⚠ 0_2_synth-lower-word-to-bits.mlir → 0_3_synth-lower-variadic.mlir
 ⚠ 0_3_synth-lower-variadic.mlir → 0_4_canonicalize.mlir
 ⚠ 0_4_canonicalize.mlir → 0_5_synth-maximum-and-cover.mlir
 ⚠ 0_5_synth-maximum-and-cover.mlir → 0_6_synth-lower-variadic.mlir
-⚠ 0_6_synth-lower-variadic.mlir → tmp2toihzbg.synth.mlir</span></td>
+⚠ 0_6_synth-lower-variadic.mlir → tmpwip_hamw.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3058,14 +3068,14 @@
                     <td class='metric'>157</td>
                     <td class='metric'>558</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/8<span class='tv-tip'>Tool error (0/8 equiv)
-⚠ tmp9e37flg8AllOneDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpmmc7d1h5AllOneDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_synth-lower-word-to-bits.mlir
 ⚠ 0_2_synth-lower-word-to-bits.mlir → 0_3_synth-lower-variadic.mlir
 ⚠ 0_3_synth-lower-variadic.mlir → 0_4_canonicalize.mlir
 ⚠ 0_4_canonicalize.mlir → 0_5_synth-maximum-and-cover.mlir
 ⚠ 0_5_synth-maximum-and-cover.mlir → 0_6_synth-lower-variadic.mlir
-⚠ 0_6_synth-lower-variadic.mlir → tmps0j0ve4u.synth.mlir</span></td>
+⚠ 0_6_synth-lower-variadic.mlir → tmp87q2p6xf.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3083,12 +3093,12 @@
                     <td class='metric'>47</td>
                     <td class='metric'>500</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/6<span class='tv-tip'>Tool error (0/6 equiv)
-⚠ tmp7qsmktp6AllZeroDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpwn2t250bAllZeroDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_synth-lower-variadic.mlir
 ⚠ 0_2_synth-lower-variadic.mlir → 0_3_synth-maximum-and-cover.mlir
 ⚠ 0_3_synth-maximum-and-cover.mlir → 0_4_synth-lower-variadic.mlir
-⚠ 0_4_synth-lower-variadic.mlir → tmpyru1tn_z.synth.mlir</span></td>
+⚠ 0_4_synth-lower-variadic.mlir → tmphfi6y1hh.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3106,12 +3116,12 @@
                     <td class='metric'>141</td>
                     <td class='metric'>783</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/6<span class='tv-tip'>Tool error (0/6 equiv)
-⚠ tmp5rsdhls2AllZeroDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpgj7fko56AllZeroDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_synth-lower-variadic.mlir
 ⚠ 0_2_synth-lower-variadic.mlir → 0_3_synth-maximum-and-cover.mlir
 ⚠ 0_3_synth-maximum-and-cover.mlir → 0_4_synth-lower-variadic.mlir
-⚠ 0_4_synth-lower-variadic.mlir → tmpnsaf3c5r.synth.mlir</span></td>
+⚠ 0_4_synth-lower-variadic.mlir → tmp788_2t5v.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3129,12 +3139,12 @@
                     <td class='metric'>230</td>
                     <td class='metric'>149</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/6<span class='tv-tip'>Tool error (0/6 equiv)
-⚠ tmpw4rqr446Bin2Gray.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpx98699lkBin2Gray.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_synth-lower-word-to-bits.mlir
 ⚠ 0_1_synth-lower-word-to-bits.mlir → 0_2_cse.mlir
 ⚠ 0_2_cse.mlir → 0_3_synth-structural-hash.mlir
 ⚠ 0_3_synth-structural-hash.mlir → 0_4_canonicalize.mlir
-⚠ 0_4_canonicalize.mlir → tmpe7vqh25h.synth.mlir</span></td>
+⚠ 0_4_canonicalize.mlir → tmpkwfqh6a0.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3152,12 +3162,12 @@
                     <td class='metric'>710</td>
                     <td class='metric'>149</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/6<span class='tv-tip'>Tool error (0/6 equiv)
-⚠ tmpxxjhrib5Bin2Gray.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpolopmdt7Bin2Gray.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_synth-lower-word-to-bits.mlir
 ⚠ 0_1_synth-lower-word-to-bits.mlir → 0_2_cse.mlir
 ⚠ 0_2_cse.mlir → 0_3_synth-structural-hash.mlir
 ⚠ 0_3_synth-structural-hash.mlir → 0_4_canonicalize.mlir
-⚠ 0_4_canonicalize.mlir → tmpkoz2ecs9.synth.mlir</span></td>
+⚠ 0_4_canonicalize.mlir → tmpmi2lqq92.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3175,7 +3185,7 @@
                     <td class='metric' style='background-color: rgb(255,199,199);'>551 <span class='diff'>(+0.2%)</span></td>
                     <td class='metric' style='background-color: rgb(255,150,150);'>1267 <span class='diff'>(+22.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/12<span class='tv-tip'>Tool error (0/12 equiv)
-⚠ tmp8xol8ovuCmpEQGE.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpaj4223beCmpEQGE.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_synth-lower-word-to-bits.mlir
@@ -3186,7 +3196,7 @@
 ⚠ 0_7_canonicalize.mlir → 0_8_synth-maximum-and-cover.mlir
 ⚠ 0_8_synth-maximum-and-cover.mlir → 0_9_synth-lower-variadic.mlir
 ⚠ 0_9_synth-lower-variadic.mlir → 0_10_synth-structural-hash.mlir
-⚠ 0_10_synth-structural-hash.mlir → tmpbr0kts39.synth.mlir</span></td>
+⚠ 0_10_synth-structural-hash.mlir → tmp9c8djh1k.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3204,7 +3214,7 @@
                     <td class='metric' style='background-color: rgb(255,194,194);'>1695 <span class='diff'>(+2.1%)</span></td>
                     <td class='metric' style='background-color: rgb(171,255,171);'>1250 <span class='diff'>(-11.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/11<span class='tv-tip'>Tool error (0/11 equiv)
-⚠ tmp7tah8r86CmpEQGE.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpgtumvb2uCmpEQGE.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_synth-lower-word-to-bits.mlir
 ⚠ 0_2_synth-lower-word-to-bits.mlir → 0_3_cse.mlir
@@ -3214,7 +3224,7 @@
 ⚠ 0_6_canonicalize.mlir → 0_7_synth-maximum-and-cover.mlir
 ⚠ 0_7_synth-maximum-and-cover.mlir → 0_8_synth-lower-variadic.mlir
 ⚠ 0_8_synth-lower-variadic.mlir → 0_9_synth-structural-hash.mlir
-⚠ 0_9_synth-structural-hash.mlir → tmpspbl41x3.synth.mlir</span></td>
+⚠ 0_9_synth-structural-hash.mlir → tmp0ckuapg3.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3232,13 +3242,13 @@
                     <td class='metric'>287</td>
                     <td class='metric'>650</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/7<span class='tv-tip'>Tool error (0/7 equiv)
-⚠ tmpnqlmo8_kCmpEQ.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmp01j0hzxjCmpEQ.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_synth-lower-word-to-bits.mlir
 ⚠ 0_1_synth-lower-word-to-bits.mlir → 0_2_synth-lower-variadic.mlir
 ⚠ 0_2_synth-lower-variadic.mlir → 0_3_canonicalize.mlir
 ⚠ 0_3_canonicalize.mlir → 0_4_synth-maximum-and-cover.mlir
 ⚠ 0_4_synth-maximum-and-cover.mlir → 0_5_synth-lower-variadic.mlir
-⚠ 0_5_synth-lower-variadic.mlir → tmp5x1h078y.synth.mlir</span></td>
+⚠ 0_5_synth-lower-variadic.mlir → tmpl61awvpo.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3256,13 +3266,13 @@
                     <td class='metric'>862</td>
                     <td class='metric'>933</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/7<span class='tv-tip'>Tool error (0/7 equiv)
-⚠ tmpai091txoCmpEQ.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmp2qx0sf17CmpEQ.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_synth-lower-word-to-bits.mlir
 ⚠ 0_1_synth-lower-word-to-bits.mlir → 0_2_synth-lower-variadic.mlir
 ⚠ 0_2_synth-lower-variadic.mlir → 0_3_canonicalize.mlir
 ⚠ 0_3_canonicalize.mlir → 0_4_synth-maximum-and-cover.mlir
 ⚠ 0_4_synth-maximum-and-cover.mlir → 0_5_synth-lower-variadic.mlir
-⚠ 0_5_synth-lower-variadic.mlir → tmpgxhxobfp.synth.mlir</span></td>
+⚠ 0_5_synth-lower-variadic.mlir → tmp89wfqivm.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3280,14 +3290,14 @@
                     <td class='metric' style='background-color: rgb(255,197,197);'>553 <span class='diff'>(+0.9%)</span></td>
                     <td class='metric' style='background-color: rgb(187,255,187);'>950 <span class='diff'>(-5.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/8<span class='tv-tip'>Tool error (0/8 equiv)
-⚠ tmpb2hf3uiyCmpGE.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpmig9tr3yCmpGE.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_synth-structural-hash.mlir
 ⚠ 0_3_synth-structural-hash.mlir → 0_4_synth-maximum-and-cover.mlir
 ⚠ 0_4_synth-maximum-and-cover.mlir → 0_5_synth-lower-variadic.mlir
 ⚠ 0_5_synth-lower-variadic.mlir → 0_6_synth-structural-hash.mlir
-⚠ 0_6_synth-structural-hash.mlir → tmpef56p71h.synth.mlir</span></td>
+⚠ 0_6_synth-structural-hash.mlir → tmpp4yz5vpb.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3305,13 +3315,13 @@
                     <td class='metric' style='background-color: rgb(199,255,199);'>1663 <span class='diff'>(-0.2%)</span></td>
                     <td class='metric' style='background-color: rgb(188,255,188);'>1306 <span class='diff'>(-4.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/7<span class='tv-tip'>Tool error (0/7 equiv)
-⚠ tmp6vjzwvmiCmpGE.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpckd8aoakCmpGE.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_synth-structural-hash.mlir
 ⚠ 0_2_synth-structural-hash.mlir → 0_3_synth-maximum-and-cover.mlir
 ⚠ 0_3_synth-maximum-and-cover.mlir → 0_4_synth-lower-variadic.mlir
 ⚠ 0_4_synth-lower-variadic.mlir → 0_5_synth-structural-hash.mlir
-⚠ 0_5_synth-structural-hash.mlir → tmpzx4s1y1b.synth.mlir</span></td>
+⚠ 0_5_synth-structural-hash.mlir → tmp0x22qipq.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3329,7 +3339,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>550 <span class='diff'>(-22.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1291 <span class='diff'>(-42.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/14<span class='tv-tip'>Tool error (7/14 equiv)
-✔ tmpf1vnfpzpCnt.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp4eh37jaaCnt.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3342,7 +3352,7 @@
 ⚠ 0_9_canonicalize.mlir → 0_10_synth-structural-hash.mlir
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
-⚠ 0_12_synth-lower-variadic.mlir → tmpwmpo2jg9.synth.mlir</span></td>
+⚠ 0_12_synth-lower-variadic.mlir → tmpo2b6zl0h.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3360,7 +3370,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>550 <span class='diff'>(-22.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1291 <span class='diff'>(-42.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/14<span class='tv-tip'>Tool error (7/14 equiv)
-✔ tmputzhf0usCnt.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpn4scl8tfCnt.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3373,7 +3383,7 @@
 ⚠ 0_9_canonicalize.mlir → 0_10_synth-structural-hash.mlir
 ⚠ 0_10_synth-structural-hash.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
-⚠ 0_12_synth-lower-variadic.mlir → tmphkf91nko.synth.mlir</span></td>
+⚠ 0_12_synth-lower-variadic.mlir → tmpjqnpn84o.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3391,7 +3401,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>869 <span class='diff'>(+109.4%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>928 <span class='diff'>(-31.4%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/17<span class='tv-tip'>Tool error (8/17 equiv)
-✔ tmp0p8zpkdlDecC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp4_n1cso5DecC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -3407,7 +3417,7 @@
 ⚠ 0_12_synth-structural-hash.mlir → 0_13_synth-maximum-and-cover.mlir
 ⚠ 0_13_synth-maximum-and-cover.mlir → 0_14_synth-lower-variadic.mlir
 ⚠ 0_14_synth-lower-variadic.mlir → 0_15_synth-structural-hash.mlir
-⚠ 0_15_synth-structural-hash.mlir → tmpvki80wfo.synth.mlir</span></td>
+⚠ 0_15_synth-structural-hash.mlir → tmpe9hqppy8.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3425,7 +3435,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>4675 <span class='diff'>(+240.2%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1222 <span class='diff'>(-57.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/17<span class='tv-tip'>Tool error (8/17 equiv)
-✔ tmppjqgjizvDecC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpig51mmo3DecC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -3441,7 +3451,7 @@
 ⚠ 0_12_synth-structural-hash.mlir → 0_13_synth-maximum-and-cover.mlir
 ⚠ 0_13_synth-maximum-and-cover.mlir → 0_14_synth-lower-variadic.mlir
 ⚠ 0_14_synth-lower-variadic.mlir → 0_15_synth-structural-hash.mlir
-⚠ 0_15_synth-structural-hash.mlir → tmpow8tdr7i.synth.mlir</span></td>
+⚠ 0_15_synth-structural-hash.mlir → tmpkuxw0m12.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3459,7 +3469,7 @@
                     <td class='metric' style='background-color: rgb(255,153,153);'>443 <span class='diff'>(+18.4%)</span></td>
                     <td class='metric' style='background-color: rgb(255,181,181);'>1286 <span class='diff'>(+7.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/13<span class='tv-tip'>Tool error (4/13 equiv)
-✔ tmpzjzb3r7tDec.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpocp5k7e3Dec.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -3471,7 +3481,7 @@
 ⚠ 0_8_synth-structural-hash.mlir → 0_9_synth-maximum-and-cover.mlir
 ⚠ 0_9_synth-maximum-and-cover.mlir → 0_10_synth-lower-variadic.mlir
 ⚠ 0_10_synth-lower-variadic.mlir → 0_11_synth-structural-hash.mlir
-⚠ 0_11_synth-structural-hash.mlir → tmpqx821b2c.synth.mlir</span></td>
+⚠ 0_11_synth-structural-hash.mlir → tmpxc943j2f.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3489,7 +3499,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>3317 <span class='diff'>(+156.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1400 <span class='diff'>(-35.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/13<span class='tv-tip'>Tool error (4/13 equiv)
-✔ tmpt8w71rkpDec.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmp2ur6xgwyDec.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -3501,7 +3511,7 @@
 ⚠ 0_8_synth-structural-hash.mlir → 0_9_synth-maximum-and-cover.mlir
 ⚠ 0_9_synth-maximum-and-cover.mlir → 0_10_synth-lower-variadic.mlir
 ⚠ 0_10_synth-lower-variadic.mlir → 0_11_synth-structural-hash.mlir
-⚠ 0_11_synth-structural-hash.mlir → tmp52wbfk1f.synth.mlir</span></td>
+⚠ 0_11_synth-structural-hash.mlir → tmpo6mxwlt7.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3519,7 +3529,7 @@
                     <td class='metric'>202</td>
                     <td class='metric'>229</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/11<span class='tv-tip'>Tool error (3/11 equiv)
-✔ tmp6z4517fcDecode.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmp4zdiz6hvDecode.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3529,7 +3539,7 @@
 ⚠ 0_6_synth-lower-word-to-bits.mlir → 0_7_cse.mlir
 ⚠ 0_7_cse.mlir → 0_8_synth-structural-hash.mlir
 ⚠ 0_8_synth-structural-hash.mlir → 0_9_canonicalize.mlir
-⚠ 0_9_canonicalize.mlir → tmpiqsx879x.synth.mlir</span></td>
+⚠ 0_9_canonicalize.mlir → tmpe21qxlgr.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3547,7 +3557,7 @@
                     <td class='metric' style='background-color: rgb(197,255,197);'>645 <span class='diff'>(-0.9%)</span></td>
                     <td class='metric'>512</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/15<span class='tv-tip'>Tool error (3/15 equiv)
-✔ tmp0iwzk79cDecode.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpepqpx2a2Decode.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3561,7 +3571,7 @@
 ⚠ 0_10_canonicalize.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmpxf51qicx.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmpwg6k6724.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3579,13 +3589,13 @@
                     <td class='metric' style='background-color: rgb(255,159,159);'>43 <span class='diff'>(+16.2%)</span></td>
                     <td class='metric' style='background-color: rgb(255,183,183);'>371 <span class='diff'>(+6.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/7<span class='tv-tip'>Tool error (3/7 equiv)
-✔ tmp3rpit6qbFullAdder.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpu0ld9865FullAdder.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
 ⚠ 0_3_convert-comb-to-synth.mlir → 0_4_cse.mlir
 ⚠ 0_4_cse.mlir → 0_5_synth-structural-hash.mlir
-⚠ 0_5_synth-structural-hash.mlir → tmphngyx35g.synth.mlir</span></td>
+⚠ 0_5_synth-structural-hash.mlir → tmptezyors9.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3603,13 +3613,13 @@
                     <td class='metric' style='background-color: rgb(255,159,159);'>43 <span class='diff'>(+16.2%)</span></td>
                     <td class='metric' style='background-color: rgb(255,183,183);'>371 <span class='diff'>(+6.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/7<span class='tv-tip'>Tool error (3/7 equiv)
-✔ tmp3ccnazccFullAdder.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpzlkc6n_5FullAdder.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
 ⚠ 0_3_convert-comb-to-synth.mlir → 0_4_cse.mlir
 ⚠ 0_4_cse.mlir → 0_5_synth-structural-hash.mlir
-⚠ 0_5_synth-structural-hash.mlir → tmp3ergoyu7.synth.mlir</span></td>
+⚠ 0_5_synth-structural-hash.mlir → tmp6lddl916.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3627,14 +3637,14 @@
                     <td class='metric' style='background-color: rgb(255,155,155);'>873 <span class='diff'>(+18.0%)</span></td>
                     <td class='metric' style='background-color: rgb(184,255,184);'>586 <span class='diff'>(-6.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/8<span class='tv-tip'>Tool error (4/8 equiv)
-✔ tmpq79xaac6Gray2Bin.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpl4r8vrwiGray2Bin.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
 ⚠ 0_3_synth-lower-variadic.mlir → 0_4_convert-comb-to-synth.mlir
 ⚠ 0_4_convert-comb-to-synth.mlir → 0_5_cse.mlir
 ⚠ 0_5_cse.mlir → 0_6_synth-structural-hash.mlir
-⚠ 0_6_synth-structural-hash.mlir → tmpfcgw8k35.synth.mlir</span></td>
+⚠ 0_6_synth-structural-hash.mlir → tmp73e8t6ok.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3652,14 +3662,14 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>4883 <span class='diff'>(+38.5%)</span></td>
                     <td class='metric' style='background-color: rgb(151,255,151);'>771 <span class='diff'>(-19.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/8<span class='tv-tip'>Tool error (3/8 equiv)
-✔ tmp76_7eu7gGray2Bin.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpw3_49h0jGray2Bin.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⏱ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
 ⚠ 0_3_synth-lower-variadic.mlir → 0_4_convert-comb-to-synth.mlir
 ⚠ 0_4_convert-comb-to-synth.mlir → 0_5_cse.mlir
 ⚠ 0_5_cse.mlir → 0_6_synth-structural-hash.mlir
-⚠ 0_6_synth-structural-hash.mlir → tmpwlzu5hf9.synth.mlir</span></td>
+⚠ 0_6_synth-structural-hash.mlir → tmpsylj6fjz.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3677,7 +3687,7 @@
                     <td class='metric' style='background-color: rgb(255,190,190);'>401 <span class='diff'>(+3.9%)</span></td>
                     <td class='metric' style='background-color: rgb(163,255,163);'>731 <span class='diff'>(-14.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/11<span class='tv-tip'>Tool error (3/11 equiv)
-✔ tmpuk0hm3r0IncC.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpux_n352eIncC.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3687,7 +3697,7 @@
 ⚠ 0_6_synth-structural-hash.mlir → 0_7_synth-maximum-and-cover.mlir
 ⚠ 0_7_synth-maximum-and-cover.mlir → 0_8_synth-lower-variadic.mlir
 ⚠ 0_8_synth-lower-variadic.mlir → 0_9_synth-structural-hash.mlir
-⚠ 0_9_synth-structural-hash.mlir → tmppipd_d69.synth.mlir</span></td>
+⚠ 0_9_synth-structural-hash.mlir → tmp0cuu1_mm.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3705,7 +3715,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1880 <span class='diff'>(+54.0%)</span></td>
                     <td class='metric' style='background-color: rgb(255,176,176);'>1377 <span class='diff'>(+9.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/11<span class='tv-tip'>Tool error (3/11 equiv)
-✔ tmpeunveomhIncC.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmp6ivh6ba8IncC.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3715,7 +3725,7 @@
 ⚠ 0_6_synth-structural-hash.mlir → 0_7_synth-maximum-and-cover.mlir
 ⚠ 0_7_synth-maximum-and-cover.mlir → 0_8_synth-lower-variadic.mlir
 ⚠ 0_8_synth-lower-variadic.mlir → 0_9_synth-structural-hash.mlir
-⚠ 0_9_synth-structural-hash.mlir → tmp6sylt1sg.synth.mlir</span></td>
+⚠ 0_9_synth-structural-hash.mlir → tmp8tnhcd6k.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3733,7 +3743,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1451 <span class='diff'>(+81.8%)</span></td>
                     <td class='metric' style='background-color: rgb(178,255,178);'>1474 <span class='diff'>(-8.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpe_5ipw4iIncDecC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp3exqyyzhIncDecC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -3753,7 +3763,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp7exyvd6t.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpigb5goa_.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3771,7 +3781,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>7040 <span class='diff'>(+182.8%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1282 <span class='diff'>(-56.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmp_43et897IncDecC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpth9ni3vdIncDecC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -3791,7 +3801,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp83hxc1x4.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpbjla_swc.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3809,7 +3819,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>988 <span class='diff'>(+49.9%)</span></td>
                     <td class='metric' style='background-color: rgb(187,255,187);'>1343 <span class='diff'>(-5.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/16<span class='tv-tip'>Tool error (4/16 equiv)
-✔ tmp0rh3lewtIncDec.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmppokw2e6xIncDec.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -3824,7 +3834,7 @@
 ⚠ 0_11_canonicalize.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmp0mgoad2g.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpz5tmi8jp.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3842,7 +3852,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5872 <span class='diff'>(+151.5%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1364 <span class='diff'>(-43.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/16<span class='tv-tip'>Tool error (4/16 equiv)
-✔ tmpui0kashvIncDec.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpj4by9q3iIncDec.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -3857,7 +3867,7 @@
 ⚠ 0_11_canonicalize.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmp6fik2ic5.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpkhlrc55i.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3875,7 +3885,7 @@
                     <td class='metric' style='background-color: rgb(192,255,192);'>379 <span class='diff'>(-2.8%)</span></td>
                     <td class='metric' style='background-color: rgb(255,195,195);'>654 <span class='diff'>(+1.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/12<span class='tv-tip'>Tool error (3/12 equiv)
-✔ tmpzwj9h0r7Inc.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpbgs18263Inc.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3886,7 +3896,7 @@
 ⚠ 0_7_synth-structural-hash.mlir → 0_8_synth-maximum-and-cover.mlir
 ⚠ 0_8_synth-maximum-and-cover.mlir → 0_9_synth-lower-variadic.mlir
 ⚠ 0_9_synth-lower-variadic.mlir → 0_10_synth-structural-hash.mlir
-⚠ 0_10_synth-structural-hash.mlir → tmp_68rywu1.synth.mlir</span></td>
+⚠ 0_10_synth-structural-hash.mlir → tmpab3n99mm.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3904,7 +3914,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1844 <span class='diff'>(+52.8%)</span></td>
                     <td class='metric' style='background-color: rgb(255,192,192);'>1052 <span class='diff'>(+3.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/12<span class='tv-tip'>Tool error (3/12 equiv)
-✔ tmp9ln4b9p5Inc.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpnt9ciihkInc.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3915,7 +3925,7 @@
 ⚠ 0_7_synth-structural-hash.mlir → 0_8_synth-maximum-and-cover.mlir
 ⚠ 0_8_synth-maximum-and-cover.mlir → 0_9_synth-lower-variadic.mlir
 ⚠ 0_9_synth-lower-variadic.mlir → 0_10_synth-structural-hash.mlir
-⚠ 0_10_synth-structural-hash.mlir → tmpn6a5qcwy.synth.mlir</span></td>
+⚠ 0_10_synth-structural-hash.mlir → tmp_08dr840.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3933,7 +3943,7 @@
                     <td class='metric' style='background-color: rgb(255,180,180);'>447 <span class='diff'>(+7.7%)</span></td>
                     <td class='metric' style='background-color: rgb(185,255,185);'>1223 <span class='diff'>(-5.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/14<span class='tv-tip'>Tool error (3/14 equiv)
-✔ tmpxxpm559sLeadOneDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmp7br37oowLeadOneDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -3946,7 +3956,7 @@
 ⚠ 0_9_canonicalize.mlir → 0_10_synth-maximum-and-cover.mlir
 ⚠ 0_10_synth-maximum-and-cover.mlir → 0_11_synth-lower-variadic.mlir
 ⚠ 0_11_synth-lower-variadic.mlir → 0_12_synth-structural-hash.mlir
-⚠ 0_12_synth-structural-hash.mlir → tmp1uqwc493.synth.mlir</span></td>
+⚠ 0_12_synth-structural-hash.mlir → tmpcea7vluu.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3964,7 +3974,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1595 <span class='diff'>(+22.2%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1480 <span class='diff'>(-62.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/16<span class='tv-tip'>Tool error (4/16 equiv)
-✔ tmp350cnaenLeadOneDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpioeb5mrtLeadOneDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_comb-balance-mux.mlir
@@ -3979,7 +3989,7 @@
 ⚠ 0_11_canonicalize.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmplvwxd8za.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmp_g5bstrd.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -3997,7 +4007,7 @@
                     <td class='metric' style='background-color: rgb(186,255,186);'>643 <span class='diff'>(-5.3%)</span></td>
                     <td class='metric' style='background-color: rgb(255,150,150);'>1578 <span class='diff'>(+26.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/14<span class='tv-tip'>Tool error (3/14 equiv)
-✔ tmp44l9tpyfLeadSignDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpn8cfkvx4LeadSignDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -4010,7 +4020,7 @@
 ⚠ 0_9_canonicalize.mlir → 0_10_synth-maximum-and-cover.mlir
 ⚠ 0_10_synth-maximum-and-cover.mlir → 0_11_synth-lower-variadic.mlir
 ⚠ 0_11_synth-lower-variadic.mlir → 0_12_synth-structural-hash.mlir
-⚠ 0_12_synth-structural-hash.mlir → tmp_539sdcl.synth.mlir</span></td>
+⚠ 0_12_synth-structural-hash.mlir → tmpf6ll9e6p.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4028,7 +4038,7 @@
                     <td class='metric' style='background-color: rgb(255,198,198);'>2187 <span class='diff'>(+0.5%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1889 <span class='diff'>(-48.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/16<span class='tv-tip'>Tool error (4/16 equiv)
-✔ tmp0d03tc8dLeadSignDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpzi4rtu4iLeadSignDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_comb-balance-mux.mlir
@@ -4043,7 +4053,7 @@
 ⚠ 0_11_canonicalize.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpau44ils6.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpmo24ruzj.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4061,7 +4071,7 @@
                     <td class='metric' style='background-color: rgb(255,179,179);'>446 <span class='diff'>(+8.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1077 <span class='diff'>(-22.4%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/14<span class='tv-tip'>Tool error (3/14 equiv)
-✔ tmp410ehu7sLeadZeroDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpm4g1em_kLeadZeroDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -4074,7 +4084,7 @@
 ⚠ 0_9_canonicalize.mlir → 0_10_synth-maximum-and-cover.mlir
 ⚠ 0_10_synth-maximum-and-cover.mlir → 0_11_synth-lower-variadic.mlir
 ⚠ 0_11_synth-lower-variadic.mlir → 0_12_synth-structural-hash.mlir
-⚠ 0_12_synth-structural-hash.mlir → tmprc0m8ks5.synth.mlir</span></td>
+⚠ 0_12_synth-structural-hash.mlir → tmp01m0l8n2.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4092,7 +4102,7 @@
                     <td class='metric' style='background-color: rgb(255,158,158);'>1532 <span class='diff'>(+16.6%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2008 <span class='diff'>(-49.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/16<span class='tv-tip'>Tool error (4/16 equiv)
-✔ tmp526kfsykLeadZeroDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpy_51a4lwLeadZeroDet.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_comb-balance-mux.mlir
@@ -4107,7 +4117,7 @@
 ⚠ 0_11_canonicalize.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpkdgwcwp_.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpyv3j641i.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4125,7 +4135,7 @@
                     <td class='metric' style='background-color: rgb(255,191,191);'>183 <span class='diff'>(+3.4%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>874 <span class='diff'>(-25.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/10<span class='tv-tip'>Tool error (0/10 equiv)
-⚠ tmptp3e357oLog2.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpme5pl37zLog2.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_synth-lower-word-to-bits.mlir
 ⚠ 0_2_synth-lower-word-to-bits.mlir → 0_3_cse.mlir
@@ -4134,7 +4144,7 @@
 ⚠ 0_5_canonicalize.mlir → 0_6_synth-maximum-and-cover.mlir
 ⚠ 0_6_synth-maximum-and-cover.mlir → 0_7_synth-lower-variadic.mlir
 ⚠ 0_7_synth-lower-variadic.mlir → 0_8_synth-structural-hash.mlir
-⚠ 0_8_synth-structural-hash.mlir → tmpcz6swat6.synth.mlir</span></td>
+⚠ 0_8_synth-structural-hash.mlir → tmps3e8pcs6.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4152,7 +4162,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>902 <span class='diff'>(+42.5%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1191 <span class='diff'>(-66.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 1/12<span class='tv-tip'>Tool error (1/12 equiv)
-✔ tmpa7lzgv3hLog2.test.tmp.mlir → 0_0_comb-balance-mux.mlir
+✔ tmpcwwl1g5dLog2.test.tmp.mlir → 0_0_comb-balance-mux.mlir
 ⚠ 0_0_comb-balance-mux.mlir → 0_1_convert-comb-to-synth.mlir
 ⚠ 0_1_convert-comb-to-synth.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_synth-lower-word-to-bits.mlir
@@ -4163,7 +4173,7 @@
 ⚠ 0_7_canonicalize.mlir → 0_8_synth-maximum-and-cover.mlir
 ⚠ 0_8_synth-maximum-and-cover.mlir → 0_9_synth-lower-variadic.mlir
 ⚠ 0_9_synth-lower-variadic.mlir → 0_10_synth-structural-hash.mlir
-⚠ 0_10_synth-structural-hash.mlir → tmplvdpal14.synth.mlir</span></td>
+⚠ 0_10_synth-structural-hash.mlir → tmpmwz8rx89.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4181,7 +4191,7 @@
                     <td class='metric' style='background-color: rgb(175,255,175);'>5896 <span class='diff'>(-9.9%)</span></td>
                     <td class='metric' style='background-color: rgb(176,255,176);'>2570 <span class='diff'>(-9.4%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmp341qd2dpMulAddSgn.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpvl_nsukzMulAddSgn.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -4200,7 +4210,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpyyc2f9ty.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmp8mj_7_wg.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -4218,7 +4228,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>40344 <span class='diff'>(-31.3%)</span></td>
                     <td class='metric' style='background-color: rgb(167,255,167);'>4083 <span class='diff'>(-13.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpcpvxvvnjMulAddSgn.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp415x9z0zMulAddSgn.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -4238,7 +4248,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmp_euq3008.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmp1i3cwpjz.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -4256,7 +4266,7 @@
                     <td class='metric' style='background-color: rgb(175,255,175);'>5896 <span class='diff'>(-9.9%)</span></td>
                     <td class='metric' style='background-color: rgb(176,255,176);'>2570 <span class='diff'>(-9.4%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/20<span class='tv-tip'>Tool error (7/20 equiv)
-✔ tmpxgo8d61sMulAddUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpi4n4z55fMulAddUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -4275,7 +4285,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpz_v42z_h.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpglz5rfka.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -4293,7 +4303,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>40344 <span class='diff'>(-31.3%)</span></td>
                     <td class='metric' style='background-color: rgb(167,255,167);'>4083 <span class='diff'>(-13.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmp999h6mzpMulAddUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpmo7js58sMulAddUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -4313,7 +4323,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpfvaj11h4.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpbv363mf2.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -4331,7 +4341,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>11434 <span class='diff'>(-39.5%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>3153 <span class='diff'>(-19.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/19<span class='tv-tip'>Tool error (5/19 equiv)
-✔ tmpvhlesrplMulSgn.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp6_4cjcp3MulSgn.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -4349,7 +4359,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpwnbdirf4.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmp_agemn4t.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -4367,7 +4377,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>81205 <span class='diff'>(-47.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4558 <span class='diff'>(-29.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/21<span class='tv-tip'>Tool error (7/21 equiv)
-✔ tmpdpzhu7aaMulSgn.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpdnlbdnmuMulSgn.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ⏱ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -4387,7 +4397,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpj4gh_ay6.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpn1jlgtbt.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -4405,7 +4415,7 @@
                     <td class='metric' style='background-color: rgb(176,255,176);'>11355 <span class='diff'>(-9.6%)</span></td>
                     <td class='metric' style='background-color: rgb(151,255,151);'>3268 <span class='diff'>(-19.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/19<span class='tv-tip'>Tool error (6/19 equiv)
-✔ tmpfqiim8x5MulUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpxwu_bj0fMulUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -4423,7 +4433,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmp0whh11l4.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmpzslxpn59.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -4441,7 +4451,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>81021 <span class='diff'>(-28.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4530 <span class='diff'>(-27.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpqkxrazc2MulUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpoww8cb85MulUns.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -4461,7 +4471,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpcyftyjzb.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpjvpwtft3.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -4479,7 +4489,7 @@
                     <td class='metric' style='background-color: rgb(255,171,171);'>501 <span class='diff'>(+11.6%)</span></td>
                     <td class='metric' style='background-color: rgb(164,255,164);'>990 <span class='diff'>(-14.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/17<span class='tv-tip'>Tool error (5/17 equiv)
-✔ tmp4snz2wrwNegC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpj_7x2vkgNegC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ✔ 0_2_convert-comb-to-synth.mlir → 0_3_cse.mlir
@@ -4495,7 +4505,7 @@
 ⚠ 0_12_canonicalize.mlir → 0_13_synth-maximum-and-cover.mlir
 ⚠ 0_13_synth-maximum-and-cover.mlir → 0_14_synth-lower-variadic.mlir
 ⚠ 0_14_synth-lower-variadic.mlir → 0_15_synth-structural-hash.mlir
-⚠ 0_15_synth-structural-hash.mlir → tmp6vn7khlq.synth.mlir</span></td>
+⚠ 0_15_synth-structural-hash.mlir → tmpel5zv_7i.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4513,7 +4523,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>2170 <span class='diff'>(+47.4%)</span></td>
                     <td class='metric' style='background-color: rgb(175,255,175);'>1601 <span class='diff'>(-9.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/17<span class='tv-tip'>Tool error (5/17 equiv)
-✔ tmp2qk59p61NegC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpkxxi46_rNegC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ✔ 0_2_convert-comb-to-synth.mlir → 0_3_cse.mlir
@@ -4529,7 +4539,7 @@
 ⚠ 0_12_canonicalize.mlir → 0_13_synth-maximum-and-cover.mlir
 ⚠ 0_13_synth-maximum-and-cover.mlir → 0_14_synth-lower-variadic.mlir
 ⚠ 0_14_synth-lower-variadic.mlir → 0_15_synth-structural-hash.mlir
-⚠ 0_15_synth-structural-hash.mlir → tmpq62hs_2_.synth.mlir</span></td>
+⚠ 0_15_synth-structural-hash.mlir → tmpio5at1h4.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4547,7 +4557,7 @@
                     <td class='metric' style='background-color: rgb(255,165,165);'>360 <span class='diff'>(+13.9%)</span></td>
                     <td class='metric' style='background-color: rgb(183,255,183);'>909 <span class='diff'>(-6.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/16<span class='tv-tip'>Tool error (5/16 equiv)
-✔ tmpcgzzal52Neg.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpumq8__9qNeg.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ✔ 0_2_convert-comb-to-synth.mlir → 0_3_cse.mlir
@@ -4562,7 +4572,7 @@
 ⚠ 0_11_canonicalize.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpshtdu8nn.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpa1g6l5g_.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4580,7 +4590,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1665 <span class='diff'>(+58.3%)</span></td>
                     <td class='metric' style='background-color: rgb(255,196,196);'>1428 <span class='diff'>(+1.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 5/16<span class='tv-tip'>Tool error (5/16 equiv)
-✔ tmpobyu53i4Neg.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpk4x4p7cpNeg.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ✔ 0_2_convert-comb-to-synth.mlir → 0_3_cse.mlir
@@ -4595,7 +4605,7 @@
 ⚠ 0_11_canonicalize.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpjgdbhcqw.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpbltup_kk.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4613,14 +4623,14 @@
                     <td class='metric'>50</td>
                     <td class='metric'>390</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/8<span class='tv-tip'>Tool error (0/8 equiv)
-⚠ tmpma97j7yiRedAnd.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpma7qiegsRedAnd.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_synth-lower-word-to-bits.mlir
 ⚠ 0_2_synth-lower-word-to-bits.mlir → 0_3_synth-lower-variadic.mlir
 ⚠ 0_3_synth-lower-variadic.mlir → 0_4_canonicalize.mlir
 ⚠ 0_4_canonicalize.mlir → 0_5_synth-maximum-and-cover.mlir
 ⚠ 0_5_synth-maximum-and-cover.mlir → 0_6_synth-lower-variadic.mlir
-⚠ 0_6_synth-lower-variadic.mlir → tmpupvt9x24.synth.mlir</span></td>
+⚠ 0_6_synth-lower-variadic.mlir → tmp5avc3gbp.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4638,14 +4648,14 @@
                     <td class='metric'>157</td>
                     <td class='metric'>558</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/8<span class='tv-tip'>Tool error (0/8 equiv)
-⚠ tmppivgf62cRedAnd.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmp4dkbzvrlRedAnd.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_synth-lower-word-to-bits.mlir
 ⚠ 0_2_synth-lower-word-to-bits.mlir → 0_3_synth-lower-variadic.mlir
 ⚠ 0_3_synth-lower-variadic.mlir → 0_4_canonicalize.mlir
 ⚠ 0_4_canonicalize.mlir → 0_5_synth-maximum-and-cover.mlir
 ⚠ 0_5_synth-maximum-and-cover.mlir → 0_6_synth-lower-variadic.mlir
-⚠ 0_6_synth-lower-variadic.mlir → tmppc9n74iz.synth.mlir</span></td>
+⚠ 0_6_synth-lower-variadic.mlir → tmpxxbfyoc2.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4663,12 +4673,12 @@
                     <td class='metric'>43</td>
                     <td class='metric'>668</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/6<span class='tv-tip'>Tool error (0/6 equiv)
-⚠ tmp_ii5wgztRedOr.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpkuq79ddaRedOr.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_synth-lower-variadic.mlir
 ⚠ 0_2_synth-lower-variadic.mlir → 0_3_synth-maximum-and-cover.mlir
 ⚠ 0_3_synth-maximum-and-cover.mlir → 0_4_synth-lower-variadic.mlir
-⚠ 0_4_synth-lower-variadic.mlir → tmp1rrou9c4.synth.mlir</span></td>
+⚠ 0_4_synth-lower-variadic.mlir → tmpk_ihit4j.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4686,12 +4696,12 @@
                     <td class='metric'>138</td>
                     <td class='metric'>919</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/6<span class='tv-tip'>Tool error (0/6 equiv)
-⚠ tmponp334bjRedOr.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpriwffrklRedOr.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_synth-lower-variadic.mlir
 ⚠ 0_2_synth-lower-variadic.mlir → 0_3_synth-maximum-and-cover.mlir
 ⚠ 0_3_synth-maximum-and-cover.mlir → 0_4_synth-lower-variadic.mlir
-⚠ 0_4_synth-lower-variadic.mlir → tmpajv9uh6l.synth.mlir</span></td>
+⚠ 0_4_synth-lower-variadic.mlir → tmp1gnsi6ij.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4709,10 +4719,10 @@
                     <td class='metric' style='background-color: rgb(255,190,190);'>225 <span class='diff'>(+3.7%)</span></td>
                     <td class='metric'>616</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 2/4<span class='tv-tip'>Tool error (2/4 equiv)
-✔ tmp_5_2n1s6RedXor.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpqs379nroRedXor.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
-⚠ 0_2_convert-comb-to-synth.mlir → tmpfnokwq32.synth.mlir</span></td>
+⚠ 0_2_convert-comb-to-synth.mlir → tmp_eokai2n.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4730,11 +4740,11 @@
                     <td class='metric' style='background-color: rgb(255,188,188);'>705 <span class='diff'>(+4.4%)</span></td>
                     <td class='metric'>831</td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 2/5<span class='tv-tip'>Tool error (2/5 equiv)
-✔ tmpnw7d44ecRedXor.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpk4hlq5ldRedXor.test.tmp.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ⚠ 0_2_convert-comb-to-synth.mlir → 0_3_synth-structural-hash.mlir
-⚠ 0_3_synth-structural-hash.mlir → tmpbr1j24f_.synth.mlir</span></td>
+⚠ 0_3_synth-structural-hash.mlir → tmp439jgaci.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4752,7 +4762,7 @@
                     <td class='metric' style='background-color: rgb(255,192,192);'>1241 <span class='diff'>(+2.8%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2054 <span class='diff'>(-20.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 9/20<span class='tv-tip'>Tool error (9/20 equiv)
-✔ tmppr5q5bouSubCZ.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp2z4ox1agSubCZ.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -4771,7 +4781,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmp4zm3vgji.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmpj6sypa_3.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4789,7 +4799,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5661 <span class='diff'>(+49.0%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2133 <span class='diff'>(-39.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 9/20<span class='tv-tip'>Tool error (9/20 equiv)
-✔ tmpgsdrfz37SubCZ.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp4_pdcjsySubCZ.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -4808,7 +4818,7 @@
 ⚠ 0_15_canonicalize.mlir → 0_16_synth-maximum-and-cover.mlir
 ⚠ 0_16_synth-maximum-and-cover.mlir → 0_17_synth-lower-variadic.mlir
 ⚠ 0_17_synth-lower-variadic.mlir → 0_18_synth-structural-hash.mlir
-⚠ 0_18_synth-structural-hash.mlir → tmpqrbbwux5.synth.mlir</span></td>
+⚠ 0_18_synth-structural-hash.mlir → tmp40xqo2c8.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4826,7 +4836,7 @@
                     <td class='metric' style='background-color: rgb(255,186,186);'>1217 <span class='diff'>(+5.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1437 <span class='diff'>(-32.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/19<span class='tv-tip'>Tool error (8/19 equiv)
-✔ tmpy94hfu8oSubC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpnvtd1ko8SubC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -4844,7 +4854,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmp7yqtg1az.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmpavi4iadj.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4862,7 +4872,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5604 <span class='diff'>(+51.5%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1489 <span class='diff'>(-54.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/19<span class='tv-tip'>Tool error (8/19 equiv)
-✔ tmpv7ymjafxSubC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpwi31foieSubC.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -4880,7 +4890,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpldhu79kg.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmpxdjh99vj.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4898,7 +4908,7 @@
                     <td class='metric' style='background-color: rgb(192,255,192);'>1307 <span class='diff'>(-3.0%)</span></td>
                     <td class='metric' style='background-color: rgb(169,255,169);'>1950 <span class='diff'>(-12.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/19<span class='tv-tip'>Tool error (8/19 equiv)
-✔ tmppd2s939gSubVZ.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpepmulbr9SubVZ.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -4916,7 +4926,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmp7jbyim57.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmpwx7kl4gw.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4934,7 +4944,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5754 <span class='diff'>(+46.0%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2224 <span class='diff'>(-26.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/19<span class='tv-tip'>Tool error (8/19 equiv)
-✔ tmpu5uqc4bxSubVZ.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp2pf_fo2vSubVZ.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -4952,7 +4962,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpbrkxr9pn.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmp5ph2rex4.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -4970,7 +4980,7 @@
                     <td class='metric' style='background-color: rgb(190,255,190);'>1247 <span class='diff'>(-3.7%)</span></td>
                     <td class='metric' style='background-color: rgb(158,255,158);'>1787 <span class='diff'>(-16.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/18<span class='tv-tip'>Tool error (7/18 equiv)
-✔ tmpd2bf0h_fSubV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpoi0rx8keSubV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -4987,7 +4997,7 @@
 ⚠ 0_13_canonicalize.mlir → 0_14_synth-maximum-and-cover.mlir
 ⚠ 0_14_synth-maximum-and-cover.mlir → 0_15_synth-lower-variadic.mlir
 ⚠ 0_15_synth-lower-variadic.mlir → 0_16_synth-structural-hash.mlir
-⚠ 0_16_synth-structural-hash.mlir → tmpgds5qw44.synth.mlir</span></td>
+⚠ 0_16_synth-structural-hash.mlir → tmp0eihg9lr.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5005,7 +5015,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5515 <span class='diff'>(+48.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1489 <span class='diff'>(-47.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/18<span class='tv-tip'>Tool error (7/18 equiv)
-✔ tmpzyovqq94SubV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpmxsrrfooSubV.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -5022,7 +5032,7 @@
 ⚠ 0_13_canonicalize.mlir → 0_14_synth-maximum-and-cover.mlir
 ⚠ 0_14_synth-maximum-and-cover.mlir → 0_15_synth-lower-variadic.mlir
 ⚠ 0_15_synth-lower-variadic.mlir → 0_16_synth-structural-hash.mlir
-⚠ 0_16_synth-structural-hash.mlir → tmpwinphj95.synth.mlir</span></td>
+⚠ 0_16_synth-structural-hash.mlir → tmpqcd8fc3t.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5040,7 +5050,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1150 <span class='diff'>(+34.5%)</span></td>
                     <td class='metric' style='background-color: rgb(156,255,156);'>1376 <span class='diff'>(-17.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/18<span class='tv-tip'>Tool error (7/18 equiv)
-✔ tmp3c0ks8wlSub.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpg9h2dt29Sub.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5057,7 +5067,7 @@
 ⚠ 0_13_canonicalize.mlir → 0_14_synth-maximum-and-cover.mlir
 ⚠ 0_14_synth-maximum-and-cover.mlir → 0_15_synth-lower-variadic.mlir
 ⚠ 0_15_synth-lower-variadic.mlir → 0_16_synth-structural-hash.mlir
-⚠ 0_16_synth-structural-hash.mlir → tmpc2dhs0jl.synth.mlir</span></td>
+⚠ 0_16_synth-structural-hash.mlir → tmpvct_6mw0.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5075,7 +5085,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5500 <span class='diff'>(+95.9%)</span></td>
                     <td class='metric' style='background-color: rgb(154,255,154);'>1492 <span class='diff'>(-18.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/18<span class='tv-tip'>Tool error (7/18 equiv)
-✔ tmpn7s9_8zgSub.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpsl0ax2zuSub.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5092,7 +5102,7 @@
 ⚠ 0_13_canonicalize.mlir → 0_14_synth-maximum-and-cover.mlir
 ⚠ 0_14_synth-maximum-and-cover.mlir → 0_15_synth-lower-variadic.mlir
 ⚠ 0_15_synth-lower-variadic.mlir → 0_16_synth-structural-hash.mlir
-⚠ 0_16_synth-structural-hash.mlir → tmppl8nfmxe.synth.mlir</span></td>
+⚠ 0_16_synth-structural-hash.mlir → tmpo0m8chda.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5110,7 +5120,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1092 <span class='diff'>(+43.1%)</span></td>
                     <td class='metric' style='background-color: rgb(168,255,168);'>1953 <span class='diff'>(-12.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmpu5ku_fl_SumZeroDet.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmptknz6fxwSumZeroDet.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5125,7 +5135,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmp8n_v_0p2.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmp4vmmx9id.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5143,7 +5153,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5467 <span class='diff'>(+119.3%)</span></td>
                     <td class='metric' style='background-color: rgb(153,255,153);'>2325 <span class='diff'>(-18.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/16<span class='tv-tip'>Tool error (7/16 equiv)
-✔ tmpt_p8bis1SumZeroDet.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmp4sk38l0oSumZeroDet.test.tmp.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_convert-datapath-to-comb.mlir
 ✔ 0_1_convert-datapath-to-comb.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5158,7 +5168,7 @@
 ⚠ 0_11_synth-structural-hash.mlir → 0_12_synth-maximum-and-cover.mlir
 ⚠ 0_12_synth-maximum-and-cover.mlir → 0_13_synth-lower-variadic.mlir
 ⚠ 0_13_synth-lower-variadic.mlir → 0_14_synth-structural-hash.mlir
-⚠ 0_14_synth-structural-hash.mlir → tmpnmphsor8.synth.mlir</span></td>
+⚠ 0_14_synth-structural-hash.mlir → tmpetyob1ou.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5179,7 +5189,7 @@
                     <td class='metric' style='background-color: rgb(255,164,164);'>782 <span class='diff'>(+14.3%)</span></td>
                     <td class='metric' style='background-color: rgb(180,255,180);'>1564 <span class='diff'>(-7.6%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/13<span class='tv-tip'>Tool error (4/13 equiv)
-✔ tmp_cdi0pwfadd.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpm_q7s893add.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -5191,7 +5201,7 @@
 ⚠ 0_8_synth-structural-hash.mlir → 0_9_synth-maximum-and-cover.mlir
 ⚠ 0_9_synth-maximum-and-cover.mlir → 0_10_synth-lower-variadic.mlir
 ⚠ 0_10_synth-lower-variadic.mlir → 0_11_synth-structural-hash.mlir
-⚠ 0_11_synth-structural-hash.mlir → tmp_4dqyqlh.synth.mlir</span></td>
+⚠ 0_11_synth-structural-hash.mlir → tmpk5j76bhs.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5209,7 +5219,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>4581 <span class='diff'>(+91.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>1356 <span class='diff'>(-49.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 4/13<span class='tv-tip'>Tool error (4/13 equiv)
-✔ tmpluwpnrhyadd.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpnmb_kf4dadd.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ✔ 0_2_canonicalize.mlir → 0_3_synth-lower-variadic.mlir
@@ -5221,7 +5231,7 @@
 ⚠ 0_8_synth-structural-hash.mlir → 0_9_synth-maximum-and-cover.mlir
 ⚠ 0_9_synth-maximum-and-cover.mlir → 0_10_synth-lower-variadic.mlir
 ⚠ 0_10_synth-lower-variadic.mlir → 0_11_synth-structural-hash.mlir
-⚠ 0_11_synth-structural-hash.mlir → tmphlyb7fyw.synth.mlir</span></td>
+⚠ 0_11_synth-structural-hash.mlir → tmpefzfyo8x.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5239,7 +5249,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>4522 <span class='diff'>(+31.0%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2161 <span class='diff'>(-22.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/19<span class='tv-tip'>Tool error (0/19 equiv)
-⚠ tmpcmqav3a4alu.mlir → 0_0_convert-comb-to-datapath.mlir
+⚠ tmpe5zmezqpalu.mlir → 0_0_convert-comb-to-datapath.mlir
 ⚠ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ⚠ 0_2_convert-datapath-to-comb.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5257,7 +5267,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpjg2dx22v.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmpwu3mqgzt.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5275,7 +5285,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>17333 <span class='diff'>(+62.3%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>2948 <span class='diff'>(-29.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/19<span class='tv-tip'>Tool error (0/19 equiv)
-⚠ tmpwuxc52m6alu.mlir → 0_0_convert-comb-to-datapath.mlir
+⚠ tmp4jh96jgmalu.mlir → 0_0_convert-comb-to-datapath.mlir
 ⚠ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ⚠ 0_2_convert-datapath-to-comb.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5293,7 +5303,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmpfxteil5g.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmpp3djrfuw.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5311,7 +5321,7 @@
                     <td class='metric' style='background-color: rgb(183,255,183);'>683 <span class='diff'>(-6.4%)</span></td>
                     <td class='metric' style='background-color: rgb(197,255,197);'>767 <span class='diff'>(-1.0%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/11<span class='tv-tip'>Tool error (3/11 equiv)
-✔ tmp6nz9pleqbarrel_shifter.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpzrl_rryvbarrel_shifter.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5321,7 +5331,7 @@
 ⚠ 0_6_synth-lower-word-to-bits.mlir → 0_7_cse.mlir
 ⚠ 0_7_cse.mlir → 0_8_synth-structural-hash.mlir
 ⚠ 0_8_synth-structural-hash.mlir → 0_9_canonicalize.mlir
-⚠ 0_9_canonicalize.mlir → tmp8l3kg212.synth.mlir</span></td>
+⚠ 0_9_canonicalize.mlir → tmp5ijbfrpm.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5339,7 +5349,7 @@
                     <td class='metric' style='background-color: rgb(255,181,181);'>3159 <span class='diff'>(+7.3%)</span></td>
                     <td class='metric' style='background-color: rgb(255,182,182);'>1259 <span class='diff'>(+7.1%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 3/15<span class='tv-tip'>Tool error (3/15 equiv)
-✔ tmprzuks3hlbarrel_shifter.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpa_ba6a5sbarrel_shifter.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ✔ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5353,7 +5363,7 @@
 ⚠ 0_10_canonicalize.mlir → 0_11_synth-maximum-and-cover.mlir
 ⚠ 0_11_synth-maximum-and-cover.mlir → 0_12_synth-lower-variadic.mlir
 ⚠ 0_12_synth-lower-variadic.mlir → 0_13_synth-structural-hash.mlir
-⚠ 0_13_synth-structural-hash.mlir → tmp2n_efi5p.synth.mlir</span></td>
+⚠ 0_13_synth-structural-hash.mlir → tmpek8u0dkx.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5371,7 +5381,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>815 <span class='diff'>(+38.1%)</span></td>
                     <td class='metric' style='background-color: rgb(178,255,178);'>1053 <span class='diff'>(-8.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/12<span class='tv-tip'>Tool error (0/12 equiv)
-⚠ tmp4sedo_g0comparator.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpjwsaj9m2comparator.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_synth-lower-word-to-bits.mlir
@@ -5382,7 +5392,7 @@
 ⚠ 0_7_canonicalize.mlir → 0_8_synth-maximum-and-cover.mlir
 ⚠ 0_8_synth-maximum-and-cover.mlir → 0_9_synth-lower-variadic.mlir
 ⚠ 0_9_synth-lower-variadic.mlir → 0_10_synth-structural-hash.mlir
-⚠ 0_10_synth-structural-hash.mlir → tmpi0e42w5_.synth.mlir</span></td>
+⚠ 0_10_synth-structural-hash.mlir → tmp_358yz_q.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5400,7 +5410,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>2472 <span class='diff'>(+44.4%)</span></td>
                     <td class='metric' style='background-color: rgb(255,169,169);'>1582 <span class='diff'>(+12.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/12<span class='tv-tip'>Tool error (0/12 equiv)
-⚠ tmpjohzdpqmcomparator.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmperar65j1comparator.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_synth-lower-word-to-bits.mlir
@@ -5411,7 +5421,7 @@
 ⚠ 0_7_canonicalize.mlir → 0_8_synth-maximum-and-cover.mlir
 ⚠ 0_8_synth-maximum-and-cover.mlir → 0_9_synth-lower-variadic.mlir
 ⚠ 0_9_synth-lower-variadic.mlir → 0_10_synth-structural-hash.mlir
-⚠ 0_10_synth-structural-hash.mlir → tmpiugclenc.synth.mlir</span></td>
+⚠ 0_10_synth-structural-hash.mlir → tmpqkthhtq0.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5429,7 +5439,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1009 <span class='diff'>(+63.0%)</span></td>
                     <td class='metric' style='background-color: rgb(255,180,180);'>1216 <span class='diff'>(+7.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/13<span class='tv-tip'>Tool error (0/13 equiv)
-⚠ tmp9769ixz1icmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpjlsq1g0cicmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_cse.mlir
@@ -5441,7 +5451,7 @@
 ⚠ 0_8_canonicalize.mlir → 0_9_synth-maximum-and-cover.mlir
 ⚠ 0_9_synth-maximum-and-cover.mlir → 0_10_synth-lower-variadic.mlir
 ⚠ 0_10_synth-lower-variadic.mlir → 0_11_synth-structural-hash.mlir
-⚠ 0_11_synth-structural-hash.mlir → tmp6x_q_x9d.synth.mlir</span></td>
+⚠ 0_11_synth-structural-hash.mlir → tmplu_7x3bc.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5459,7 +5469,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>3815 <span class='diff'>(+116.5%)</span></td>
                     <td class='metric' style='background-color: rgb(255,165,165);'>1724 <span class='diff'>(+13.8%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/13<span class='tv-tip'>Tool error (0/13 equiv)
-⚠ tmp56obgflficmp.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmpoltazrsqicmp.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_cse.mlir
@@ -5471,7 +5481,7 @@
 ⚠ 0_8_canonicalize.mlir → 0_9_synth-maximum-and-cover.mlir
 ⚠ 0_9_synth-maximum-and-cover.mlir → 0_10_synth-lower-variadic.mlir
 ⚠ 0_10_synth-lower-variadic.mlir → 0_11_synth-structural-hash.mlir
-⚠ 0_11_synth-structural-hash.mlir → tmpxppz6n7c.synth.mlir</span></td>
+⚠ 0_11_synth-structural-hash.mlir → tmpzpa4m3hg.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5489,7 +5499,7 @@
                     <td class='metric' style='background-color: rgb(176,255,176);'>11355 <span class='diff'>(-9.6%)</span></td>
                     <td class='metric' style='background-color: rgb(151,255,151);'>3268 <span class='diff'>(-19.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 6/19<span class='tv-tip'>Tool error (6/19 equiv)
-✔ tmpeobvyk0mmul.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpvsjhef6kmul.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_canonicalize.mlir
@@ -5507,7 +5517,7 @@
 ⚠ 0_14_canonicalize.mlir → 0_15_synth-maximum-and-cover.mlir
 ⚠ 0_15_synth-maximum-and-cover.mlir → 0_16_synth-lower-variadic.mlir
 ⚠ 0_16_synth-lower-variadic.mlir → 0_17_synth-structural-hash.mlir
-⚠ 0_17_synth-structural-hash.mlir → tmp9cgli5ww.synth.mlir</span></td>
+⚠ 0_17_synth-structural-hash.mlir → tmp7qxlqgj5.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -5525,7 +5535,7 @@
                     <td class='metric' style='background-color: rgb(150,255,150);'>81021 <span class='diff'>(-28.9%)</span></td>
                     <td class='metric' style='background-color: rgb(150,255,150);'>4530 <span class='diff'>(-27.5%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 8/21<span class='tv-tip'>Tool error (8/21 equiv)
-✔ tmpy6hbfio9mul.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmphf8raq7fmul.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ⏱ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_cse.mlir
@@ -5545,7 +5555,7 @@
 ⚠ 0_16_canonicalize.mlir → 0_17_synth-maximum-and-cover.mlir
 ⚠ 0_17_synth-maximum-and-cover.mlir → 0_18_synth-lower-variadic.mlir
 ⚠ 0_18_synth-lower-variadic.mlir → 0_19_synth-structural-hash.mlir
-⚠ 0_19_synth-structural-hash.mlir → tmpflybhhiw.synth.mlir</span></td>
+⚠ 0_19_synth-structural-hash.mlir → tmpqzbdwje2.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>
                 </tr>
                 <tr>
@@ -5563,7 +5573,7 @@
                     <td class='metric' style='background-color: rgb(255,180,180);'>528 <span class='diff'>(+7.8%)</span></td>
                     <td class='metric' style='background-color: rgb(255,165,165);'>631 <span class='diff'>(+13.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/10<span class='tv-tip'>Tool error (0/10 equiv)
-⚠ tmpavlyaguqmux.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmp6nlndsoumux.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_synth-lower-word-to-bits.mlir
@@ -5572,7 +5582,7 @@
 ⚠ 0_5_synth-structural-hash.mlir → 0_6_canonicalize.mlir
 ⚠ 0_6_canonicalize.mlir → 0_7_synth-maximum-and-cover.mlir
 ⚠ 0_7_synth-maximum-and-cover.mlir → 0_8_synth-lower-variadic.mlir
-⚠ 0_8_synth-lower-variadic.mlir → tmplyxbfqtm.synth.mlir</span></td>
+⚠ 0_8_synth-lower-variadic.mlir → tmp6ei62xbg.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5590,7 +5600,7 @@
                     <td class='metric' style='background-color: rgb(255,186,186);'>1488 <span class='diff'>(+5.5%)</span></td>
                     <td class='metric' style='background-color: rgb(255,165,165);'>631 <span class='diff'>(+13.7%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 0/10<span class='tv-tip'>Tool error (0/10 equiv)
-⚠ tmpdzj0ero5mux.mlir → 0_0_convert-comb-to-synth.mlir
+⚠ tmp7fdaqyx_mux.mlir → 0_0_convert-comb-to-synth.mlir
 ⚠ 0_0_convert-comb-to-synth.mlir → 0_1_cse.mlir
 ⚠ 0_1_cse.mlir → 0_2_canonicalize.mlir
 ⚠ 0_2_canonicalize.mlir → 0_3_synth-lower-word-to-bits.mlir
@@ -5599,7 +5609,7 @@
 ⚠ 0_5_synth-structural-hash.mlir → 0_6_canonicalize.mlir
 ⚠ 0_6_canonicalize.mlir → 0_7_synth-maximum-and-cover.mlir
 ⚠ 0_7_synth-maximum-and-cover.mlir → 0_8_synth-lower-variadic.mlir
-⚠ 0_8_synth-lower-variadic.mlir → tmp338reniz.synth.mlir</span></td>
+⚠ 0_8_synth-lower-variadic.mlir → tmp0t0lld7q.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5617,11 +5627,11 @@
                     <td class='metric' style='background-color: rgb(194,255,194);'>240 <span class='diff'>(-2.0%)</span></td>
                     <td class='metric' style='background-color: rgb(255,192,192);'>616 <span class='diff'>(+3.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 2/5<span class='tv-tip'>Tool error (2/5 equiv)
-✔ tmpewc9516nparity.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmp4lrnt97kparity.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ⚠ 0_2_convert-comb-to-synth.mlir → 0_3_canonicalize.mlir
-⚠ 0_3_canonicalize.mlir → tmpqbppo7rr.synth.mlir</span></td>
+⚠ 0_3_canonicalize.mlir → tmpw4hxhkd_.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5639,12 +5649,12 @@
                     <td class='metric' style='background-color: rgb(255,188,188);'>720 <span class='diff'>(+4.7%)</span></td>
                     <td class='metric' style='background-color: rgb(185,255,185);'>831 <span class='diff'>(-5.9%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 2/6<span class='tv-tip'>Tool error (2/6 equiv)
-✔ tmp3j1qzat_parity.mlir → 0_0_convert-comb-to-synth.mlir
+✔ tmpi8ao5fymparity.mlir → 0_0_convert-comb-to-synth.mlir
 ✔ 0_0_convert-comb-to-synth.mlir → 0_1_canonicalize.mlir
 ⚠ 0_1_canonicalize.mlir → 0_2_convert-comb-to-synth.mlir
 ⚠ 0_2_convert-comb-to-synth.mlir → 0_3_canonicalize.mlir
 ⚠ 0_3_canonicalize.mlir → 0_4_synth-structural-hash.mlir
-⚠ 0_4_synth-structural-hash.mlir → tmpp7lhwot9.synth.mlir</span></td>
+⚠ 0_4_synth-structural-hash.mlir → tmpr8l169gg.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5662,7 +5672,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>1150 <span class='diff'>(+34.5%)</span></td>
                     <td class='metric' style='background-color: rgb(156,255,156);'>1376 <span class='diff'>(-17.3%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/18<span class='tv-tip'>Tool error (7/18 equiv)
-✔ tmpq1vph6zrsub.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpbz9riec5sub.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5679,7 +5689,7 @@
 ⚠ 0_13_canonicalize.mlir → 0_14_synth-maximum-and-cover.mlir
 ⚠ 0_14_synth-maximum-and-cover.mlir → 0_15_synth-lower-variadic.mlir
 ⚠ 0_15_synth-lower-variadic.mlir → 0_16_synth-structural-hash.mlir
-⚠ 0_16_synth-structural-hash.mlir → tmpohi2up91.synth.mlir</span></td>
+⚠ 0_16_synth-structural-hash.mlir → tmpc_z5bsyy.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
                 <tr>
@@ -5697,7 +5707,7 @@
                     <td class='metric' style='background-color: rgb(255,150,150);'>5500 <span class='diff'>(+95.9%)</span></td>
                     <td class='metric' style='background-color: rgb(154,255,154);'>1492 <span class='diff'>(-18.2%)</span></td>
                     <td class='tv-cell' style='background:rgb(255,235,180)'>⚠ 7/18<span class='tv-tip'>Tool error (7/18 equiv)
-✔ tmprm5y68j0sub.mlir → 0_0_convert-comb-to-datapath.mlir
+✔ tmpz51s81lzsub.mlir → 0_0_convert-comb-to-datapath.mlir
 ✔ 0_0_convert-comb-to-datapath.mlir → 0_1_canonicalize.mlir
 ✔ 0_1_canonicalize.mlir → 0_2_convert-datapath-to-comb.mlir
 ✔ 0_2_convert-datapath-to-comb.mlir → 0_3_convert-comb-to-synth.mlir
@@ -5714,7 +5724,7 @@
 ⚠ 0_13_canonicalize.mlir → 0_14_synth-maximum-and-cover.mlir
 ⚠ 0_14_synth-maximum-and-cover.mlir → 0_15_synth-lower-variadic.mlir
 ⚠ 0_15_synth-lower-variadic.mlir → 0_16_synth-structural-hash.mlir
-⚠ 0_16_synth-structural-hash.mlir → tmp6t0o7h3t.synth.mlir</span></td>
+⚠ 0_16_synth-structural-hash.mlir → tmprriftb2_.synth.mlir</span></td>
                     <td style='text-align:center; background:rgb(200,255,200)'>✔ EQUIV</td>
                 </tr>
 
