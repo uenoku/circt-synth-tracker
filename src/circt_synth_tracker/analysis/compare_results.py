@@ -651,7 +651,7 @@ def _benchmark_source_url(benchmark_name, category):
     # Strip category-specific name prefix (e.g. "behavioural_AbsVal" -> "AbsVal")
     prefix = info["name_strip_prefix"]
     if prefix and name.startswith(prefix):
-        name = name[len(prefix):]
+        name = name[len(prefix) :]
 
     matches = list(local_dir.rglob(f"{name}.sv"))
     if not matches:
