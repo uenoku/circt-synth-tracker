@@ -57,6 +57,9 @@ def _run_lec_pair(args, from_file, to_file):
 
     lec_cmd = lec_base + ["--emit-smtlib"]
     solver_cmd = args.tv_solver.split()
+    # Handle common solvers that need specific flags for stdin
+    if solver_cmd[0] == "z3" and "-in" not in solver_cmd:
+        solver_cmd.append("-in")
     try:
         lec_proc = subprocess.run(lec_cmd, capture_output=True)
         if lec_proc.returncode != 0:
@@ -139,17 +142,24 @@ def run_tv(args, mlir_file, synth_mlir_file, output_file, tree_dir):
             "#!/usr/bin/env bash",
             "# Reproducer for TV non-equiv failures",
             "",
+            f'TOP_MODULE="{args.top}"',
+            "",
         ]
+
+        # Normalize solver command for reproduce.sh
+        solver_cmd = args.tv_solver
+        if solver_cmd.split()[0] == "z3" and "-in" not in solver_cmd:
+            solver_cmd = f"{args.tv_solver} -in"
+
         for i, (from_file, to_file) in enumerate(failed_pairs):
-            from_dest = f"{i}_from_{from_file.name}"
-            to_dest = f"{i}_to_{to_file.name}"
-            shutil.copy2(from_file, tv_pair_dir / from_dest)
-            shutil.copy2(to_file, tv_pair_dir / to_dest)
+            shutil.copy2(from_file, tv_pair_dir / from_file.name)
+            shutil.copy2(to_file, tv_pair_dir / to_file.name)
+
             reproduce_lines.append(f"# Pair {i}: {from_file.name} -> {to_file.name}")
-            reproduce_lines.append(
-                f"circt-lec {from_dest} {to_dest} --emit-smtlib | {args.tv_solver}"
-            )
+            cmd = f'circt-lec {from_file.name} {to_file.name} --c1 "$TOP_MODULE" --c2 "$TOP_MODULE" --emit-smtlib | {solver_cmd}'
+            reproduce_lines.append(cmd)
             reproduce_lines.append("")
+
         (tv_pair_dir / "reproduce.sh").write_text("\n".join(reproduce_lines))
         (tv_pair_dir / "reproduce.sh").chmod(0o755)
         print(
