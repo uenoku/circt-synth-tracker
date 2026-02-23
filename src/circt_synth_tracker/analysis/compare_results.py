@@ -1145,10 +1145,12 @@ def generate_html_report(
                     # Return content and style for the cell
                     if diff > 0:
                         content = (
-                            f"{value} <span class='diff'>(+{diff_pct:.1f}%)</span>"
+                            f"{value}<br><span class='diff'>(+{diff_pct:.1f}%)</span>"
                         )
                     elif diff < 0:
-                        content = f"{value} <span class='diff'>({diff_pct:.1f}%)</span>"
+                        content = (
+                            f"{value}<br><span class='diff'>({diff_pct:.1f}%)</span>"
+                        )
                     else:
                         content = str(value)
 
@@ -1223,8 +1225,16 @@ def generate_html_report(
                         header = f"NON-EQUIV detected ({tv_verified}/{tv_total} equiv)"
                         tv_cell = f"<td class='tv-cell' style='background:rgb(255,200,200)'>✘ NON-EQUIV{frac}{_tv_tip_span(header, tv_results_list)}</td>"
                     elif tv_status == "error":
-                        header = f"Tool error ({tv_verified}/{tv_total} equiv)"
-                        tv_cell = f"<td class='tv-cell' style='background:rgb(255,235,180)'>⚠{frac}{_tv_tip_span(header, tv_results_list)}</td>"
+                        only_timeouts = all(
+                            r.get("status") in ("equiv", "timeout")
+                            for r in tv_results_list
+                        )
+                        if only_timeouts:
+                            header = f"Timeout ({tv_verified}/{tv_total} equiv)"
+                            tv_cell = f"<td class='tv-cell' style='background:rgb(255,235,180)'>⏱{frac}{_tv_tip_span(header, tv_results_list)}</td>"
+                        else:
+                            header = f"Tool error ({tv_verified}/{tv_total} equiv)"
+                            tv_cell = f"<td class='tv-cell' style='background:rgb(255,235,180)'>⚠{frac}{_tv_tip_span(header, tv_results_list)}</td>"
                     else:
                         tv_cell = "<td style='text-align:center; color:#aaa'>—</td>"
                     html += f"                    {tv_cell}\n"
@@ -1236,7 +1246,7 @@ def generate_html_report(
                 elif status == "non-equiv":
                     equiv_cell = "<td style='text-align:center; background:rgb(255,200,200)'>✘ NON-EQUIV</td>"
                 elif status == "timeout":
-                    equiv_cell = "<td style='text-align:center; background:rgb(255,235,180)'>TIMEOUT</td>"
+                    equiv_cell = "<td style='text-align:center; background:rgb(255,235,180)'>⏱ TIMEOUT</td>"
                 elif status == "error":
                     equiv_cell = "<td style='text-align:center; background:rgb(255,235,180)'>ERR</td>"
                 else:
