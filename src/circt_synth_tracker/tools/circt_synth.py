@@ -35,7 +35,7 @@ def run_command(cmd, description):
 
 
 def _tv_sort_key(p):
-    """Sort key for MLIR pass output files by their numeric prefix (e.g. 0_10_ → (0,10))."""
+    """Sort key for MLIR pass output files by their numeric prefix (e.g. 0_10_ -> (0,10))."""
     m = re.match(r"^(\d+)_(\d+)_", p.name)
     if m:
         return (int(m.group(1)), int(m.group(2)))
