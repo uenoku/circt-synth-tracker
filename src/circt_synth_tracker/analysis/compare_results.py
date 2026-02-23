@@ -702,7 +702,6 @@ def generate_html_report(
         }
         .metric {
             text-align: right;
-            font-family: 'Courier New', monospace;
         }
         .metric-value {
             padding: 2px 4px;
