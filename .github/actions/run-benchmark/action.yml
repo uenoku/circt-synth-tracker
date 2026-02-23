@@ -29,6 +29,10 @@ inputs:
   summary_file:
     description: 'Output JSON summary file path'
     required: true
+  enable_tv:
+    description: 'Enable translation validation (TV) with bitwuzla'
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -42,7 +46,7 @@ runs:
         EXTRA_PARAM=""
         [ -n "${{ inputs.circt_synth_extra_args }}" ] && EXTRA_PARAM="-DCIRCT_SYNTH_EXTRA_ARGS=\"${{ inputs.circt_synth_extra_args }}\""
         TV_PARAM=""
-        if [ "${{ inputs.synth_tool }}" = "circt" ]; then
+        if [ "${{ inputs.synth_tool }}" = "circt" ] && [ "${{ inputs.enable_tv }}" = "true" ]; then
           TV_PARAM="-DTV_SOLVER=bitwuzla"
         fi
         IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"

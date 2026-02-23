@@ -45,6 +45,11 @@ on:
         required: false
         type: boolean
         default: false
+      enable_tv:
+        description: 'Enable translation validation (TV) with bitwuzla'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -114,6 +119,7 @@ jobs:
           tool_label: ${{ env.LABEL_A }}
           tool_version: ${{ env.VERSION_A }}
           summary_file: summary_a.json
+          enable_tv: ${{ inputs.enable_tv }}
 
       - name: Run config B
         uses: ./.github/actions/run-benchmark
@@ -126,6 +132,7 @@ jobs:
           tool_label: ${{ env.LABEL_B }}
           tool_version: ${{ env.VERSION_B }}
           summary_file: summary_b.json
+          enable_tv: ${{ inputs.enable_tv }}
 
       - name: Compare A vs B
         run: |

@@ -15,10 +15,15 @@ on:
         required: false
         default: ''
       equiv_check:
-        description: 'Run equivalence check (--equiv-check) during CIRCT synthesis (always enabled for scheduled runs)'
+        description: 'Run equivalence check (--equiv-check) during CIRCT synthesis (always enabled for scheduled and push runs)'
         required: false
         type: boolean
-        default: true
+        default: false
+      enable_tv:
+        description: 'Enable translation validation (TV) with bitwuzla (always enabled for scheduled and push runs)'
+        required: false
+        type: boolean
+        default: false
   pull_request:
     branches:
       - main
@@ -82,12 +87,19 @@ jobs:
       - name: Setup tracker
         uses: ./.github/actions/setup-tracker
 
-      - name: Determine equiv-check flag
+      - name: Determine equiv-check and TV flags
         run: |
+          # Enable equiv-check for scheduled/push runs, or when manually opted-in
           if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.equiv_check }}" = "true" ]; then
             echo "EQUIV_CHECK=true" >> $GITHUB_ENV
           else
             echo "EQUIV_CHECK=false" >> $GITHUB_ENV
+          fi
+          # Enable TV for scheduled/push runs, or when manually opted-in
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.enable_tv }}" = "true" ]; then
+            echo "ENABLE_TV=true" >> $GITHUB_ENV
+          else
+            echo "ENABLE_TV=false" >> $GITHUB_ENV
           fi
 
       - name: Run CIRCT tests
@@ -100,6 +112,7 @@ jobs:
           tool_label: circt
           tool_version: ${{ env.CIRCT_VERSION }}
           summary_file: circt-summary.json
+          enable_tv: ${{ env.ENABLE_TV }}
 
       - name: Run Yosys tests
         uses: ./.github/actions/run-benchmark
@@ -111,6 +124,7 @@ jobs:
           tool_label: yosys
           tool_version: ${{ env.YOSYS_VERSION }}
           summary_file: yosys-summary.json
+          enable_tv: 'false'
 
       - name: Run equivalence check
         if: env.EQUIV_CHECK == 'true'
