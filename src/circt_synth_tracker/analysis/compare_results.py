@@ -683,6 +683,16 @@ def generate_html_report(
             font-weight: bold;
             position: sticky;
             top: 0;
+            z-index: 10;
+        }
+        th:first-child, td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+        }
+        th:first-child {
+            background-color: #4CAF50;
+            z-index: 12;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
