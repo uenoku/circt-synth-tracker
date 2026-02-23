@@ -43,11 +43,11 @@ lit -v benchmarks/ -DBW=8 -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys
 # circt-synth has custom parameters to pass additional arguments
 lit -v benchmarks/ -DSYNTH_TOOL=circt -DCIRCT_SYNTH_EXTRA_ARGS="--disable-datapath"
 # Apply ABC optimization between synthesis and judging
-lit -v benchmarks/ -DABC_COMMANDS="resyn"
+lit -v benchmarks/ -DSYNTH_TOOL=circt -DABC_COMMANDS="resyn"
 
-# Run SMT Translation Validation (TV) with Bitwuzla
-# TV verifies each CIRCT synthesis pass preserves circuit semantics using circt-lec + Bitwuzla
-lit -v benchmarks/ -DRUN_TV=1 -DTV_SOLVER=bitwuzla
+# Run SMT Translation Validation (TV)
+# TV verifies each CIRCT synthesis pass preserves circuit semantics using circt-lec + SMT solver
+lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla  # or -DTV_SOLVER=z3
 
 # Run specific circt-synth version
 export CIRCT_SYNTH=/path/to/circt-synth
@@ -86,8 +86,7 @@ compare-results circt-summary.json yosys-summary.json -o report.html --equiv-che
 | `BW` | `16` | Bitwidth for parameterized benchmarks |
 | `TEST_OUTPUT_DIR` | `build` | Directory for lit test outputs |
 | `CIRCT_SYNTH_EXTRA_ARGS` | _(empty)_ | Extra flags passed to `circt-synth` |
-| `RUN_TV` | _(empty)_ | Enable SMT Translation Validation; set to `1` to enable |
-| `TV_SOLVER` | _(empty)_ | SMT solver command for TV (e.g. `bitwuzla`, `z3 -in`); uses `circt-lec --run` if unset |
+| `TV_SOLVER` | _(empty)_ | SMT solver command for TV (e.g. `bitwuzla` or `z3`); when set, TV is automatically enabled |
 
 ### Lit Substitutions
 
@@ -134,7 +133,7 @@ compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.j
 
 ## SMT Translation Validation
 
-Translation Validation (TV) uses `circt-lec` to verify that each CIRCT synthesis pass preserves the circuit's logical equivalence. When enabled, `circt-synth` dumps per-pass MLIR snapshots and `circt-lec` checks each consecutive pair in the transformation sequence:
+Translation Validation (TV) uses `circt-lec` to verify that each CIRCT synthesis pass preserves the circuit's logical equivalence. When enabled, `circt-synth` dumps per-pass MLIR snapshots and `circt-lec --emit-smtlib` is piped to an external SMT solver (Bitwuzla or Z3) for each consecutive pair in the transformation sequence:
 
 ```
 input.mlir → pass_0 → pass_1 → … → synth_output.mlir
@@ -142,20 +141,29 @@ input.mlir → pass_0 → pass_1 → … → synth_output.mlir
 
 Each step is checked independently. Results are recorded as a `.tv` sidecar file alongside the AIG output and aggregated into the summary JSON under `tv_status` (`pass` / `fail` / `error`) and `tv_results` (per-step status).
 
-### Running TV locally
-
-TV requires `circt-lec` in PATH. Use [Bitwuzla](https://bitwuzla.github.io/) as the SMT solver for best performance:
+When a non-equivalence is detected, the failing MLIR pair(s) are saved to a `.tv-pairs/` directory alongside the AIG output, together with a `reproduce.sh` script:
 
 ```bash
-# Download Bitwuzla (static binary, Linux x86_64)
-curl -fsSL https://github.com/bitwuzla/bitwuzla/releases/latest/download/Bitwuzla-Linux-x86_64-static.zip \
-  | unzip -j - '*/bin/bitwuzla' -d ~/.local/bin/
-
-# Run benchmarks with TV
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DRUN_TV=1 -DTV_SOLVER=bitwuzla
+# Inside .tv-pairs/
+./reproduce.sh
+# which runs e.g.:
+# circt-lec 0_from_0_3_SomePass.mlir 0_to_0_4_NextPass.mlir --emit-smtlib | bitwuzla
 ```
 
-TV results appear in the HTML report as an **SMT TV (bitwuzla)** column and in the Markdown report under a **SMT Translation Validation (bitwuzla)** summary section with per-benchmark pass/fail counts and a per-transformation step table in the details.
+### Running TV locally
+
+TV requires `circt-lec` in PATH and an SMT solver that accepts SMT-LIB format on stdin and outputs `sat` or `unsat`. [Bitwuzla](https://bitwuzla.github.io/) is recommended for best performance:
+
+```bash
+# Bitwuzla (recommended)
+lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla
+
+# Z3
+lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=z3
+
+# Any custom SMT solver supporting stdin/stdout
+lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER="your-solver -your-flags"
+```
 
 ### TV in CI
 

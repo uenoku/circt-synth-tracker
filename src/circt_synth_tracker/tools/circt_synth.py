@@ -48,79 +48,73 @@ def _tv_sort_key(p):
 def _run_lec_pair(args, from_file, to_file):
     """Run circt-lec on a pair of MLIR files and return status string.
 
-    When args.tv_solver is set, emit SMT-LIB and pipe to the external solver.
-    Otherwise use circt-lec --run directly.
+    Emits SMT-LIB via circt-lec --emit-smtlib and pipes to args.tv_solver.
     Returns one of: "equiv", "non-equiv", "error", "timeout".
     """
     lec_base = [args.circt_lec, str(from_file), str(to_file)]
     if args.top:
         lec_base.extend(["--c1", args.top, "--c2", args.top])
 
-    if args.tv_solver:
-        # Emit SMT-LIB and pipe to external solver
-        lec_cmd = lec_base + ["--emit-smtlib"]
-        solver_cmd = args.tv_solver.split()
-        try:
-            lec_proc = subprocess.run(lec_cmd, capture_output=True)
-            if lec_proc.returncode != 0:
-                print(
-                    f"    circt-lec error: {lec_proc.stderr.decode()[:200]}",
-                    file=sys.stderr,
-                )
-                return "error"
-            solver_result = subprocess.run(
-                solver_cmd,
-                input=lec_proc.stdout,
-                capture_output=True,
-                timeout=args.tv_timeout,
+    lec_cmd = lec_base + ["--emit-smtlib"]
+    solver_cmd = args.tv_solver.split()
+    # Handle common solvers that need specific flags for stdin
+    if solver_cmd[0] == "z3" and "-in" not in solver_cmd:
+        solver_cmd.append("-in")
+    try:
+        lec_proc = subprocess.run(lec_cmd, capture_output=True)
+        if lec_proc.returncode != 0:
+            print(
+                f"    circt-lec error: {lec_proc.stderr.decode()[:200]}",
+                file=sys.stderr,
             )
-            out = solver_result.stdout.decode()
-            if "unsat" in out:
-                return "equiv"
-            elif "sat" in out:
-                return "non-equiv"
-            else:
-                print(f"    Solver unexpected output: {out[:200]}", file=sys.stderr)
-                return "error"
-        except subprocess.TimeoutExpired:
-            return "timeout"
-    else:
-        lec_cmd = lec_base + ["--run"]
-        try:
-            lec_result = subprocess.run(
-                lec_cmd, capture_output=True, text=True, timeout=args.tv_timeout
-            )
-            out = lec_result.stdout + lec_result.stderr
-            if "c1 == c2" in out:
-                return "equiv"
-            elif "c1 != c2" in out:
-                return "non-equiv"
-            else:
-                print(f"    Tool error: {out[:200]}", file=sys.stderr)
-                return "error"
-        except subprocess.TimeoutExpired:
-            return "timeout"
+            return "error"
+        solver_result = subprocess.run(
+            solver_cmd,
+            input=lec_proc.stdout,
+            capture_output=True,
+            timeout=args.tv_timeout,
+        )
+        out = solver_result.stdout.decode()
+        if "unsat" in out:
+            return "equiv"
+        elif "sat" in out:
+            return "non-equiv"
+        else:
+            print(f"    Solver unexpected output: {out[:200]}", file=sys.stderr)
+            return "error"
+    except subprocess.TimeoutExpired:
+        return "timeout"
 
 
 def run_tv(args, mlir_file, synth_mlir_file, output_file, tree_dir):
     """Run translation validation between consecutive pass outputs using circt-lec.
 
     Collects all .mlir files under tree_dir, sorts them by their numeric prefix,
-    then runs circt-lec between each consecutive pair in the sequence:
+    then runs circt-lec --emit-smtlib piped to args.tv_solver between each
+    consecutive pair in the sequence:
         input.mlir -> 0_0_... -> 0_1_... -> ... -> synth_output.mlir
     """
+    if not args.tv_solver:
+        print(
+            "Error: --tv-solver is required when using --run-tv (e.g. --tv-solver bitwuzla)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     tree_files = sorted(Path(tree_dir).rglob("*.mlir"), key=_tv_sort_key)
 
     sequence = [mlir_file] + tree_files + [synth_mlir_file]
 
     tv_results = []
     overall_status = "pass"
+    failed_pairs = []
 
     for from_file, to_file in zip(sequence, sequence[1:]):
         print(f"  TV: {from_file.name} -> {to_file.name}", file=sys.stderr)
         status = _run_lec_pair(args, from_file, to_file)
         if status == "non-equiv":
             overall_status = "fail"
+            failed_pairs.append((from_file, to_file))
             print("    NON-EQUIV detected!", file=sys.stderr)
         elif status == "timeout":
             print(f"    Timeout after {args.tv_timeout}s", file=sys.stderr)
@@ -137,6 +131,42 @@ def run_tv(args, mlir_file, synth_mlir_file, output_file, tree_dir):
         + "\n"
     )
     print(f"  TV: overall_status={overall_status}, wrote {tv_sidecar}", file=sys.stderr)
+
+    # Preserve failed MLIR pairs for debugging (only on non-equiv, not timeout)
+    if failed_pairs:
+        import shutil
+
+        tv_pair_dir = Path(str(output_file) + ".tv-pairs")
+        tv_pair_dir.mkdir(parents=True, exist_ok=True)
+        reproduce_lines = [
+            "#!/usr/bin/env bash",
+            "# Reproducer for TV non-equiv failures",
+            "",
+            f'TOP_MODULE="{args.top}"',
+            "",
+        ]
+
+        # Normalize solver command for reproduce.sh
+        solver_cmd = args.tv_solver
+        if solver_cmd.split()[0] == "z3" and "-in" not in solver_cmd:
+            solver_cmd = f"{args.tv_solver} -in"
+
+        for i, (from_file, to_file) in enumerate(failed_pairs):
+            shutil.copy2(from_file, tv_pair_dir / from_file.name)
+            shutil.copy2(to_file, tv_pair_dir / to_file.name)
+
+            reproduce_lines.append(f"# Pair {i}: {from_file.name} -> {to_file.name}")
+            cmd = f'circt-lec {from_file.name} {to_file.name} --c1 "$TOP_MODULE" --c2 "$TOP_MODULE" --emit-smtlib | {solver_cmd}'
+            reproduce_lines.append(cmd)
+            reproduce_lines.append("")
+
+        (tv_pair_dir / "reproduce.sh").write_text("\n".join(reproduce_lines))
+        (tv_pair_dir / "reproduce.sh").chmod(0o755)
+        print(
+            f"  TV: preserved {len(failed_pairs)} failed pair(s) at {tv_pair_dir}",
+            file=sys.stderr,
+        )
+
     return overall_status
 
 
@@ -191,8 +221,9 @@ def main():
         default="",
         help=(
             "External SMT solver command for TV (e.g. 'z3 -in' or 'bitwuzla'). "
-            "When set, circt-lec --emit-smtlib output is piped to this solver. "
-            "unsat=equiv, sat=non-equiv. Default: use circt-lec --run."
+            "Required when --run-tv is used. "
+            "circt-lec --emit-smtlib output is piped to this solver; "
+            "unsat=equiv, sat=non-equiv."
         ),
     )
     parser.add_argument(
