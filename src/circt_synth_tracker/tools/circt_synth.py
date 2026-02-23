@@ -132,20 +132,30 @@ def run_tv(args, mlir_file, synth_mlir_file, output_file, tree_dir):
     # Preserve failed MLIR pairs for debugging (only on non-equiv, not timeout)
     if failed_pairs:
         import shutil
+
         tv_pair_dir = Path(str(output_file) + ".tv-pairs")
         tv_pair_dir.mkdir(parents=True, exist_ok=True)
-        reproduce_lines = ["#!/usr/bin/env bash", "# Reproducer for TV non-equiv failures", ""]
+        reproduce_lines = [
+            "#!/usr/bin/env bash",
+            "# Reproducer for TV non-equiv failures",
+            "",
+        ]
         for i, (from_file, to_file) in enumerate(failed_pairs):
             from_dest = f"{i}_from_{from_file.name}"
             to_dest = f"{i}_to_{to_file.name}"
             shutil.copy2(from_file, tv_pair_dir / from_dest)
             shutil.copy2(to_file, tv_pair_dir / to_dest)
             reproduce_lines.append(f"# Pair {i}: {from_file.name} -> {to_file.name}")
-            reproduce_lines.append(f"circt-lec {from_dest} {to_dest} --emit-smtlib | {args.tv_solver}")
+            reproduce_lines.append(
+                f"circt-lec {from_dest} {to_dest} --emit-smtlib | {args.tv_solver}"
+            )
             reproduce_lines.append("")
         (tv_pair_dir / "reproduce.sh").write_text("\n".join(reproduce_lines))
         (tv_pair_dir / "reproduce.sh").chmod(0o755)
-        print(f"  TV: preserved {len(failed_pairs)} failed pair(s) at {tv_pair_dir}", file=sys.stderr)
+        print(
+            f"  TV: preserved {len(failed_pairs)} failed pair(s) at {tv_pair_dir}",
+            file=sys.stderr,
+        )
 
     return overall_status
 
