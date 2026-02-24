@@ -23,12 +23,12 @@ on:
         description: 'Run equivalence check (--equiv-check) during CIRCT synthesis'
         required: false
         type: boolean
-        default: false
+        default: true
       enable_tv:
         description: 'Enable translation validation (TV) with bitwuzla'
         required: false
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: read

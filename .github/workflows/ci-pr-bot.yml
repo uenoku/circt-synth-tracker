@@ -35,7 +35,14 @@ jobs:
         if: steps.auth.outputs.authorized == 'true'
         run: |
           COMMENT="${{ github.event.comment.body }}"
-          PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr \K[0-9]+' | head -1)
+          # Try check-pr-quick first (more specific match)
+          PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr-quick \K[0-9]+' | head -1)
+          if [ -n "$PR_NUM" ]; then
+            echo "quick=true" >> $GITHUB_OUTPUT
+          else
+            PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr \K[0-9]+' | head -1)
+            echo "quick=false" >> $GITHUB_OUTPUT
+          fi
           if [ -z "$PR_NUM" ]; then
             echo "::error::Could not parse PR number from comment"
             exit 1
@@ -61,12 +68,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh workflow run ci-pr-benchmark.yml \
-            --repo "${{ github.repository }}" \
-            --field pr_number="${{ steps.parse.outputs.pr_number }}" \
-            --field bitwidths="16,48" \
-            --field issue_number="${{ github.event.issue.number }}"
-          echo "Dispatched benchmark for CIRCT PR #${{ steps.parse.outputs.pr_number }}"
+          if [ "${{ steps.parse.outputs.quick }}" = "true" ]; then
+            gh workflow run ci-pr-benchmark.yml \
+              --repo "${{ github.repository }}" \
+              --field pr_number="${{ steps.parse.outputs.pr_number }}" \
+              --field bitwidths="16,48" \
+              --field issue_number="${{ github.event.issue.number }}" \
+              --field equiv_check=false \
+              --field enable_tv=false
+          else
+            gh workflow run ci-pr-benchmark.yml \
+              --repo "${{ github.repository }}" \
+              --field pr_number="${{ steps.parse.outputs.pr_number }}" \
+              --field bitwidths="16,48" \
+              --field issue_number="${{ github.event.issue.number }}"
+          fi
+          echo "Dispatched benchmark for CIRCT PR #${{ steps.parse.outputs.pr_number }} (quick=${{ steps.parse.outputs.quick }})"
 
       - name: Post acknowledgment comment
         if: steps.auth.outputs.authorized == 'true'
@@ -74,13 +91,19 @@ jobs:
         with:
           script: |
             const prNumber = '${{ steps.parse.outputs.pr_number }}';
+            const isQuick = '${{ steps.parse.outputs.quick }}' === 'true';
             const workflowUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/ci-pr-benchmark.yml`;
+            const modeNote = isQuick
+              ? '⚡ Running in **quick mode** (no translation validation or equivalence check).'
+              : '🔍 Running **full verification** (with translation validation and equivalence check).';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: ${{ github.event.issue.number }},
               body: [
                 `🤖 Benchmark triggered for [CIRCT PR #${prNumber}](https://github.com/llvm/circt/pull/${prNumber})!`,
+                '',
+                modeNote,
                 '',
                 'Building CIRCT from source before and after the PR — this takes a while.',
                 `Results will be posted here when done. [View workflow runs](${workflowUrl})`,
