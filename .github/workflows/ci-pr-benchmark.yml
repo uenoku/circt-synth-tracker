@@ -286,6 +286,9 @@ jobs:
             const beforeVer = process.env.CIRCT_VERSION_BEFORE || 'unknown';
             const afterVer = process.env.CIRCT_VERSION_AFTER || 'unknown';
 
+            // Construct GitHub Pages URL
+            const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-benchmarks/pr-${prNumber}/report.html`;
+
             const body = [
               `## Benchmark results for CIRCT PR [#${prNumber}](https://github.com/llvm/circt/pull/${prNumber})`,
               `> **${prTitle}**`,
@@ -297,7 +300,7 @@ jobs:
               '',
               reportBody,
               '',
-              `[Full workflow run with artifacts](${runUrl})`,
+              `[📊 View report](${pagesUrl}) | [📦 Artifacts](${runUrl})`,
             ].join('\n');
 
             await github.rest.issues.createComment({
