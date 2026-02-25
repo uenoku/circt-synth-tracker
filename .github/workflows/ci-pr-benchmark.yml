@@ -291,6 +291,8 @@ jobs:
 
             const body = [
               `## Benchmark results for CIRCT PR [#${prNumber}](https://github.com/llvm/circt/pull/${prNumber})`,
+              `[📊 View report](${pagesUrl}) | [📦 Artifacts](${runUrl})`,
+              '',
               `> **${prTitle}**`,
               '',
               '| | Before | After |',
@@ -299,8 +301,6 @@ jobs:
               `| Version | \`${beforeVer}\` | \`${afterVer}\` |`,
               '',
               reportBody,
-              '',
-              `[📊 View report](${pagesUrl}) | [📦 Artifacts](${runUrl})`,
             ].join('\n');
 
             await github.rest.issues.createComment({
