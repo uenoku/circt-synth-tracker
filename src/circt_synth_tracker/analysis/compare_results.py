@@ -339,7 +339,7 @@ def _outlier_table_section(
             let _firstRender = true;
 
             function cellBg(v) {{
-                if (v === null) return '';
+                if (v === null || v === 0) return '';
                 const intensity = Math.min(Math.abs(v) / 20.0, 1.0);
                 const base = Math.round(200 - 50 * intensity);
                 return v < 0
