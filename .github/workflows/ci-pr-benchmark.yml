@@ -133,7 +133,16 @@ jobs:
           uv sync
           uv run prepare
 
+      - name: Cache Bitwuzla
+        uses: actions/cache@v4
+        id: bitwuzla-cache
+        with:
+          path: /tmp/bitwuzla-cache
+          key: bitwuzla-${{ runner.os }}-${{ runner.arch }}
+
       - name: Download Bitwuzla
+        env:
+          BITWUZLA_CACHE_DIR: /tmp/bitwuzla-cache
         run: bash tracker/.github/scripts/install-bitwuzla.sh
 
       - name: Checkout CIRCT at PR base SHA
