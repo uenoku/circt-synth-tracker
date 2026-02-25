@@ -53,6 +53,7 @@ circt_synth_extra_args = lit_config.params.get('CIRCT_SYNTH_EXTRA_ARGS', '')
 abc_commands = lit_config.params.get('ABC_COMMANDS', '')
 run_lec = lit_config.params.get('RUN_LEC', '')
 tv_solver = lit_config.params.get('TV_SOLVER', '')
+keep_tv_artifacts = lit_config.params.get('KEEP_TV_ARTIFACTS', '')
 
 circt_synth_wrapper = f'run-circt-synth --circt-synth {circt_synth} --circt-verilog {circt_verilog} --circt-translate {circt_translate} --circt-lec {circt_lec}'
 if circt_synth_extra_args:
@@ -62,6 +63,9 @@ if run_lec:
 if tv_solver:
     circt_synth_wrapper += ' --run-tv'
     circt_synth_wrapper += f' --tv-solver=\"{tv_solver}\"'
+
+if keep_tv_artifacts:
+    circt_synth_wrapper += ' --keep-tv-artifacts'
 
 yosys_wrapper = f'run-yosys --yosys {yosys}'
 

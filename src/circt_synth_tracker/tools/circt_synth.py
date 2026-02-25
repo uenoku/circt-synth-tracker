@@ -45,7 +45,7 @@ def _tv_sort_key(p):
     return (float("inf"), float("inf"))
 
 
-def _run_lec_pair(args, from_file, to_file):
+def _run_lec_pair(args, from_file, to_file, smt_output_path=None):
     """Run circt-lec on a pair of MLIR files and return status string.
 
     Emits SMT-LIB via circt-lec --emit-smtlib and pipes to args.tv_solver.
@@ -62,6 +62,9 @@ def _run_lec_pair(args, from_file, to_file):
         solver_cmd.append("-in")
     try:
         lec_proc = subprocess.run(lec_cmd, capture_output=True)
+        if smt_output_path is not None:
+            smt_output_path.parent.mkdir(parents=True, exist_ok=True)
+            smt_output_path.write_bytes(lec_proc.stdout)
         if lec_proc.returncode != 0:
             print(
                 f"    circt-lec error: {lec_proc.stderr.decode()[:200]}",
@@ -86,7 +89,9 @@ def _run_lec_pair(args, from_file, to_file):
         return "timeout"
 
 
-def run_tv(args, mlir_file, synth_mlir_file, output_file, tree_dir):
+def run_tv(
+    args, mlir_file, synth_mlir_file, output_file, tree_dir, keep_artifacts=False
+):
     """Run translation validation between consecutive pass outputs using circt-lec.
 
     Collects all .mlir files under tree_dir, sorts them by their numeric prefix,
@@ -105,13 +110,22 @@ def run_tv(args, mlir_file, synth_mlir_file, output_file, tree_dir):
 
     sequence = [mlir_file] + tree_files + [synth_mlir_file]
 
+    smt_dir = None
+    if keep_artifacts:
+        smt_dir = Path(tree_dir) / "tv-smt"
+        smt_dir.mkdir(parents=True, exist_ok=True)
+
     tv_results = []
     overall_status = "pass"
     failed_pairs = []
 
-    for from_file, to_file in zip(sequence, sequence[1:]):
+    for i, (from_file, to_file) in enumerate(zip(sequence, sequence[1:])):
         print(f"  TV: {from_file.name} -> {to_file.name}", file=sys.stderr)
-        status = _run_lec_pair(args, from_file, to_file)
+        smt_output_path = None
+        if smt_dir is not None:
+            smt_name = f"{i:03d}_{from_file.stem}_to_{to_file.stem}.smt2"
+            smt_output_path = smt_dir / smt_name
+        status = _run_lec_pair(args, from_file, to_file, smt_output_path)
         if status == "non-equiv":
             overall_status = "fail"
             failed_pairs.append((from_file, to_file))
@@ -166,6 +180,9 @@ def run_tv(args, mlir_file, synth_mlir_file, output_file, tree_dir):
             f"  TV: preserved {len(failed_pairs)} failed pair(s) at {tv_pair_dir}",
             file=sys.stderr,
         )
+
+    if keep_artifacts and smt_dir is not None:
+        print(f"  TV: kept SMT inputs in {smt_dir}", file=sys.stderr)
 
     return overall_status
 
@@ -225,6 +242,11 @@ def main():
             "circt-lec --emit-smtlib output is piped to this solver; "
             "unsat=equiv, sat=non-equiv."
         ),
+    )
+    parser.add_argument(
+        "--keep-tv-artifacts",
+        action="store_true",
+        help="Keep translation validation MLIR dumps and SMT-LIB inputs for debugging",
     )
     parser.add_argument(
         "--keep-mlir", action="store_true", help="Keep intermediate MLIR files"
@@ -294,7 +316,14 @@ def main():
             synth_cmd.extend(args.circt_synth_extra_args.split())
 
         if args.run_tv:
-            tv_tree_dir = tempfile.mkdtemp(suffix="-tv-ir-tree")
+            if args.keep_tv_artifacts:
+                import shutil
+
+                tv_tree_dir = Path(str(output_file) + ".tv-ir-tree")
+                shutil.rmtree(tv_tree_dir, ignore_errors=True)
+                tv_tree_dir.mkdir(parents=True, exist_ok=True)
+            else:
+                tv_tree_dir = tempfile.mkdtemp(suffix="-tv-ir-tree")
             synth_cmd.extend(
                 [
                     f"--mlir-print-ir-tree-dir={tv_tree_dir}",
@@ -350,7 +379,14 @@ def main():
         # Step 2c: Run translation validation if requested
         if args.run_tv and tv_tree_dir:
             print("Step 2c: Running translation validation (TV)...", file=sys.stderr)
-            run_tv(args, mlir_file, synth_mlir_file, output_file, tv_tree_dir)
+            run_tv(
+                args,
+                mlir_file,
+                synth_mlir_file,
+                output_file,
+                tv_tree_dir,
+                args.keep_tv_artifacts,
+            )
 
         # Step 3: Export to AIG using circt-translate
         translate_cmd = [
@@ -374,9 +410,14 @@ def main():
             synth_mlir_file.unlink()
         # Clean up TV tree dir
         if tv_tree_dir is not None:
-            import shutil
+            if args.keep_tv_artifacts:
+                print(
+                    f"  TV: keeping per-pass IR tree at {tv_tree_dir}", file=sys.stderr
+                )
+            else:
+                import shutil
 
-            shutil.rmtree(tv_tree_dir, ignore_errors=True)
+                shutil.rmtree(tv_tree_dir, ignore_errors=True)
 
     return 0
 

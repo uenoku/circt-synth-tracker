@@ -87,6 +87,7 @@ compare-results circt-summary.json yosys-summary.json -o report.html --equiv-che
 | `TEST_OUTPUT_DIR` | `build` | Directory for lit test outputs |
 | `CIRCT_SYNTH_EXTRA_ARGS` | _(empty)_ | Extra flags passed to `circt-synth` |
 | `TV_SOLVER` | _(empty)_ | SMT solver command for TV (e.g. `bitwuzla` or `z3`); when set, TV is automatically enabled |
+| `KEEP_TV_ARTIFACTS` | _(empty)_ | Retain translation validation per-pass MLIR dumps and SMT-LIB inputs for debugging |
 
 ### Lit Substitutions
 
@@ -149,6 +150,11 @@ When a non-equivalence is detected, the failing MLIR pair(s) are saved to a `.tv
 # which runs e.g.:
 # circt-lec 0_from_0_3_SomePass.mlir 0_to_0_4_NextPass.mlir --emit-smtlib | bitwuzla
 ```
+
+Set `-DKEEP_TV_ARTIFACTS=1` when running TV to keep the per-pass MLIR tree alongside
+the AIG output as `<output>.tv-ir-tree` and the SMT-LIB dumps inside its `tv-smt/`
+subdirectory. The CLI prints the retained directory path so you can inspect the IR
+snapshots and solver inputs without searching through temporary locations.
 
 ### Running TV locally
 
