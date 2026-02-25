@@ -963,9 +963,10 @@ def generate_html_report(
         """
         + (
             f'<nav><a href="report.html" class="active">Latest Report</a>'
-            f'<a href="{escape(timeseries_url)}">History</a></nav>'
+            f'<a href="{escape(timeseries_url)}">History</a>'
+            f'<a href="https://github.com/uenoku/circt-synth-tracker" target="_blank">GitHub</a></nav>'
             if timeseries_url
-            else ""
+            else '<nav><a href="https://github.com/uenoku/circt-synth-tracker" target="_blank">GitHub</a></nav>'
         )
         + """
 

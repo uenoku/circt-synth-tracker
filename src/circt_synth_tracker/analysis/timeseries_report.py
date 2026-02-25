@@ -292,6 +292,7 @@ def generate_html(history, chart_data):
     <nav>
       <a href="report.html">Latest Report</a>
       <a href="timeseries.html" class="active">History</a>
+      <a href="https://github.com/uenoku/circt-synth-tracker" target="_blank">GitHub</a>
     </nav>
 
     <!-- ── Overview ───────────────────────────────────────────── -->
