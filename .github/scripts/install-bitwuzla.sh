@@ -5,6 +5,7 @@ set -euo pipefail
 apt-get install -y unzip
 BITWUZLA_VERSION=$(curl -s https://api.github.com/repos/bitwuzla/bitwuzla/releases/latest | jq -r '.tag_name')
 CACHE_DIR="${BITWUZLA_CACHE_DIR:-.}"
+mkdir -p "$CACHE_DIR"
 BITWUZLA_ZIP="$CACHE_DIR/bitwuzla-${BITWUZLA_VERSION}.zip"
 
 # Use cached version if available
