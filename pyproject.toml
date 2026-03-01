@@ -26,6 +26,7 @@ check-cec = "circt_synth_tracker.analysis.check_cec:main"
 append-history = "circt_synth_tracker.analysis.append_history:main"
 timeseries-report = "circt_synth_tracker.analysis.timeseries_report:main"
 
+
 [project.optional-dependencies]
 dev = ["pytest>=7.0.0", "ruff>=0.1.0"]
 

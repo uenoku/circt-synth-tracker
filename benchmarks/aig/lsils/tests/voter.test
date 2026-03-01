@@ -1,0 +1,2 @@
+RUN: %AIG_TOOL %LSILS_AIG/random_control/voter.aig -o %t.aig
+RUN: %judge %t.aig | %submit %s --name voter

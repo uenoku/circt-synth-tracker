@@ -4,3 +4,6 @@
 [submodule "benchmarks/comb/EALU/ELAU"]
 	path = benchmarks/comb/ELAU/ELAU
 	url = https://github.com/pulp-platform/ELAU
+[submodule "benchmarks/aig/lsils/benchmarks"]
+	path = benchmarks/aig/lsils/benchmarks
+	url = https://github.com/lsils/benchmarks

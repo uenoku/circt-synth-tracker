@@ -105,6 +105,16 @@ def register_builtin_tools():
         )
     )
 
+    # CIRCT Opt
+    _registry.register_tool(
+        ToolConfig(
+            name="circt-opt",
+            command="circt-opt",
+            default_args=[],
+            env_var="CIRCT_OPT",
+        )
+    )
+
     # CIRCT LEC
     _registry.register_tool(
         ToolConfig(
