@@ -1,0 +1,2 @@
+RUN: %AIG_TOOL %LSILS_AIG/arithmetic/square.aig -o %t.aig
+RUN: %judge %t.aig | %submit %s --name square

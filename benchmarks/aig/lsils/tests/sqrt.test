@@ -1,0 +1,2 @@
+RUN: %AIG_TOOL %LSILS_AIG/arithmetic/sqrt.aig -o %t.aig
+RUN: %judge %t.aig | %submit %s --name sqrt
