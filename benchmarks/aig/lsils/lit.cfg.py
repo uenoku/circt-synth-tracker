@@ -3,6 +3,7 @@ Configuration file for lsils AIG benchmark suite using lit.
 This configuration adds lsils-specific settings.
 """
 import os
+import shutil
 import lit.formats
 from pathlib import Path
 
@@ -45,6 +46,11 @@ os.makedirs(config.test_exec_root, exist_ok=True)
 # Add substitution for lsils benchmarks directory
 lsils_aig_dir = Path(__file__).parent / 'benchmarks'
 config.substitutions.append(('%LSILS_AIG', str(lsils_aig_dir)))
+
+# Skip AIG evaluation if ABC (AIG_TOOL) is not explicitly provided
+abc_tool = os.environ.get('ABC')
+if not abc_tool or not shutil.which(abc_tool):
+    config.unsupported = True
 
 # Note: Substitutions like %SYNTH_TOOL, %BW, %judge, %submit are inherited
 # from benchmarks/lit.cfg.py via lit_config.load_config()
