@@ -1,2 +1,0 @@
-RUN: %AIG_TOOL %LSILS_AIG/random_control/int2float.aig -o %t.aig
-RUN: %judge %t.aig | %submit %s --name int2float

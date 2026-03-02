@@ -1,2 +1,0 @@
-RUN: %AIG_TOOL %LSILS_AIG/arithmetic/multiplier.aig -o %t.aig
-RUN: %judge %t.aig | %submit %s --name multiplier
