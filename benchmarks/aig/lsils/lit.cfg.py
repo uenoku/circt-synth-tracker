@@ -46,9 +46,9 @@ os.makedirs(config.test_exec_root, exist_ok=True)
 lsils_aig_dir = Path(__file__).parent / 'benchmarks'
 config.substitutions.append(('%LSILS_AIG', str(lsils_aig_dir)))
 
-# Skip AIG evaluation if ABC_COMMANDS are not provided — without commands,
-# run-abc-opt is a no-op (file copy) and the evaluation is pointless.
-abc_commands = lit_config.params.get('ABC_COMMANDS', '')
+# Skip AIG evaluation if ABC_COMMANDS are not provided or empty — without
+# commands, run-abc-opt is a no-op (file copy) and the evaluation is pointless.
+abc_commands = lit_config.params.get('ABC_COMMANDS', '').strip()
 if not abc_commands:
     config.unsupported = True
 
