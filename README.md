@@ -34,26 +34,26 @@ source .venv/bin/activate
 ```bash
 # Make sure yosys, circt-synth, circt-verilog and circt-translate are in PATH.
 # Run all benchmarks
-lit -v benchmarks/ # Test results are stored in build/ by default
+lit -v benchmarks/comb/ # Test results are stored in build/ by default
 # Run specific test suite
 lit -v benchmarks/comb/DatapathBench/
 
 # Run with custom parameters (pass parameters using -D<name>=<value>)
-lit -v benchmarks/ -DBW=8 -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys
+lit -v benchmarks/comb/ -DBW=8 -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys
 # Run pass-level compile-time benchmark suite on LSILS AIG inputs (CIRCT vs ABC equivalents)
 lit -v benchmarks/pass/ -DTEST_OUTPUT_DIR=build_pass -DLUT_SIZE=6 -DCUT_SIZE=8
 # circt-synth has custom parameters to pass additional arguments
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DCIRCT_SYNTH_EXTRA_ARGS="--disable-datapath"
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DCIRCT_SYNTH_EXTRA_ARGS="--disable-datapath"
 # Apply ABC optimization between synthesis and judging
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DABC_COMMANDS="resyn"
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DABC_COMMANDS="resyn"
 
 # Run SMT Translation Validation (TV)
 # TV verifies each CIRCT synthesis pass preserves circuit semantics using circt-lec + SMT solver
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla  # or -DTV_SOLVER=z3
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla  # or -DTV_SOLVER=z3
 
 # Run specific circt-synth version
 export CIRCT_SYNTH=/path/to/circt-synth
-lit -v benchmarks/
+lit -v benchmarks/comb/
 (or add specific version of circt-synth to PATH)
 
 # Compare Results
@@ -108,8 +108,8 @@ aliases (fetched from the ABC repository at a pinned commit). These can be
 referenced by name in `ABC_COMMANDS`:
 
 ```bash
-lit -v benchmarks/ -DABC_COMMANDS="resyn2;"
-lit -v benchmarks/ -DABC_COMMANDS="compress2rs;"
+lit -v benchmarks/comb/ -DABC_COMMANDS="resyn2;"
+lit -v benchmarks/comb/ -DABC_COMMANDS="compress2rs;"
 ```
 
 ### Environment Variables
@@ -164,13 +164,13 @@ TV requires `circt-lec` in PATH and an SMT solver that accepts SMT-LIB format on
 
 ```bash
 # Bitwuzla (recommended)
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla
 
 # Z3
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=z3
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=z3
 
 # Any custom SMT solver supporting stdin/stdout
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER="your-solver -your-flags"
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER="your-solver -your-flags"
 ```
 
 ### TV in CI
