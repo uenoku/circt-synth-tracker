@@ -171,6 +171,14 @@ def run_one(
     tool: str,
 ) -> None:
     bench_id = f"{wl.name}_k{lut_size}_c{cut_size}"
+    common = {
+        "benchmark": bench_id,
+        "suite": wl.suite,
+        "aig_file": str(wl.aig_file),
+        "mode": mode,
+        "lut_size": lut_size,
+        "cut_size": cut_size,
+    }
 
     circt_cmd, abc_cmd, target_pass_name = command_for_mode(
         command_templates, mode, lut_size, cut_size
@@ -250,15 +258,6 @@ def run_one(
                 "abc_commands": abc_cmd,
             },
         )
-
-    common = {
-        "benchmark": bench_id,
-        "suite": wl.suite,
-        "aig_file": str(wl.aig_file),
-        "mode": mode,
-        "lut_size": lut_size,
-        "cut_size": cut_size,
-    }
 
 
 def main() -> int:

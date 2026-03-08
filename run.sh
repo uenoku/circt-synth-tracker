@@ -2,8 +2,6 @@
 set -euo pipefail
 
  export PATH="$HOME/dev/circt-synth/build/bin:$PATH"
-rm *.json
-rm *.html
 rm -rf build_pass
  
 LUT_SIZE="${LUT_SIZE:-6}"
@@ -35,7 +33,12 @@ for L in "${LUT_ARR[@]}"; do
       -j "${JOBS}" \
       -DTEST_OUTPUT_DIR="${OUT_DIR}" \
       -DLUT_SIZE="${L}" \
-      -DCUT_SIZE="${C}"
+      -DCUT_SIZE="${C}" -DTOOL=abc
+    lit -v benchmarks/pass/ \
+      -j "${JOBS}" \
+      -DTEST_OUTPUT_DIR="${OUT_DIR}" \
+      -DLUT_SIZE="${L}" \
+      -DCUT_SIZE="${C}" -DTOOL=circt
   done
 done
 
