@@ -3,6 +3,9 @@ name: AIG Pass Benchmark
 on:
   schedule:
     - cron: '0 13 * * *'
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -18,7 +21,8 @@ on:
         default: '8,25'
 
 permissions:
-  contents: read
+  contents: write
+  pages: write
 
 jobs:
   benchmark:
@@ -108,3 +112,19 @@ jobs:
             *-summary.json
             pass-benchmark-report.md
             pass-benchmark-report.html
+
+      - name: Prepare deployment files
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          DEPLOY_DIR="deploy/pass-benchmarks/main"
+          mkdir -p "$DEPLOY_DIR"
+          cp pass-benchmark-report.html "$DEPLOY_DIR/report-pass.html" || true
+          ls -la deploy/
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          keep_files: true
