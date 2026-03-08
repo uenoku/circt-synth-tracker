@@ -191,7 +191,7 @@ jobs:
         run: |
           cd tracker
           source .venv/bin/activate
-          pass-pr-compare-report \
+          pass-pr-compare-report pr \
             --before-circt-lut before-circt-lut-summary.json \
             --before-circt-sop before-circt-sop-summary.json \
             --after-circt-lut after-circt-lut-summary.json \
