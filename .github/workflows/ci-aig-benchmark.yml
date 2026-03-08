@@ -85,14 +85,36 @@ jobs:
           aggregate-results --tool circt-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o circt-sop-summary.json
           aggregate-results --tool abc-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o abc-sop-summary.json
 
+      - name: Merge per-mode summaries
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          def merge(out, tool, version, a, b):
+              ja = json.loads(Path(a).read_text())
+              jb = json.loads(Path(b).read_text())
+              merged = {
+                  "tool": tool,
+                  "version": version,
+                  "timestamp": ja.get("timestamp", ""),
+                  "total_benchmarks": len(ja.get("benchmarks", {})) + len(jb.get("benchmarks", {})),
+                  "benchmarks": {**ja.get("benchmarks", {}), **jb.get("benchmarks", {})},
+              }
+              Path(out).write_text(json.dumps(merged, indent=2))
+
+          merge("circt-summary.json", "circt-pass", "${{ env.CIRCT_VERSION }}", "circt-lut-summary.json", "circt-sop-summary.json")
+          merge("abc-summary.json", "abc-pass", "${{ env.CIRCT_VERSION }}", "abc-lut-summary.json", "abc-sop-summary.json")
+          PY
+
       - name: Build pass benchmark reports
         run: |
           source .venv/bin/activate
           pass-pr-compare-report single \
-            --circt-lut circt-lut-summary.json \
-            --abc-lut abc-lut-summary.json \
-            --circt-sop circt-sop-summary.json \
-            --abc-sop abc-sop-summary.json \
+            --a circt-summary.json \
+            --b abc-summary.json \
+            --label-a CIRCT \
+            --label-b ABC \
             --version "$CIRCT_VERSION" \
             --title "Pass Benchmark (CIRCT vs ABC)" \
             --markdown-out pass-benchmark-report.md \
