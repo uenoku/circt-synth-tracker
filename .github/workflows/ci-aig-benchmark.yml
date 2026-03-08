@@ -63,12 +63,15 @@ jobs:
           LUT_SIZES="${{ github.event.inputs.lut_sizes || '6,8' }}"
           CUT_SIZE="${{ github.event.inputs.cut_size || '8' }}"
           IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
-          for L in "${LUT_ARR[@]}"; do
-            lit -v benchmarks/pass/ \
-              -j "$(nproc)" \
-              -DTEST_OUTPUT_DIR=build_pass \
-              -DLUT_SIZE=$L \
-              -DCUT_SIZE=$CUT_SIZE
+          for TOOL in circt abc; do
+            for L in "${LUT_ARR[@]}"; do
+              lit -v benchmarks/pass/ \
+                -j "$(nproc)" \
+                -DTEST_OUTPUT_DIR=build_pass \
+                -DLUT_SIZE=$L \
+                -DCUT_SIZE=$CUT_SIZE \
+                -DTOOL=$TOOL
+            done
           done
 
       - name: Aggregate pass benchmark results

@@ -226,6 +226,17 @@ Shared optional input:
 
 Useful for evaluating the effect of ABC passes, synthesis options, or tool choice.
 
+### Pass Experiment (`ci-pass-experiment.yml`)
+Triggered manually to compare pass-benchmark config A vs config B using two separate runs, then `compare-results` on aggregated summaries.
+Each config can override pass commands independently:
+- LUT mode: CIRCT command and ABC command
+- SOP mode: CIRCT command and ABC command
+
+This enables before/after comparisons such as:
+- CIRCT pass pipeline tweaks (`circt` command changes)
+- ABC script tweaks (`abc` command changes)
+- or both, while keeping the same benchmark set and LUT/CUT sweep.
+
 ### PR Bot (`ci-pr-bot.yml`)
 Listens for `@tracker-bot check-pr <N>` comments on issues and dispatches
 the PR benchmark workflow automatically.

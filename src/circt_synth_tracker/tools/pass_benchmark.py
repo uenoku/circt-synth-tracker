@@ -168,48 +168,88 @@ def run_one(
     abc: str,
     command_templates: dict[str, dict[str, str]],
     output_dir: Path,
+    tool: str,
 ) -> None:
     bench_id = f"{wl.name}_k{lut_size}_c{cut_size}"
 
+    circt_cmd, abc_cmd, target_pass_name = command_for_mode(
+        command_templates, mode, lut_size, cut_size
+    )
+
     with tempfile.TemporaryDirectory(prefix=f"passbench-{wl.name}-") as td:
         tdp = Path(td)
-        mlir_in = tdp / "input.mlir"
 
-        # Convert AIGER -> MLIR once, then benchmark pass execution.
-        run_command([circt_translate, str(wl.aig_file), "--import-aiger", "-o", str(mlir_in)])
+        circt_pass_time = None
+        circt_wall = None
+        circt_timings: dict[str, float] = {}
+        circt_matched: list[str] = []
+        abc_elapsed = None
+        abc_wall = None
 
-        circt_cmd, abc_cmd, target_pass_name = command_for_mode(
-            command_templates, mode, lut_size, cut_size
-        )
-
-        circt_pipeline = f"builtin.module(hw.module({circt_cmd}))"
-        _, circt_stderr, circt_wall = run_command(
-            [
-                circt_opt,
-                str(mlir_in),
-                "--pass-pipeline",
-                circt_pipeline,
-                "--mlir-timing",
-                "--mlir-timing-display=list",
-                "-o",
-                str(tdp / "circt_out.mlir"),
-            ]
-        )
-        circt_timings = parse_mlir_timing(circt_stderr)
-        circt_pass_time, circt_matched = extract_target_pass_time(
-            target_pass_name, circt_timings
-        )
-        if circt_pass_time is None:
-            available = ", ".join(sorted(circt_timings.keys()))
-            raise RuntimeError(
-                f"failed to match target pass '{target_pass_name}' in MLIR timings. "
-                f"available passes: [{available}]"
+        if tool == "circt":
+            mlir_in = tdp / "input.mlir"
+            # Convert AIGER -> MLIR once, then benchmark pass execution.
+            run_command(
+                [circt_translate, str(wl.aig_file), "--import-aiger", "-o", str(mlir_in)]
             )
 
-        abc_script = f"read {wl.aig_file}; {abc_cmd}; time;"
-        abc_stdout, abc_stderr, abc_wall = run_command([abc, "-c", abc_script])
-        print(f"ABC output:\n{abc_stdout}\n{abc_stderr}")
-        abc_elapsed = parse_abc_time(abc_stdout + "\n" + abc_stderr)
+            circt_pipeline = f"builtin.module(hw.module({circt_cmd}))"
+            _, circt_stderr, circt_wall = run_command(
+                [
+                    circt_opt,
+                    str(mlir_in),
+                    "--pass-pipeline",
+                    circt_pipeline,
+                    "--mlir-timing",
+                    "--mlir-timing-display=list",
+                    "-o",
+                    str(tdp / "circt_out.mlir"),
+                ]
+            )
+            circt_timings = parse_mlir_timing(circt_stderr)
+            circt_pass_time, circt_matched = extract_target_pass_time(
+                target_pass_name, circt_timings
+            )
+            if circt_pass_time is None:
+                available = ", ".join(sorted(circt_timings.keys()))
+                raise RuntimeError(
+                    f"failed to match target pass '{target_pass_name}' in MLIR timings. "
+                    f"available passes: [{available}]"
+                )
+        else:
+            abc_script = f"read {wl.aig_file}; {abc_cmd}; time;"
+            abc_stdout, abc_stderr, abc_wall = run_command([abc, "-c", abc_script])
+            print(f"ABC output:\n{abc_stdout}\n{abc_stderr}")
+            abc_elapsed = parse_abc_time(abc_stdout + "\n" + abc_stderr)
+
+    if tool == "circt":
+        circt_pipeline = f"builtin.module(hw.module({circt_cmd}))"
+        write_result(
+            output_dir,
+            tool=f"circt-{mode}-pass",
+            bench_name=bench_id,
+            metrics={
+                **common,
+                "compile_time_s": circt_pass_time,
+                "pass_time_s": circt_pass_time,
+                "runner_wall_time_s": circt_wall,
+                "matched_passes": circt_matched,
+                "mlir_pass_timings_s": circt_timings,
+                "pipeline": circt_pipeline,
+            },
+        )
+    else:
+        write_result(
+            output_dir,
+            tool=f"abc-{mode}-pass",
+            bench_name=bench_id,
+            metrics={
+                **common,
+                "compile_time_s": abc_elapsed if abc_elapsed is not None else abc_wall,
+                "runner_wall_time_s": abc_wall,
+                "abc_commands": abc_cmd,
+            },
+        )
 
     common = {
         "benchmark": bench_id,
@@ -219,33 +259,6 @@ def run_one(
         "lut_size": lut_size,
         "cut_size": cut_size,
     }
-
-    write_result(
-        output_dir,
-        tool=f"circt-{mode}-pass",
-        bench_name=bench_id,
-        metrics={
-            **common,
-            "compile_time_s": circt_pass_time,
-            "pass_time_s": circt_pass_time,
-            "runner_wall_time_s": circt_wall,
-            "matched_passes": circt_matched,
-            "mlir_pass_timings_s": circt_timings,
-            "pipeline": circt_pipeline,
-        },
-    )
-
-    write_result(
-        output_dir,
-        tool=f"abc-{mode}-pass",
-        bench_name=bench_id,
-        metrics={
-            **common,
-            "compile_time_s": abc_elapsed if abc_elapsed is not None else abc_wall,
-            "runner_wall_time_s": abc_wall,
-            "abc_commands": abc_cmd,
-        },
-    )
 
 
 def main() -> int:
@@ -272,6 +285,12 @@ def main() -> int:
     parser.add_argument("--mode", choices=["lut-mapping", "sop-balancing"], required=True)
     parser.add_argument("--lut-size", type=int, default=6)
     parser.add_argument("--cut-size", type=int, default=8)
+    parser.add_argument(
+        "--tool",
+        choices=["circt", "abc"],
+        default="circt",
+        help="Benchmark engine to run (default: circt)",
+    )
     parser.add_argument("--max-benchmarks", type=int, default=0)
     parser.add_argument("--circt-translate", default="circt-translate")
     parser.add_argument("--circt-opt", default="../build/bin/circt-opt")
@@ -313,7 +332,7 @@ def main() -> int:
 
     circt_translate = resolve_tool(args.circt_translate)
     circt_opt = resolve_tool(args.circt_opt)
-    abc = find_abc(args.abc)
+    abc = find_abc(args.abc) if args.tool == "abc" else ""
     command_templates = load_command_templates(benchmarks_root)
 
     failures: list[str] = []
@@ -329,6 +348,7 @@ def main() -> int:
                 abc=abc,
                 command_templates=command_templates,
                 output_dir=output_dir,
+                tool=args.tool,
             )
             print(f"PASS {wl.suite}/{wl.name}")
         except Exception as e:  # pragma: no cover

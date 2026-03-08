@@ -23,6 +23,7 @@ benchmarks_root = Path(__file__).parent.parent
 relative_path = Path(__file__).parent.relative_to(benchmarks_root)
 lut_size = lit_config.params.get("LUT_SIZE", "6")
 cut_size = lit_config.params.get("CUT_SIZE", "8")
+tool = lit_config.params.get("TOOL", "circt")
 
 config.test_exec_root = os.path.join(
     benchmarks_root.parent, test_output_dir, str(relative_path)
@@ -31,6 +32,7 @@ os.makedirs(config.test_exec_root, exist_ok=True)
 
 config.substitutions.append(("%PASS_LUT_SIZE", lut_size))
 config.substitutions.append(("%PASS_CUT_SIZE", cut_size))
+config.substitutions.append(("%PASS_TOOL", tool))
 config.substitutions.append(
     ("%LSILS_AIG", str(benchmarks_root / "aig" / "lsils" / "benchmarks"))
 )
