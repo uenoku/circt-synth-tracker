@@ -31,6 +31,12 @@ source .venv/bin/activate
 
 ## Running Tests
 
+This repository has two benchmark tracks:
+- `comb` (`benchmarks/comb/`): end-to-end combinational synthesis benchmarks
+- `pass` (`benchmarks/pass/`): pass-level compile-time benchmarks
+
+Make sure to run the correct track for your objective; parameters and outputs differ between `comb` and `pass`.
+
 Suite-specific parameter docs:
 - Combinational suite: `benchmarks/comb/README.md`
 - Pass benchmark suite: `benchmarks/pass/README.md`
