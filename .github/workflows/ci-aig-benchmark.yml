@@ -3,6 +3,9 @@ name: AIG Pass Benchmark
 on:
   schedule:
     - cron: '0 13 * * *'
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -18,7 +21,8 @@ on:
         default: '8,25'
 
 permissions:
-  contents: read
+  contents: write
+  pages: write
 
 jobs:
   benchmark:
@@ -65,11 +69,12 @@ jobs:
           IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
           IFS=',' read -ra CUT_ARR <<< "$CUT_SIZES"
           for TOOL in circt abc; do
+            TOOL_OUT_DIR="build_pass/$TOOL"
             for L in "${LUT_ARR[@]}"; do
               for C in "${CUT_ARR[@]}"; do
                 lit -v benchmarks/pass/ \
                   -j "$(nproc)" \
-                  -DTEST_OUTPUT_DIR=build_pass \
+                  -DTEST_OUTPUT_DIR="$TOOL_OUT_DIR" \
                   -DLUT_SIZE=$L \
                   -DCUT_SIZE=$C \
                   -DTOOL=$TOOL
@@ -80,21 +85,19 @@ jobs:
       - name: Aggregate pass benchmark results
         run: |
           source .venv/bin/activate
-          aggregate-results --tool circt-lut-mapping-pass --version "$CIRCT_VERSION" --results-dir build_pass -o circt-lut-summary.json
-          aggregate-results --tool abc-lut-mapping-pass --version "$CIRCT_VERSION" --results-dir build_pass -o abc-lut-summary.json
-          aggregate-results --tool circt-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o circt-sop-summary.json
-          aggregate-results --tool abc-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o abc-sop-summary.json
+          aggregate-results --tool 'circt-*-pass' --version "$CIRCT_VERSION" --results-dir build_pass/circt -o circt-summary.json
+          aggregate-results --tool 'abc-*-pass' --version "$CIRCT_VERSION" --results-dir build_pass/abc -o abc-summary.json
 
       - name: Build pass benchmark reports
         run: |
           source .venv/bin/activate
-          pass-benchmark-report \
-            --circt-lut circt-lut-summary.json \
-            --abc-lut abc-lut-summary.json \
-            --circt-sop circt-sop-summary.json \
-            --abc-sop abc-sop-summary.json \
-            --sweep-lut-sizes "${{ github.event.inputs.lut_sizes || '6,8' }}" \
-            --sweep-cut-sizes "${{ github.event.inputs.cut_sizes || '8,25' }}" \
+          pass-pr-compare-report single \
+            --a circt-summary.json \
+            --b abc-summary.json \
+            --label-a CIRCT \
+            --label-b ABC \
+            --version "$CIRCT_VERSION" \
+            --title "Pass Benchmark (CIRCT vs ABC)" \
             --markdown-out pass-benchmark-report.md \
             --html-out pass-benchmark-report.html
 
@@ -110,3 +113,19 @@ jobs:
             *-summary.json
             pass-benchmark-report.md
             pass-benchmark-report.html
+
+      - name: Prepare deployment files
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          DEPLOY_DIR="deploy/pass-benchmarks/main"
+          mkdir -p "$DEPLOY_DIR"
+          cp pass-benchmark-report.html "$DEPLOY_DIR/report-pass.html" || true
+          ls -la deploy/
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          keep_files: true

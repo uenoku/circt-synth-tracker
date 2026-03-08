@@ -1,0 +1,260 @@
+name: CIRCT PR Pass Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'CIRCT PR number to benchmark (e.g. 12345)'
+        required: true
+        type: string
+      lut_sizes:
+        description: 'Comma-separated LUT sizes K (e.g. "6,8")'
+        required: false
+        default: '6,8'
+      cut_sizes:
+        description: 'Comma-separated cut sizes C (e.g. "8,25")'
+        required: false
+        default: '8,25'
+
+permissions:
+  contents: write
+  pages: write
+
+# Keep the container image tag in sync with llvm/circt's buildAndTest.yml
+env:
+  CIRCT_CI_IMAGE: ghcr.io/circt/images/circt-ci-build:20260107030736
+
+jobs:
+  benchmark:
+    name: Pass benchmark CIRCT PR #${{ inputs.pr_number }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/circt/images/circt-ci-build:20260107030736
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout tracker repository
+        uses: actions/checkout@v4
+        with:
+          path: tracker
+          submodules: recursive
+
+      - name: Install gh and jq
+        run: |
+          apt-get install -y jq
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+            | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update
+          apt-get install -y gh
+
+      - name: Download pre-built CIRCT (base binaries + LLVM/MLIR install)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=$(gh run list \
+            --repo llvm/circt \
+            --workflow uploadReleaseArtifacts.yml \
+            --branch main \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          echo "Downloading circt-full-shared-linux-x64.tar.gz from run $RUN_ID"
+          gh run download "$RUN_ID" \
+            --repo llvm/circt \
+            --name "circt-full-shared-linux-x64.tar.gz" \
+            --dir .
+          mkdir -p circt-prebuilt
+          tar xzf circt-full-shared-linux-x64.tar.gz -C circt-prebuilt/
+          MLIR_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "MLIRConfig.cmake" -type f -exec dirname {} \; | head -1)
+          LLVM_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "LLVMConfig.cmake" -type f -exec dirname {} \; | head -1)
+          PREBUILT_BIN_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "circt-synth" -type f -exec dirname {} \; | head -1)
+          PREBUILT_LIB_DIR=$(dirname "$(dirname "$LLVM_CMAKE_DIR")")
+          echo "MLIR_DIR=$MLIR_CMAKE_DIR" >> $GITHUB_ENV
+          echo "LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
+          echo "$PREBUILT_BIN_DIR" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=$PREBUILT_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
+      - name: Get PR info from llvm/circt
+        id: pr-info
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${{ inputs.pr_number }}"
+          BASE_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json baseRefOid --jq '.baseRefOid')
+          HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json headRefOid --jq '.headRefOid')
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json title --jq '.title')
+          echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+
+      - name: Setup sccache (for CIRCT compilation)
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: sccache-circt-${{ runner.os }}-20260107030736
+          restore-keys: sccache-circt-${{ runner.os }}-
+          max-size: 1G
+          variant: sccache
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install Python dependencies and build aig-judge
+        working-directory: tracker
+        run: |
+          uv sync
+          uv run prepare
+
+      - name: Build CIRCT at PR base (before)
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          ref: ${{ steps.pr-info.outputs.base_sha }}
+          checkout_path: circt-base
+          build_path: circt-base/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
+
+      - name: Run pass benchmarks (before)
+        run: |
+          export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
+          BEFORE_VERSION=$(circt-synth --version | tail -1 | xargs)
+          echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
+          cd tracker
+          source .venv/bin/activate
+          LUT_SIZES="${{ inputs.lut_sizes || '6,8' }}"
+          CUT_SIZES="${{ inputs.cut_sizes || '8,25' }}"
+          IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
+          IFS=',' read -ra CUT_ARR <<< "$CUT_SIZES"
+          for TOOL in circt abc; do
+            TOOL_OUT_DIR="build_pass_before/$TOOL"
+            for L in "${LUT_ARR[@]}"; do
+              for C in "${CUT_ARR[@]}"; do
+                lit -v benchmarks/pass/ \
+                  -j "$(nproc)" \
+                  -DTEST_OUTPUT_DIR="$TOOL_OUT_DIR" \
+                  -DLUT_SIZE=$L \
+                  -DCUT_SIZE=$C \
+                  -DTOOL=$TOOL
+              done
+            done
+          done
+          aggregate-results --tool 'circt-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before/circt -o circt-base.json
+          aggregate-results --tool 'abc-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before/abc -o abc-base.json
+
+      - name: Build CIRCT at PR head (after)
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          ref: ${{ steps.pr-info.outputs.head_sha }}
+          checkout_path: circt-pr
+          build_path: circt-pr/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
+
+      - name: Run pass benchmarks (after)
+        run: |
+          export PATH="$GITHUB_WORKSPACE/circt-pr/build/bin:$PATH"
+          AFTER_VERSION=$(circt-synth --version | tail -1 | xargs)
+          echo "CIRCT_VERSION_AFTER=$AFTER_VERSION" >> $GITHUB_ENV
+          cd tracker
+          source .venv/bin/activate
+          LUT_SIZES="${{ inputs.lut_sizes || '6,8' }}"
+          CUT_SIZES="${{ inputs.cut_sizes || '8,25' }}"
+          IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
+          IFS=',' read -ra CUT_ARR <<< "$CUT_SIZES"
+          for TOOL in circt abc; do
+            TOOL_OUT_DIR="build_pass_after/$TOOL"
+            for L in "${LUT_ARR[@]}"; do
+              for C in "${CUT_ARR[@]}"; do
+                lit -v benchmarks/pass/ \
+                  -j "$(nproc)" \
+                  -DTEST_OUTPUT_DIR="$TOOL_OUT_DIR" \
+                  -DLUT_SIZE=$L \
+                  -DCUT_SIZE=$C \
+                  -DTOOL=$TOOL
+              done
+            done
+          done
+          aggregate-results --tool 'circt-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after/circt -o circt-pr.json
+          aggregate-results --tool 'abc-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after/abc -o abc-pr.json
+
+      - name: Build unified pass PR comparison report
+        run: |
+          cd tracker
+          source .venv/bin/activate
+          pass-pr-compare-report pr \
+            --before circt-base.json \
+            --after circt-pr.json \
+            --label-a CIRCT(PR) \
+            --label-b CIRCT(Base) \
+            --ref-before abc-base.json \
+            --ref-after abc-pr.json \
+            --ref-label ABC \
+            --before-version "${CIRCT_VERSION_BEFORE}" \
+            --after-version "${CIRCT_VERSION_AFTER}" \
+            --pr-number "${{ inputs.pr_number }}" \
+            --pr-title "${{ steps.pr-info.outputs.pr_title }}" \
+            --base-sha "${{ steps.pr-info.outputs.base_sha }}" \
+            --head-sha "${{ steps.pr-info.outputs.head_sha }}" \
+            --markdown-out pr-pass-compare.md \
+            --html-out pr-pass-compare.html
+
+      - name: Post results to GitHub Actions summary
+        if: always()
+        run: |
+          {
+            echo "## CIRCT PR #${{ inputs.pr_number }} Pass Benchmark"
+            echo ""
+            echo "**[${{ steps.pr-info.outputs.pr_title }}](https://github.com/llvm/circt/pull/${{ inputs.pr_number }})**"
+            echo ""
+            echo "| | Before | After |"
+            echo "|---|---|---|"
+            printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
+              "${{ steps.pr-info.outputs.base_sha }}" \
+              "${{ steps.pr-info.outputs.head_sha }}"
+            echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
+            echo ""
+            [ -f tracker/pr-pass-compare.md ] && cat tracker/pr-pass-compare.md
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload pass benchmark artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-${{ inputs.pr_number }}-pass-benchmark
+          retention-days: 90
+          path: |
+            tracker/build_pass_before/
+            tracker/build_pass_after/
+            tracker/*-summary.json
+            tracker/pr-pass-compare.md
+            tracker/pr-pass-compare.html
+
+      - name: Prepare deployment files
+        if: always()
+        run: |
+          # Create directory structure for deployment
+          PR_DIR="deploy/pr-pass-benchmarks/pr-${{ inputs.pr_number }}"
+          mkdir -p "$PR_DIR"
+
+          # Publish unified pass comparison report
+          cp tracker/pr-pass-compare.html "$PR_DIR/report-pass.html" || true
+
+          echo "Deployment files prepared:"
+          ls -la deploy/
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          keep_files: true

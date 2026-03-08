@@ -132,10 +132,18 @@ def main():
                                 pass
                             break
 
-                results[benchmark_name] = metrics
+                mode = metrics.get("mode")
+                key = f"{benchmark_name}@{mode}" if mode else benchmark_name
+                # If still collides (unexpected), add a numeric suffix.
+                suffix = 2
+                while key in results:
+                    key = f"{benchmark_name}@{mode or 'dup'}#{suffix}"
+                    suffix += 1
+
+                results[key] = metrics
 
                 if args.verbose:
-                    print(f"  Processed: {benchmark_name}")
+                    print(f"  Processed: {key}")
                     print(f"    Metrics: {metrics}")
 
         except Exception as e:
