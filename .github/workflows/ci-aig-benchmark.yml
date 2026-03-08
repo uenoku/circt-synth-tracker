@@ -3,6 +3,9 @@ name: AIG Pass Benchmark
 on:
   schedule:
     - cron: '0 13 * * *'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       lut_sizes:
