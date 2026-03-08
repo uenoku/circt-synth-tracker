@@ -218,6 +218,28 @@ def compare_all(
         print("No benchmarks found in summaries")
         return
 
+    def _is_pass_like(benchmark_data):
+        return isinstance(benchmark_data, dict) and benchmark_data.get(
+            "benchmark_track"
+        ) == "pass"
+
+    # Exclude pass-benchmark-style entries from compare-results outputs.
+    filtered = set()
+    for benchmark_name in all_benchmarks:
+        keep = False
+        for summary in summaries.values():
+            bd = summary.get("benchmarks", {}).get(benchmark_name)
+            if bd and not _is_pass_like(bd):
+                keep = True
+                break
+        if keep:
+            filtered.add(benchmark_name)
+    all_benchmarks = filtered
+
+    if not all_benchmarks:
+        print("No non-pass benchmarks found in summaries")
+        return
+
     print(f"\nFound {len(all_benchmarks)} unique benchmarks\n")
 
     # If HTML export requested, generate full report
@@ -676,7 +698,7 @@ def generate_html_report(
             benchmarks = summary.get("benchmarks", {})
             if benchmark_name in benchmarks:
                 benchmark_data = benchmarks[benchmark_name]
-                category = benchmark_data["category"]
+                category = benchmark_data.get("category", "Other")
                 return category
         return "Other"
 

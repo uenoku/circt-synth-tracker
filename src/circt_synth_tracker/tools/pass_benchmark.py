@@ -185,6 +185,7 @@ def run_one(
     common = {
         "benchmark": bench_id,
         "suite": wl.suite,
+        "benchmark_track": "pass",
         "aig_file": str(wl.aig_file),
         "mode": mode,
         "lut_size": lut_size,
