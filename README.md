@@ -92,16 +92,7 @@ Detailed lit parameters are documented per suite:
 - `benchmarks/comb/README.md`
 - `benchmarks/pass/README.md`
 
-### ABC Aliases (`benchmarks/abc.rc`)
-
-After `uv run prepare`, `benchmarks/abc.rc` is populated with ABC's standard
-aliases (fetched from the ABC repository at a pinned commit). These can be
-referenced by name in `ABC_COMMANDS`:
-
-```bash
-lit -v benchmarks/comb/ -DABC_COMMANDS="resyn2;"
-lit -v benchmarks/comb/ -DABC_COMMANDS="compress2rs;"
-```
+ABC alias usage for comb benchmarks is documented in `benchmarks/comb/README.md`.
 
 ### Environment Variables
 
@@ -127,46 +118,7 @@ compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.j
 
 ## SMT Translation Validation
 
-Translation Validation (TV) uses `circt-lec` to verify that each CIRCT synthesis pass preserves the circuit's logical equivalence. When enabled, `circt-synth` dumps per-pass MLIR snapshots and `circt-lec --emit-smtlib` is piped to an external SMT solver (Bitwuzla or Z3) for each consecutive pair in the transformation sequence:
-
-```
-input.mlir → pass_0 → pass_1 → … → synth_output.mlir
-```
-
-Each step is checked independently. Results are recorded as a `.tv` sidecar file alongside the AIG output and aggregated into the summary JSON under `tv_status` (`pass` / `fail` / `error`) and `tv_results` (per-step status).
-
-When a non-equivalence is detected, the failing MLIR pair(s) are saved to a `.tv-pairs/` directory alongside the AIG output, together with a `reproduce.sh` script:
-
-```bash
-# Inside .tv-pairs/
-./reproduce.sh
-# which runs e.g.:
-# circt-lec 0_from_0_3_SomePass.mlir 0_to_0_4_NextPass.mlir --emit-smtlib | bitwuzla
-```
-
-Set `-DKEEP_TV_ARTIFACTS=1` when running TV to keep the per-pass MLIR tree alongside
-the AIG output as `<output>.tv-ir-tree` and the SMT-LIB dumps inside its `tv-smt/`
-subdirectory. The CLI prints the retained directory path so you can inspect the IR
-snapshots and solver inputs without searching through temporary locations.
-
-### Running TV locally
-
-TV requires `circt-lec` in PATH and an SMT solver that accepts SMT-LIB format on stdin and outputs `sat` or `unsat`. [Bitwuzla](https://bitwuzla.github.io/) is recommended for best performance:
-
-```bash
-# Bitwuzla (recommended)
-lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla
-
-# Z3
-lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=z3
-
-# Any custom SMT solver supporting stdin/stdout
-lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER="your-solver -your-flags"
-```
-
-### TV in CI
-
-TV runs automatically for all CIRCT benchmark runs in CI (nightly, PR benchmark, and experiment workflows). Bitwuzla is downloaded as a static binary during setup.
+SMT Translation Validation (TV) details and usage are documented in `benchmarks/comb/README.md`.
 
 ## Project Structure
 

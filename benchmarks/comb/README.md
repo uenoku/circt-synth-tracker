@@ -56,3 +56,55 @@ lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DABC_COMMANDS="resyn2;"
 # Translation validation using Bitwuzla
 lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla
 ```
+
+## ABC Aliases (`benchmarks/abc.rc`)
+
+After `uv run prepare`, `benchmarks/abc.rc` is populated with ABC standard
+aliases (fetched from the ABC repository at a pinned commit). These can be
+referenced from `ABC_COMMANDS`.
+
+```bash
+lit -v benchmarks/comb/ -DABC_COMMANDS="resyn2;"
+lit -v benchmarks/comb/ -DABC_COMMANDS="compress2rs;"
+```
+
+## SMT Translation Validation
+
+Translation Validation (TV) uses `circt-lec` to verify that each CIRCT synthesis
+pass preserves logical equivalence. When enabled, `circt-synth` dumps per-pass
+MLIR snapshots and `circt-lec --emit-smtlib` is piped to an SMT solver (Bitwuzla
+or Z3) for each consecutive step:
+
+```
+input.mlir -> pass_0 -> pass_1 -> ... -> synth_output.mlir
+```
+
+Results are recorded as a `.tv` sidecar near the AIG output and are aggregated as
+`tv_status` (`pass` / `fail` / `error`) and `tv_results` (per-step status).
+
+When non-equivalence is detected, failing MLIR pair(s) are saved under `.tv-pairs/`
+alongside the AIG output, with a `reproduce.sh` helper.
+
+Set `-DKEEP_TV_ARTIFACTS=1` to keep per-pass IR and SMT-LIB dumps in:
+- `<output>.tv-ir-tree`
+- `<output>.tv-ir-tree/tv-smt`
+
+### Running TV locally
+
+TV requires `circt-lec` in `PATH` and an SMT solver that reads SMT-LIB from stdin.
+
+```bash
+# Bitwuzla (recommended)
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla
+
+# Z3
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=z3
+
+# Any compatible SMT solver
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER="your-solver -your-flags"
+```
+
+### TV in CI
+
+TV runs automatically for CIRCT benchmark runs in CI workflows. Bitwuzla is
+downloaded as a static binary during setup.
