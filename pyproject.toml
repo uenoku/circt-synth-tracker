@@ -26,7 +26,7 @@ compare-results = "circt_synth_tracker.analysis.compare_results:main"
 check-cec = "circt_synth_tracker.analysis.check_cec:main"
 append-history = "circt_synth_tracker.analysis.append_history:main"
 timeseries-report = "circt_synth_tracker.analysis.timeseries_report:main"
-pass-pr-compare-report = "circt_synth_tracker.analysis.pass_pr_compare_report:main"
+pass-pr-compare-report = "circt_synth_tracker.analysis.pass_compare_results:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0.0", "ruff>=0.1.0"]

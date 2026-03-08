@@ -21,28 +21,28 @@ if [[ -n "${LUT_SIZES}" ]]; then
 else
   LUT_LIST="${LUT_SIZE}"
 fi
-
-rm -rf "${OUT_DIR}"
-
-echo "Running pass benchmarks: LUT_SIZES=${LUT_LIST}, CUT_SIZES=${CUT_LIST}, OUT_DIR=${OUT_DIR}, JOBS=${JOBS}"
-
-IFS=',' read -ra LUT_ARR <<< "${LUT_LIST}"
-IFS=',' read -ra CUT_ARR <<< "${CUT_LIST}"
-for L in "${LUT_ARR[@]}"; do
-  for C in "${CUT_ARR[@]}"; do
-    lit -v benchmarks/pass/ \
-      -j "${JOBS}" \
-      -DTEST_OUTPUT_DIR="${OUT_DIR}" \
-      -DLUT_SIZE="${L}" \
-      -DCUT_SIZE="${C}" -DTOOL=abc
-    lit -v benchmarks/pass/ \
-      -j "${JOBS}" \
-      -DTEST_OUTPUT_DIR="${OUT_DIR}" \
-      -DLUT_SIZE="${L}" \
-      -DCUT_SIZE="${C}" -DTOOL=circt
-  done
-done
-
+ 
+ rm -rf "${OUT_DIR}"
+ 
+ echo "Running pass benchmarks: LUT_SIZES=${LUT_LIST}, CUT_SIZES=${CUT_LIST}, OUT_DIR=${OUT_DIR}, JOBS=${JOBS}"
+ 
+ IFS=',' read -ra LUT_ARR <<< "${LUT_LIST}"
+ IFS=',' read -ra CUT_ARR <<< "${CUT_LIST}"
+ for L in "${LUT_ARR[@]}"; do
+   for C in "${CUT_ARR[@]}"; do
+     lit -v benchmarks/pass/ \
+       -j "${JOBS}" \
+       -DTEST_OUTPUT_DIR="${OUT_DIR}" \
+       -DLUT_SIZE="${L}" \
+       -DCUT_SIZE="${C}" -DTOOL=abc
+     lit -v benchmarks/pass/ \
+       -j "${JOBS}" \
+       -DTEST_OUTPUT_DIR="${OUT_DIR}" \
+       -DLUT_SIZE="${L}" \
+       -DCUT_SIZE="${C}" -DTOOL=circt
+   done
+ done
+ 
 VERSION="$(circt-synth --version | tail -1 | xargs || echo local)"
 aggregate-results --tool 'circt-*-pass' --version "${VERSION}" --results-dir "${OUT_DIR}" -o circt-summary.json
 aggregate-results --tool 'abc-*-pass' --version "${VERSION}" --results-dir "${OUT_DIR}" -o abc-summary.json
