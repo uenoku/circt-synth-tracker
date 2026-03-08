@@ -56,6 +56,24 @@ def parse_mlir_timing(stderr: str) -> dict[str, float]:
     return timings
 
 
+def extract_target_pass_time(
+    target_pass_name: str, pass_timings: dict[str, float]
+) -> tuple[float | None, list[str]]:
+    """Extract runtime of the target CIRCT pass for the selected mode."""
+    matched: list[tuple[str, float]] = []
+    for name, t in pass_timings.items():
+        if target_pass_name in name:
+            matched.append((name, t))
+
+    if not matched:
+        return None, []
+
+    # Sum matched times in case timing output includes wrapper + concrete pass lines.
+    total = sum(t for _, t in matched)
+    names = [name for name, _ in matched]
+    return total, names
+
+
 def parse_abc_time(output: str) -> float | None:
     for line in output.splitlines():
         m = re.search(
@@ -76,7 +94,7 @@ def resolve_tool(path_or_name: str) -> str:
 
 
 def load_command_templates(root: Path) -> dict[str, dict[str, str]]:
-    path = root / "pass-benchmarks" / "commands.json"
+    path = root / "pass" / "commands.json"
     data = json.loads(path.read_text())
     templates: dict[str, dict[str, str]] = {}
     for entry in data:
@@ -86,16 +104,20 @@ def load_command_templates(root: Path) -> dict[str, dict[str, str]]:
         templates[name] = {
             "circt": entry.get("circt", ""),
             "abc": entry.get("abc", ""),
+            "circt-pass-name": entry.get("circt-pass-name", ""),
         }
     return templates
 
 
 def command_for_mode(
     templates: dict[str, dict[str, str]], mode: str, lut_size: int, cut_size: int
-) -> tuple[str, str]:
+) -> tuple[str, str, str]:
     template = templates.get(mode)
     if not template:
         raise ValueError(f"missing mode in commands.json: {mode}")
+    target_pass_name = template.get("circt-pass-name", "")
+    if not target_pass_name:
+        raise ValueError(f"missing 'circt-pass-name' in commands.json: {mode}")
     circt_cmd = (
         template["circt"]
         .replace("{lut-k}", str(lut_size))
@@ -106,7 +128,7 @@ def command_for_mode(
         .replace("{lut-k}", str(lut_size))
         .replace("{lut-max-cut-size}", str(cut_size))
     )
-    return circt_cmd, abc_cmd
+    return circt_cmd, abc_cmd, target_pass_name
 
 
 def discover_lsils_workloads(benchmarks_root: Path) -> list[Workload]:
@@ -146,7 +168,7 @@ def run_one(
     command_templates: dict[str, dict[str, str]],
     output_dir: Path,
 ) -> None:
-    bench_id = wl.name
+    bench_id = f"{wl.name}_k{lut_size}_c{cut_size}"
 
     with tempfile.TemporaryDirectory(prefix=f"passbench-{wl.name}-") as td:
         tdp = Path(td)
@@ -155,7 +177,9 @@ def run_one(
         # Convert AIGER -> MLIR once, then benchmark pass execution.
         run_command([circt_translate, str(wl.aig_file), "--import-aiger", "-o", str(mlir_in)])
 
-        circt_cmd, abc_cmd = command_for_mode(command_templates, mode, lut_size, cut_size)
+        circt_cmd, abc_cmd, target_pass_name = command_for_mode(
+            command_templates, mode, lut_size, cut_size
+        )
 
         circt_pipeline = f"builtin.module(hw.module({circt_cmd}))"
         _, circt_stderr, circt_wall = run_command(
@@ -171,6 +195,15 @@ def run_one(
             ]
         )
         circt_timings = parse_mlir_timing(circt_stderr)
+        circt_pass_time, circt_matched = extract_target_pass_time(
+            target_pass_name, circt_timings
+        )
+        if circt_pass_time is None:
+            available = ", ".join(sorted(circt_timings.keys()))
+            raise RuntimeError(
+                f"failed to match target pass '{target_pass_name}' in MLIR timings. "
+                f"available passes: [{available}]"
+            )
 
         abc_script = f"read {wl.aig_file}; {abc_cmd}; time;"
         abc_stdout, abc_stderr, abc_wall = run_command([abc, "-c", abc_script])
@@ -191,7 +224,10 @@ def run_one(
         bench_name=bench_id,
         metrics={
             **common,
-            "compile_time_s": circt_wall,
+            "compile_time_s": circt_pass_time,
+            "pass_time_s": circt_pass_time,
+            "runner_wall_time_s": circt_wall,
+            "matched_passes": circt_matched,
             "mlir_pass_timings_s": circt_timings,
             "pipeline": circt_pipeline,
         },
@@ -220,6 +256,17 @@ def main() -> int:
     parser.add_argument(
         "--output-dir", type=Path, required=True, help="Directory where results are stored"
     )
+    parser.add_argument(
+        "--input-aig",
+        type=Path,
+        default=None,
+        help="Single AIG input to benchmark (enables lit-parallel per-file tests)",
+    )
+    parser.add_argument(
+        "--name",
+        default=None,
+        help="Benchmark name override (default: inferred from input path)",
+    )
     parser.add_argument("--mode", choices=["lut-mapping", "sop-balancing"], required=True)
     parser.add_argument("--lut-size", type=int, default=6)
     parser.add_argument("--cut-size", type=int, default=8)
@@ -238,9 +285,25 @@ def main() -> int:
     output_dir = args.output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    workloads = discover_lsils_workloads(benchmarks_root)
-    if args.max_benchmarks > 0:
-        workloads = workloads[: args.max_benchmarks]
+    if args.input_aig is not None:
+        input_aig = args.input_aig
+        if not input_aig.is_absolute():
+            input_aig = (Path.cwd() / input_aig).resolve()
+        if not input_aig.exists():
+            print(f"Input AIG not found: {input_aig}", file=sys.stderr)
+            return 1
+        if args.name:
+            name = args.name
+        else:
+            if len(input_aig.parts) >= 2:
+                name = f"{input_aig.parent.name}_{input_aig.stem}"
+            else:
+                name = input_aig.stem
+        workloads = [Workload(name=name, suite="lsils", aig_file=input_aig)]
+    else:
+        workloads = discover_lsils_workloads(benchmarks_root)
+        if args.max_benchmarks > 0:
+            workloads = workloads[: args.max_benchmarks]
 
     if not workloads:
         print("No LSILS AIG workloads discovered", file=sys.stderr)
@@ -249,7 +312,7 @@ def main() -> int:
     circt_translate = resolve_tool(args.circt_translate)
     circt_opt = resolve_tool(args.circt_opt)
     abc = find_abc(args.abc)
-    command_templates = load_command_templates(benchmarks_root.parent)
+    command_templates = load_command_templates(benchmarks_root)
 
     failures: list[str] = []
     for wl in workloads:

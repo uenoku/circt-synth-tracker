@@ -31,3 +31,6 @@ os.makedirs(config.test_exec_root, exist_ok=True)
 
 config.substitutions.append(("%PASS_LUT_SIZE", lut_size))
 config.substitutions.append(("%PASS_CUT_SIZE", cut_size))
+config.substitutions.append(
+    ("%LSILS_AIG", str(benchmarks_root / "aig" / "lsils" / "benchmarks"))
+)

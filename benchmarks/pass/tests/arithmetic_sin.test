@@ -1,0 +1,2 @@
+RUN: run-pass-benchmark --benchmarks-root %S/../.. --output-dir %T --mode lut-mapping --lut-size %PASS_LUT_SIZE --cut-size %PASS_CUT_SIZE --input-aig %LSILS_AIG/arithmetic/sin.aig --name arithmetic_sin
+RUN: run-pass-benchmark --benchmarks-root %S/../.. --output-dir %T --mode sop-balancing --lut-size %PASS_LUT_SIZE --cut-size %PASS_CUT_SIZE --input-aig %LSILS_AIG/arithmetic/sin.aig --name arithmetic_sin

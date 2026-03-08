@@ -5,10 +5,10 @@ on:
     - cron: '0 13 * * *'
   workflow_dispatch:
     inputs:
-      lut_size:
-        description: 'LUT size (K) shared between CIRCT and ABC'
+      lut_sizes:
+        description: 'Comma-separated LUT sizes K (e.g. "6,8")'
         required: false
-        default: '6'
+        default: '6,8'
       cut_size:
         description: 'Cut size (C) shared between CIRCT and ABC'
         required: false
@@ -57,12 +57,16 @@ jobs:
       - name: Run pass benchmarks with lit
         run: |
           source .venv/bin/activate
-          LUT_SIZE="${{ github.event.inputs.lut_size || '6' }}"
+          LUT_SIZES="${{ github.event.inputs.lut_sizes || '6,8' }}"
           CUT_SIZE="${{ github.event.inputs.cut_size || '8' }}"
-          lit -v benchmarks/pass/ \
-            -DTEST_OUTPUT_DIR=build_pass \
-            -DLUT_SIZE=$LUT_SIZE \
-            -DCUT_SIZE=$CUT_SIZE
+          IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
+          for L in "${LUT_ARR[@]}"; do
+            lit -v benchmarks/pass/ \
+              -j "$(nproc)" \
+              -DTEST_OUTPUT_DIR=build_pass \
+              -DLUT_SIZE=$L \
+              -DCUT_SIZE=$CUT_SIZE
+          done
 
       - name: Aggregate pass benchmark results
         run: |
@@ -72,61 +76,18 @@ jobs:
           aggregate-results --tool circt-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o circt-sop-summary.json
           aggregate-results --tool abc-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o abc-sop-summary.json
 
-      - name: Build report-only markdown summary
+      - name: Build pass benchmark reports
         run: |
-          python3 - <<'PY'
-          import json
-          import math
-
-          def load(path):
-              with open(path) as f:
-                  return json.load(f)
-
-          def ratios(a, b):
-              out = []
-              shared = set(a["benchmarks"]).intersection(b["benchmarks"])
-              for name in sorted(shared):
-                  ta = a["benchmarks"][name].get("compile_time_s")
-                  tb = b["benchmarks"][name].get("compile_time_s")
-                  if not ta or not tb:
-                      continue
-                  out.append((name, ta, tb, ta / tb))
-              return out
-
-          def geomean(vals):
-              if not vals:
-                  return None
-              return math.exp(sum(math.log(v) for v in vals) / len(vals))
-
-          circt_lut = load("circt-lut-summary.json")
-          abc_lut = load("abc-lut-summary.json")
-          circt_sop = load("circt-sop-summary.json")
-          abc_sop = load("abc-sop-summary.json")
-
-          lut_rows = ratios(circt_lut, abc_lut)
-          sop_rows = ratios(circt_sop, abc_sop)
-
-          lut_geo = geomean([r[3] for r in lut_rows])
-          sop_geo = geomean([r[3] for r in sop_rows])
-
-          with open("pass-benchmark-report.md", "w") as f:
-              f.write("## Pass Benchmark (Report-only)\n\n")
-              f.write(f"- CIRCT version: `{circt_lut.get('version', 'unknown')}`\n")
-              f.write(f"- LUT mode geomean (CIRCT/ABC): `{lut_geo:.3f}`\n" if lut_geo else "- LUT mode geomean: `n/a`\n")
-              f.write(f"- SOP mode geomean (CIRCT/ABC): `{sop_geo:.3f}`\n\n" if sop_geo else "- SOP mode geomean: `n/a`\n\n")
-
-              f.write("### LUT Mapping\n\n")
-              f.write("| Benchmark | CIRCT (s) | ABC (s) | CIRCT/ABC |\n")
-              f.write("|---|---:|---:|---:|\n")
-              for n, tc, ta, r in lut_rows[:50]:
-                  f.write(f"| {n} | {tc:.4f} | {ta:.4f} | {r:.3f} |\n")
-
-              f.write("\n### SOP Balancing\n\n")
-              f.write("| Benchmark | CIRCT (s) | ABC (s) | CIRCT/ABC |\n")
-              f.write("|---|---:|---:|---:|\n")
-              for n, tc, ta, r in sop_rows[:50]:
-                  f.write(f"| {n} | {tc:.4f} | {ta:.4f} | {r:.3f} |\n")
-          PY
+          source .venv/bin/activate
+          pass-benchmark-report \
+            --circt-lut circt-lut-summary.json \
+            --abc-lut abc-lut-summary.json \
+            --circt-sop circt-sop-summary.json \
+            --abc-sop abc-sop-summary.json \
+            --sweep-lut-sizes "${{ github.event.inputs.lut_sizes || '6,8' }}" \
+            --sweep-cut-sizes "${{ github.event.inputs.cut_size || '8' }}" \
+            --markdown-out pass-benchmark-report.md \
+            --html-out pass-benchmark-report.html
 
       - name: Publish summary
         run: cat pass-benchmark-report.md >> $GITHUB_STEP_SUMMARY
@@ -139,3 +100,4 @@ jobs:
             build_pass/
             *-summary.json
             pass-benchmark-report.md
+            pass-benchmark-report.html
