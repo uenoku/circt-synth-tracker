@@ -64,6 +64,7 @@ def extract_target_pass_time(
     for name, t in pass_timings.items():
         if target_pass_name in name:
             matched.append((name, t))
+            print(f"Matched pass '{name}' with time {t:.3f}s for target '{target_pass_name}'")
 
     if not matched:
         return None, []
@@ -207,6 +208,7 @@ def run_one(
 
         abc_script = f"read {wl.aig_file}; {abc_cmd}; time;"
         abc_stdout, abc_stderr, abc_wall = run_command([abc, "-c", abc_script])
+        print(f"ABC output:\n{abc_stdout}\n{abc_stderr}")
         abc_elapsed = parse_abc_time(abc_stdout + "\n" + abc_stderr)
 
     common = {

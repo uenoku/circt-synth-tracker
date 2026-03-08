@@ -34,6 +34,14 @@ def ratios(a: dict, b: dict) -> list[tuple[str, float, float, float]]:
 def geomean(values: list[float]) -> float | None:
     if not values:
         return None
+    # ABC/CIRCT timing can be exactly 0.0 for tiny cases; define geomean as 0
+    # in that case to avoid log(0) domain errors.
+    if any(v == 0 for v in values):
+        return 0.0
+    # Ignore negative/invalid timings defensively.
+    values = [v for v in values if v > 0]
+    if not values:
+        return None
     return math.exp(sum(math.log(v) for v in values) / len(values))
 
 

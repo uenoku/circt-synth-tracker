@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
- export PATH="$HOME/dev/circt-sta/build/bin:$PATH"
+ export PATH="$HOME/dev/circt-synth/build/bin:$PATH"
 rm *.json
 rm *.html
 rm -rf build_pass
  
 LUT_SIZE="${LUT_SIZE:-6}"
-LUT_SIZES="${LUT_SIZES:-6,8}"
-CUT_SIZE="${CUT_SIZE:-8,15,25}"
+LUT_SIZES="${LUT_SIZES:-6}"
+CUT_SIZE="${CUT_SIZE:-8}"
 CUT_SIZES="${CUT_SIZES:-}"
 OUT_DIR="${OUT_DIR:-build_pass}"
 JOBS="${JOBS:-$(nproc)}"
