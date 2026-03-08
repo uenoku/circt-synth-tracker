@@ -40,6 +40,8 @@ lit -v benchmarks/comb/DatapathBench/
 
 # Run with custom parameters (pass parameters using -D<name>=<value>)
 lit -v benchmarks/ -DBW=8 -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys
+# Run pass-level compile-time benchmark suite on LSILS AIG inputs (CIRCT vs ABC equivalents)
+lit -v benchmarks/pass/ -DTEST_OUTPUT_DIR=build_pass -DLUT_SIZE=6 -DCUT_SIZE=8
 # circt-synth has custom parameters to pass additional arguments
 lit -v benchmarks/ -DSYNTH_TOOL=circt -DCIRCT_SYNTH_EXTRA_ARGS="--disable-datapath"
 # Apply ABC optimization between synthesis and judging
