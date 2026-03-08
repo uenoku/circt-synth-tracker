@@ -13,6 +13,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from string import Template
 from typing import Any
 
 from circt_synth_tracker.tools import find_abc
@@ -64,7 +65,9 @@ def extract_target_pass_time(
     for name, t in pass_timings.items():
         if target_pass_name in name:
             matched.append((name, t))
-            print(f"Matched pass '{name}' with time {t:.3f}s for target '{target_pass_name}'")
+            print(
+                f"Matched pass '{name}' with time {t:.3f}s for target '{target_pass_name}'"
+            )
 
     if not matched:
         return None, []
@@ -77,9 +80,7 @@ def extract_target_pass_time(
 
 def parse_abc_time(output: str) -> float | None:
     for line in output.splitlines():
-        m = re.search(
-            r"\belapse\s*:\s*([+-]?\d+(?:\.\d+)?)\s+seconds\b", line
-        )
+        m = re.search(r"\belapse\s*:\s*([+-]?\d+(?:\.\d+)?)\s+seconds\b", line)
         if m:
             return float(m.group(1))
     return None
@@ -110,6 +111,19 @@ def load_command_templates(root: Path) -> dict[str, dict[str, str]]:
     return templates
 
 
+def render_command_template(template: str, values: dict[str, int]) -> str:
+    """Render command templates without eval using ${...} placeholders only."""
+    try:
+        return Template(template).substitute(
+            lut_k=str(values["lut_k"]), cut_size=str(values["cut_size"])
+        )
+    except KeyError as e:
+        raise ValueError(
+            f"unknown template variable '${{{e.args[0]}}}' in command template; "
+            "allowed: ['cut_size', 'lut_k']"
+        ) from e
+
+
 def command_for_mode(
     templates: dict[str, dict[str, str]], mode: str, lut_size: int, cut_size: int
 ) -> tuple[str, str, str]:
@@ -119,16 +133,9 @@ def command_for_mode(
     target_pass_name = template.get("circt-pass-name", "")
     if not target_pass_name:
         raise ValueError(f"missing 'circt-pass-name' in commands.json: {mode}")
-    circt_cmd = (
-        template["circt"]
-        .replace("{lut-k}", str(lut_size))
-        .replace("{lut-max-cut-size}", str(cut_size))
-    )
-    abc_cmd = (
-        template["abc"]
-        .replace("{lut-k}", str(lut_size))
-        .replace("{lut-max-cut-size}", str(cut_size))
-    )
+    values = {"lut_k": lut_size, "cut_size": cut_size}
+    circt_cmd = render_command_template(template["circt"], values)
+    abc_cmd = render_command_template(template["abc"], values)
     return circt_cmd, abc_cmd, target_pass_name
 
 
@@ -144,7 +151,9 @@ def discover_lsils_workloads(benchmarks_root: Path) -> list[Workload]:
     return workloads
 
 
-def write_result(output_dir: Path, tool: str, bench_name: str, metrics: dict[str, Any]) -> None:
+def write_result(
+    output_dir: Path, tool: str, bench_name: str, metrics: dict[str, Any]
+) -> None:
     results_dir = output_dir / "results" / tool
     results_dir.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -155,7 +164,9 @@ def write_result(output_dir: Path, tool: str, bench_name: str, metrics: dict[str
         "metrics": metrics,
         "category": metrics.get("suite", "unknown"),
     }
-    (results_dir / f"{bench_name}.json").write_text(json.dumps(payload, indent=2) + "\n")
+    (results_dir / f"{bench_name}.json").write_text(
+        json.dumps(payload, indent=2) + "\n"
+    )
 
 
 def run_one(
@@ -198,7 +209,13 @@ def run_one(
             mlir_in = tdp / "input.mlir"
             # Convert AIGER -> MLIR once, then benchmark pass execution.
             run_command(
-                [circt_translate, str(wl.aig_file), "--import-aiger", "-o", str(mlir_in)]
+                [
+                    circt_translate,
+                    str(wl.aig_file),
+                    "--import-aiger",
+                    "-o",
+                    str(mlir_in),
+                ]
             )
 
             circt_pipeline = f"builtin.module(hw.module({circt_cmd}))"
@@ -265,10 +282,16 @@ def main() -> int:
         description="Benchmark CIRCT pass compile time vs ABC equivalent commands"
     )
     parser.add_argument(
-        "--benchmarks-root", type=Path, default=Path("benchmarks"), help="Benchmarks root"
+        "--benchmarks-root",
+        type=Path,
+        default=Path("benchmarks"),
+        help="Benchmarks root",
     )
     parser.add_argument(
-        "--output-dir", type=Path, required=True, help="Directory where results are stored"
+        "--output-dir",
+        type=Path,
+        required=True,
+        help="Directory where results are stored",
     )
     parser.add_argument(
         "--input-aig",
@@ -281,7 +304,9 @@ def main() -> int:
         default=None,
         help="Benchmark name override (default: inferred from input path)",
     )
-    parser.add_argument("--mode", choices=["lut-mapping", "sop-balancing"], required=True)
+    parser.add_argument(
+        "--mode", choices=["lut-mapping", "sop-balancing"], required=True
+    )
     parser.add_argument("--lut-size", type=int, default=6)
     parser.add_argument("--cut-size", type=int, default=8)
     parser.add_argument(

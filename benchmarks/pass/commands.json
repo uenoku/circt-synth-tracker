@@ -1,14 +1,14 @@
 [
     {
         "name": "lut-mapping",
-        "abc": "if -K {lut-k} -C {lut-max-cut-size}",
-        "circt": "synth-generic-lut-mapper{max-lut-size={lut-k} max-cuts-per-root={lut-max-cut-size}}",
+        "abc": "if -K ${lut_k} -C ${cut_size}",
+        "circt": "synth-generic-lut-mapper{max-lut-size=${lut_k} max-cuts-per-root=${cut_size}}",
         "circt-pass-name": "GenericLutMapper"
     },
     {
         "name": "sop-balancing",
-        "abc": "if -K {lut-k} -C {lut-max-cut-size} -g",
-        "circt": "synth-sop-balancing{max-cut-input-size={lut-k} max-cuts-per-root={lut-max-cut-size}}",
+        "abc": "if -K ${lut_k} -C ${cut_size} -g",
+        "circt": "synth-sop-balancing{max-cut-input-size=${lut_k} max-cuts-per-root=${cut_size}}",
         "circt-pass-name": "SOPBalancing"
     }
 ]

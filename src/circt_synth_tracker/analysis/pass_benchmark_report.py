@@ -59,13 +59,23 @@ def parse_int_list(value: str) -> list[int]:
 
 
 def sweep_rows_for_lut_sizes(
-    circt: dict, abc: dict, lut_sizes: list[int], cut_sizes: list[int] | None, min_time_s: float
+    circt: dict,
+    abc: dict,
+    lut_sizes: list[int],
+    cut_sizes: list[int] | None,
+    min_time_s: float,
 ) -> dict[int, list[tuple[int, int, float | None, float | None, float | None]]]:
-    return {lut: sweep_rows(circt, abc, lut, cut_sizes, min_time_s) for lut in lut_sizes}
+    return {
+        lut: sweep_rows(circt, abc, lut, cut_sizes, min_time_s) for lut in lut_sizes
+    }
 
 
 def sweep_rows(
-    circt: dict, abc: dict, lut_size: int, cut_sizes: list[int] | None, min_time_s: float
+    circt: dict,
+    abc: dict,
+    lut_size: int,
+    cut_sizes: list[int] | None,
+    min_time_s: float,
 ) -> list[tuple[int, int, float | None, float | None, float | None]]:
     if cut_sizes is None:
         cut_sizes = sorted(
@@ -80,7 +90,9 @@ def sweep_rows(
     for cut in cut_sizes:
         cvals: list[float] = []
         avals: list[float] = []
-        shared = set(circt.get("benchmarks", {})).intersection(abc.get("benchmarks", {}))
+        shared = set(circt.get("benchmarks", {})).intersection(
+            abc.get("benchmarks", {})
+        )
         for name in shared:
             cm = circt["benchmarks"][name]
             am = abc["benchmarks"][name]
@@ -111,8 +123,12 @@ def write_markdown(
     sop_rows: list[tuple[str, float, float, float]],
     lut_geo: float | None,
     sop_geo: float | None,
-    lut_sweeps: dict[int, list[tuple[int, int, float | None, float | None, float | None]]],
-    sop_sweeps: dict[int, list[tuple[int, int, float | None, float | None, float | None]]],
+    lut_sweeps: dict[
+        int, list[tuple[int, int, float | None, float | None, float | None]]
+    ],
+    sop_sweeps: dict[
+        int, list[tuple[int, int, float | None, float | None, float | None]]
+    ],
 ) -> None:
     with out.open("w") as f:
         f.write("## Pass Benchmark (Report-only)\n\n")
@@ -137,14 +153,18 @@ def write_markdown(
             sop_sweep = sop_sweeps.get(lut_size, [])
             f.write(f"\n### Sweep Summary (lut_size={lut_size})\n\n")
             f.write("#### LUT Mapping\n\n")
-            f.write("| cut_size | compared | CIRCT geomean (s) | ABC geomean (s) | CIRCT/ABC |\n")
+            f.write(
+                "| cut_size | compared | CIRCT geomean (s) | ABC geomean (s) | CIRCT/ABC |\n"
+            )
             f.write("|---:|---:|---:|---:|---:|\n")
             for cut, n, cgeo, ageo, ratio in lut_sweep:
                 f.write(
                     f"| {cut} | {n} | {fmt_or_na(cgeo, 6)} | {fmt_or_na(ageo, 6)} | {fmt_or_na(ratio, 4)} |\n"
                 )
             f.write("\n#### SOP Balancing\n\n")
-            f.write("| cut_size | compared | CIRCT geomean (s) | ABC geomean (s) | CIRCT/ABC |\n")
+            f.write(
+                "| cut_size | compared | CIRCT geomean (s) | ABC geomean (s) | CIRCT/ABC |\n"
+            )
             f.write("|---:|---:|---:|---:|---:|\n")
             for cut, n, cgeo, ageo, ratio in sop_sweep:
                 f.write(
@@ -159,19 +179,27 @@ def write_html(
     sop_rows: list[tuple[str, float, float, float]],
     lut_geo: float | None,
     sop_geo: float | None,
-    lut_sweeps: dict[int, list[tuple[int, int, float | None, float | None, float | None]]],
-    sop_sweeps: dict[int, list[tuple[int, int, float | None, float | None, float | None]]],
+    lut_sweeps: dict[
+        int, list[tuple[int, int, float | None, float | None, float | None]]
+    ],
+    sop_sweeps: dict[
+        int, list[tuple[int, int, float | None, float | None, float | None]]
+    ],
 ) -> None:
     def write_rows(rows: list[tuple[str, float, float, float]]) -> str:
         return "\n".join(
             f"<tr><td>{escape(n)}</td><td>{tc:.6f}</td><td>{ta:.6f}</td><td>{r:.4f}</td></tr>"
             for n, tc, ta, r in rows
         )
-    def write_sweep(rows: list[tuple[int, int, float | None, float | None, float | None]]) -> str:
+
+    def write_sweep(
+        rows: list[tuple[int, int, float | None, float | None, float | None]],
+    ) -> str:
         return "\n".join(
             f"<tr><td>{cut}</td><td>{n}</td><td>{fmt_or_na(cgeo, 6)}</td><td>{fmt_or_na(ageo, 6)}</td><td>{fmt_or_na(ratio, 4)}</td></tr>"
             for cut, n, cgeo, ageo, ratio in rows
         )
+
     def sweep_block() -> str:
         blocks = []
         for lut_size, lut_rows_sweep in lut_sweeps.items():
@@ -251,10 +279,18 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Generate pass benchmark markdown/html with geomean (CIRCT/ABC)"
     )
-    parser.add_argument("--circt-lut", type=Path, required=True, help="CIRCT LUT summary JSON")
-    parser.add_argument("--abc-lut", type=Path, required=True, help="ABC LUT summary JSON")
-    parser.add_argument("--circt-sop", type=Path, required=True, help="CIRCT SOP summary JSON")
-    parser.add_argument("--abc-sop", type=Path, required=True, help="ABC SOP summary JSON")
+    parser.add_argument(
+        "--circt-lut", type=Path, required=True, help="CIRCT LUT summary JSON"
+    )
+    parser.add_argument(
+        "--abc-lut", type=Path, required=True, help="ABC LUT summary JSON"
+    )
+    parser.add_argument(
+        "--circt-sop", type=Path, required=True, help="CIRCT SOP summary JSON"
+    )
+    parser.add_argument(
+        "--abc-sop", type=Path, required=True, help="ABC SOP summary JSON"
+    )
     parser.add_argument(
         "--sweep-lut-sizes",
         default="",
@@ -265,8 +301,12 @@ def main() -> int:
         default="",
         help="Comma-separated cut sizes for sweep tables (for example: 8,12)",
     )
-    parser.add_argument("--markdown-out", type=Path, default=Path("pass-benchmark-report.md"))
-    parser.add_argument("--html-out", type=Path, default=Path("pass-benchmark-report.html"))
+    parser.add_argument(
+        "--markdown-out", type=Path, default=Path("pass-benchmark-report.md")
+    )
+    parser.add_argument(
+        "--html-out", type=Path, default=Path("pass-benchmark-report.html")
+    )
     parser.add_argument(
         "--geomean-min-time",
         type=float,
@@ -284,7 +324,9 @@ def main() -> int:
     sop_rows = ratios(circt_sop, abc_sop)
     lut_geo = geomean([r[3] for r in lut_rows], min_time_s=args.geomean_min_time)
     sop_geo = geomean([r[3] for r in sop_rows], min_time_s=args.geomean_min_time)
-    sweep_cut_sizes = parse_int_list(args.sweep_cut_sizes) if args.sweep_cut_sizes else None
+    sweep_cut_sizes = (
+        parse_int_list(args.sweep_cut_sizes) if args.sweep_cut_sizes else None
+    )
     lut_sizes = parse_int_list(args.sweep_lut_sizes) if args.sweep_lut_sizes else []
     lut_sweeps = (
         sweep_rows_for_lut_sizes(
