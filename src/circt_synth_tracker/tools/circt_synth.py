@@ -292,6 +292,7 @@ def main():
         keep_synth_mlir = args.keep_mlir
 
     tv_tree_dir = None
+    completed = False
     try:
         # Step 1: Convert SystemVerilog to MLIR using circt-verilog
         verilog_cmd = [args.circt_verilog, str(input_file)]
@@ -401,12 +402,39 @@ def main():
         run_command(translate_cmd, "AIG export")
 
         print(f"Success! Generated {output_file}", file=sys.stderr)
+        completed = True
 
     finally:
-        # Clean up temporary MLIR files if not keeping them
-        if not keep_mlir and mlir_file.exists():
+        # Persist failing MLIR artifacts outside temporary dirs (e.g. lit TMPDIR).
+        if sys.exc_info()[0] is not None:
+            import shutil
+
+            failed_input_mlir = Path(str(output_file) + ".failed.input.mlir")
+            failed_synth_mlir = Path(str(output_file) + ".failed.synth.mlir")
+
+            try:
+                if mlir_file.exists():
+                    shutil.copy2(mlir_file, failed_input_mlir)
+                    print(
+                        f"  Preserved failing MLIR: {failed_input_mlir}",
+                        file=sys.stderr,
+                    )
+                if synth_mlir_file.exists():
+                    shutil.copy2(synth_mlir_file, failed_synth_mlir)
+                    print(
+                        f"  Preserved failing synth MLIR: {failed_synth_mlir}",
+                        file=sys.stderr,
+                    )
+            except Exception as e:
+                print(
+                    f"  Warning: failed to preserve MLIR artifacts: {e}",
+                    file=sys.stderr,
+                )
+
+        # On success, follow --keep-mlir semantics for temporary MLIR files.
+        if completed and not keep_mlir and mlir_file.exists():
             mlir_file.unlink()
-        if not keep_synth_mlir and synth_mlir_file.exists():
+        if completed and not keep_synth_mlir and synth_mlir_file.exists():
             synth_mlir_file.unlink()
         # Clean up TV tree dir
         if tv_tree_dir is not None:

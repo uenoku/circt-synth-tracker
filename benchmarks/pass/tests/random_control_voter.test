@@ -1,0 +1,2 @@
+RUN: run-pass-benchmark --benchmarks-root %S/../.. --output-dir %T --mode lut-mapping --lut-size %PASS_LUT_SIZE --cut-size %PASS_CUT_SIZE --tool %PASS_TOOL --input-aig %LSILS_AIG/random_control/voter.aig --name random_control_voter
+RUN: run-pass-benchmark --benchmarks-root %S/../.. --output-dir %T --mode sop-balancing --lut-size %PASS_LUT_SIZE --cut-size %PASS_CUT_SIZE --tool %PASS_TOOL --input-aig %LSILS_AIG/random_control/voter.aig --name random_control_voter

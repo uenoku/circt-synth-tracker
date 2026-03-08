@@ -51,7 +51,7 @@ runs:
         fi
         IFS=',' read -ra BWS <<< "${{ inputs.bitwidths }}"
         for BW in "${BWS[@]}"; do
-          eval lit -v benchmarks/ \
+          eval lit -v benchmarks/comb \
             -DSYNTH_TOOL=${{ inputs.synth_tool }} \
             -DTEST_OUTPUT_DIR=${{ inputs.output_dir }} \
             -DBW=$BW \

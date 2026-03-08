@@ -44,11 +44,20 @@ def main():
     # Determine tool name
     tool_name = args.tool or os.environ.get("synth_tool", "unknown")
     category = "unknown"
+    benchmark_track = "unknown"
     if args.test_file:
+        normalized = args.test_file.replace("\\", "/")
+        if "/benchmarks/comb/" in normalized:
+            benchmark_track = "comb"
+        elif "/benchmarks/pass/" in normalized:
+            benchmark_track = "pass"
         for part in args.test_file.split("/")[:-1][::-1]:
             if part != "tests" and part != "Output":
                 category = part
                 break
+    # Store track tag in metrics so aggregate-results preserves it.
+    if isinstance(judge_data, dict):
+        judge_data["benchmark_track"] = benchmark_track
 
     # Create result record
     results = {

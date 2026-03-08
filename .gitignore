@@ -216,3 +216,6 @@ test-config.fish
 
 # C++ judge build directory
 judge-build/
+
+# Local helper scripts
+run.sh

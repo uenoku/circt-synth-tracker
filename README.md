@@ -31,27 +31,39 @@ source .venv/bin/activate
 
 ## Running Tests
 
+This repository has two benchmark tracks:
+- `comb` (`benchmarks/comb/`): end-to-end combinational synthesis benchmarks
+- `pass` (`benchmarks/pass/`): pass-level compile-time benchmarks
+
+Make sure to run the correct track for your objective; parameters and outputs differ between `comb` and `pass`.
+
+Suite-specific parameter docs:
+- Combinational suite: `benchmarks/comb/README.md`
+- Pass benchmark suite: `benchmarks/pass/README.md`
+
 ```bash
 # Make sure yosys, circt-synth, circt-verilog and circt-translate are in PATH.
 # Run all benchmarks
-lit -v benchmarks/ # Test results are stored in build/ by default
+lit -v benchmarks/comb/ # Test results are stored in build/ by default
 # Run specific test suite
 lit -v benchmarks/comb/DatapathBench/
 
 # Run with custom parameters (pass parameters using -D<name>=<value>)
-lit -v benchmarks/ -DBW=8 -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys
+lit -v benchmarks/comb/ -DBW=8 -DSYNTH_TOOL=yosys -DTEST_OUTPUT_DIR=build_yosys
+# Run pass-level compile-time benchmark suite on LSILS AIG inputs (CIRCT vs ABC equivalents)
+lit -v benchmarks/pass/ -DTEST_OUTPUT_DIR=build_pass -DLUT_SIZE=6 -DCUT_SIZE=8
 # circt-synth has custom parameters to pass additional arguments
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DCIRCT_SYNTH_EXTRA_ARGS="--disable-datapath"
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DCIRCT_SYNTH_EXTRA_ARGS="--disable-datapath"
 # Apply ABC optimization between synthesis and judging
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DABC_COMMANDS="resyn"
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DABC_COMMANDS="resyn"
 
 # Run SMT Translation Validation (TV)
 # TV verifies each CIRCT synthesis pass preserves circuit semantics using circt-lec + SMT solver
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla  # or -DTV_SOLVER=z3
+lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla  # or -DTV_SOLVER=z3
 
 # Run specific circt-synth version
 export CIRCT_SYNTH=/path/to/circt-synth
-lit -v benchmarks/
+lit -v benchmarks/comb/
 (or add specific version of circt-synth to PATH)
 
 # Compare Results
@@ -76,39 +88,11 @@ compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.j
 compare-results circt-summary.json yosys-summary.json -o report.html --equiv-check -j 4
 ```
 
-### Available Lit Parameters
+Detailed lit parameters are documented per suite:
+- `benchmarks/comb/README.md`
+- `benchmarks/pass/README.md`
 
-| Parameter | Default | Description |
-|---|---|---|
-| `SYNTH_TOOL` | `circt` | Synthesis tool: `circt` or `yosys` |
-| `TECH_MAP` | `mockturtle` | Technology mapper for `%judge`: `mockturtle` or `abc` |
-| `ABC_COMMANDS` | _(empty)_ | ABC commands run via `%AIG_TOOL` between synthesis and judging (e.g. `"compress2rs;"`) |
-| `BW` | `16` | Bitwidth for parameterized benchmarks |
-| `TEST_OUTPUT_DIR` | `build` | Directory for lit test outputs |
-| `CIRCT_SYNTH_EXTRA_ARGS` | _(empty)_ | Extra flags passed to `circt-synth` |
-| `TV_SOLVER` | _(empty)_ | SMT solver command for TV (e.g. `bitwuzla` or `z3`); when set, TV is automatically enabled |
-| `KEEP_TV_ARTIFACTS` | _(empty)_ | Retain translation validation per-pass MLIR dumps and SMT-LIB inputs for debugging |
-
-### Lit Substitutions
-
-| Substitution | Description |
-|---|---|
-| `%SYNTH_TOOL` | Synthesis pipeline (SV → AIG) |
-| `%AIG_TOOL` | AIG optimization layer (`run-abc-opt`); no-op when `ABC_COMMANDS` is empty |
-| `%judge` | AIG evaluation tool (`mockturtle-aig-judge` or `abc-aig-judge`) |
-| `%submit` | Stores benchmark results as JSON |
-| `%BW` | Bitwidth parameter |
-
-### ABC Aliases (`benchmarks/abc.rc`)
-
-After `uv run prepare`, `benchmarks/abc.rc` is populated with ABC's standard
-aliases (fetched from the ABC repository at a pinned commit). These can be
-referenced by name in `ABC_COMMANDS`:
-
-```bash
-lit -v benchmarks/ -DABC_COMMANDS="resyn2;"
-lit -v benchmarks/ -DABC_COMMANDS="compress2rs;"
-```
+ABC alias usage for comb benchmarks is documented in `benchmarks/comb/README.md`.
 
 ### Environment Variables
 
@@ -134,46 +118,7 @@ compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.j
 
 ## SMT Translation Validation
 
-Translation Validation (TV) uses `circt-lec` to verify that each CIRCT synthesis pass preserves the circuit's logical equivalence. When enabled, `circt-synth` dumps per-pass MLIR snapshots and `circt-lec --emit-smtlib` is piped to an external SMT solver (Bitwuzla or Z3) for each consecutive pair in the transformation sequence:
-
-```
-input.mlir → pass_0 → pass_1 → … → synth_output.mlir
-```
-
-Each step is checked independently. Results are recorded as a `.tv` sidecar file alongside the AIG output and aggregated into the summary JSON under `tv_status` (`pass` / `fail` / `error`) and `tv_results` (per-step status).
-
-When a non-equivalence is detected, the failing MLIR pair(s) are saved to a `.tv-pairs/` directory alongside the AIG output, together with a `reproduce.sh` script:
-
-```bash
-# Inside .tv-pairs/
-./reproduce.sh
-# which runs e.g.:
-# circt-lec 0_from_0_3_SomePass.mlir 0_to_0_4_NextPass.mlir --emit-smtlib | bitwuzla
-```
-
-Set `-DKEEP_TV_ARTIFACTS=1` when running TV to keep the per-pass MLIR tree alongside
-the AIG output as `<output>.tv-ir-tree` and the SMT-LIB dumps inside its `tv-smt/`
-subdirectory. The CLI prints the retained directory path so you can inspect the IR
-snapshots and solver inputs without searching through temporary locations.
-
-### Running TV locally
-
-TV requires `circt-lec` in PATH and an SMT solver that accepts SMT-LIB format on stdin and outputs `sat` or `unsat`. [Bitwuzla](https://bitwuzla.github.io/) is recommended for best performance:
-
-```bash
-# Bitwuzla (recommended)
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla
-
-# Z3
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER=z3
-
-# Any custom SMT solver supporting stdin/stdout
-lit -v benchmarks/ -DSYNTH_TOOL=circt -DTV_SOLVER="your-solver -your-flags"
-```
-
-### TV in CI
-
-TV runs automatically for all CIRCT benchmark runs in CI (nightly, PR benchmark, and experiment workflows). Bitwuzla is downloaded as a static binary during setup.
+SMT Translation Validation (TV) details and usage are documented in `benchmarks/comb/README.md`.
 
 ## Project Structure
 
@@ -232,6 +177,17 @@ Shared optional input:
 - `equiv_check`: run CEC between the two configurations' AIG outputs
 
 Useful for evaluating the effect of ABC passes, synthesis options, or tool choice.
+
+### Pass Experiment (`ci-pass-experiment.yml`)
+Triggered manually to compare pass-benchmark config A vs config B using two separate runs, then `compare-results` on aggregated summaries.
+Each config can override pass commands independently:
+- LUT mode: CIRCT command and ABC command
+- SOP mode: CIRCT command and ABC command
+
+This enables before/after comparisons such as:
+- CIRCT pass pipeline tweaks (`circt` command changes)
+- ABC script tweaks (`abc` command changes)
+- or both, while keeping the same benchmark set and LUT/CUT sweep.
 
 ### PR Bot (`ci-pr-bot.yml`)
 Listens for `@tracker-bot check-pr <N>` comments on issues and dispatches

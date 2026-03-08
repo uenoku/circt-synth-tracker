@@ -1,34 +1,28 @@
-name: AIG LUT Mapping Benchmark
+name: AIG Pass Benchmark
 
 on:
   schedule:
-    # Run daily at 13:00 UTC (after comb lowering benchmark)
     - cron: '0 13 * * *'
-  workflow_dispatch:
-    inputs:
-      bitwidths:
-        description: 'Comma-separated list of bitwidths to test (e.g. "16,32")'
-        required: false
-        default: '16'
-      abc_commands:
-        description: 'ABC commands to run on AIG after LUT mapping via %AIG_TOOL'
-        required: false
-        default: ''
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      lut_sizes:
+        description: 'Comma-separated LUT sizes K (e.g. "6,8")'
+        required: false
+        default: '6,8'
+      cut_sizes:
+        description: 'Comma-separated cut sizes C (e.g. "8,25")'
+        required: false
+        default: '8,25'
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
   benchmark:
-    name: AIG LUT Mapping Benchmark
+    name: CIRCT vs ABC Pass Compile Time
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/circt/images/circt-integration-test:v20
@@ -43,8 +37,7 @@ jobs:
           submodules: recursive
 
       - name: Install jq
-        run: |
-          apt-get update && apt-get install -y jq
+        run: apt-get update && apt-get install -y jq
 
       - name: Install CIRCT nightly
         uses: circt/install-circt@3f8dda6e1c1965537b5801a43c81c287bac4eae4 # v1.1.1
@@ -53,8 +46,7 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Add CIRCT to PATH
-        run: |
-          echo "$GITHUB_WORKSPACE/circt/bin" >> $GITHUB_PATH
+        run: echo "$GITHUB_WORKSPACE/circt/bin" >> $GITHUB_PATH
 
       - name: Get CIRCT version
         run: |
@@ -64,3 +56,57 @@ jobs:
 
       - name: Setup tracker
         uses: ./.github/actions/setup-tracker
+
+      - name: Run pass benchmarks with lit
+        run: |
+          source .venv/bin/activate
+          LUT_SIZES="${{ github.event.inputs.lut_sizes || '6,8' }}"
+          CUT_SIZES="${{ github.event.inputs.cut_sizes || '8,25' }}"
+          IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
+          IFS=',' read -ra CUT_ARR <<< "$CUT_SIZES"
+          for TOOL in circt abc; do
+            for L in "${LUT_ARR[@]}"; do
+              for C in "${CUT_ARR[@]}"; do
+                lit -v benchmarks/pass/ \
+                  -j "$(nproc)" \
+                  -DTEST_OUTPUT_DIR=build_pass \
+                  -DLUT_SIZE=$L \
+                  -DCUT_SIZE=$C \
+                  -DTOOL=$TOOL
+              done
+            done
+          done
+
+      - name: Aggregate pass benchmark results
+        run: |
+          source .venv/bin/activate
+          aggregate-results --tool circt-lut-mapping-pass --version "$CIRCT_VERSION" --results-dir build_pass -o circt-lut-summary.json
+          aggregate-results --tool abc-lut-mapping-pass --version "$CIRCT_VERSION" --results-dir build_pass -o abc-lut-summary.json
+          aggregate-results --tool circt-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o circt-sop-summary.json
+          aggregate-results --tool abc-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o abc-sop-summary.json
+
+      - name: Build pass benchmark reports
+        run: |
+          source .venv/bin/activate
+          pass-benchmark-report \
+            --circt-lut circt-lut-summary.json \
+            --abc-lut abc-lut-summary.json \
+            --circt-sop circt-sop-summary.json \
+            --abc-sop abc-sop-summary.json \
+            --sweep-lut-sizes "${{ github.event.inputs.lut_sizes || '6,8' }}" \
+            --sweep-cut-sizes "${{ github.event.inputs.cut_sizes || '8,25' }}" \
+            --markdown-out pass-benchmark-report.md \
+            --html-out pass-benchmark-report.html
+
+      - name: Publish summary
+        run: cat pass-benchmark-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload pass benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass-benchmark-artifacts
+          path: |
+            build_pass/
+            *-summary.json
+            pass-benchmark-report.md
+            pass-benchmark-report.html
