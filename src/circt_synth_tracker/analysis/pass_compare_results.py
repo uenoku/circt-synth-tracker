@@ -48,7 +48,11 @@ def compare_rows(a: dict, b: dict, mode: str) -> list[tuple[str, float, float, f
 def geomean_ratio(rows: list[tuple[str, float, float, float]]) -> float | None:
     a_geo = geomean([r[1] for r in rows])
     b_geo = geomean([r[2] for r in rows])
-    return (a_geo / b_geo) if (a_geo is not None and b_geo is not None and b_geo > 0) else None
+    return (
+        (a_geo / b_geo)
+        if (a_geo is not None and b_geo is not None and b_geo > 0)
+        else None
+    )
 
 
 def rows_html(rows: list[tuple[str, float, float, float]]) -> str:
@@ -104,7 +108,7 @@ def render_pair(
   </style>
 </head><body>
   <h1>{escape(title)}</h1>
-  {''.join(f'<p>{escape(line)}</p>' for line in (subtitle_lines or []))}
+  {"".join(f"<p>{escape(line)}</p>" for line in (subtitle_lines or []))}
   <table>
     <thead><tr><th>Mode</th><th>Geomean {escape(label_a)}/{escape(label_b)}</th><th>Matched</th></tr></thead>
     <tbody>
@@ -146,15 +150,21 @@ def run_pr(args: argparse.Namespace) -> int:
     cc_lut_after = geomean([r[1] for r in cc_lut_rows])
     cc_sop_before = geomean([r[2] for r in cc_sop_rows])
     cc_sop_after = geomean([r[1] for r in cc_sop_rows])
-    cc_lut_delta = (cc_lut_after / cc_lut_before) if (cc_lut_after and cc_lut_before) else None
-    cc_sop_delta = (cc_sop_after / cc_sop_before) if (cc_sop_after and cc_sop_before) else None
+    cc_lut_delta = (
+        (cc_lut_after / cc_lut_before) if (cc_lut_after and cc_lut_before) else None
+    )
+    cc_sop_delta = (
+        (cc_sop_after / cc_sop_before) if (cc_sop_after and cc_sop_before) else None
+    )
 
     ref_before_lut = ref_before_sop = ref_after_lut = ref_after_sop = None
     if args.ref_before and args.ref_after:
         ref_before = load_json(args.ref_before)
         ref_after = load_json(args.ref_after)
         ref_before_lut = geomean_ratio(compare_rows(before, ref_before, "lut-mapping"))
-        ref_before_sop = geomean_ratio(compare_rows(before, ref_before, "sop-balancing"))
+        ref_before_sop = geomean_ratio(
+            compare_rows(before, ref_before, "sop-balancing")
+        )
         ref_after_lut = geomean_ratio(compare_rows(after, ref_after, "lut-mapping"))
         ref_after_sop = geomean_ratio(compare_rows(after, ref_after, "sop-balancing"))
 
@@ -178,7 +188,7 @@ def run_pr(args: argparse.Namespace) -> int:
                 "",
                 f"### {args.label_a} vs {args.ref_label} ({args.label_a}/{args.ref_label})",
                 "",
-                f"| Mode | Before Ratio | After Ratio | Ratio Delta (After/Before) |",
+                "| Mode | Before Ratio | After Ratio | Ratio Delta (After/Before) |",
                 "|---|---:|---:|---:|",
                 f"| LUT Mapping | {fmt(ref_before_lut)} | {fmt(ref_after_lut)} | {fmt((ref_after_lut / ref_before_lut) if (ref_before_lut and ref_after_lut) else None)} |",
                 f"| SOP Balancing | {fmt(ref_before_sop)} | {fmt(ref_after_sop)} | {fmt((ref_after_sop / ref_before_sop) if (ref_before_sop and ref_after_sop) else None)} |",
@@ -188,14 +198,14 @@ def run_pr(args: argparse.Namespace) -> int:
     args.markdown_out.write_text("\n".join(md) + "\n")
 
     html_parts = [
-        "<!doctype html><html lang=\"en\"><head>",
-        "<meta charset=\"utf-8\" />",
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />",
+        '<!doctype html><html lang="en"><head>',
+        '<meta charset="utf-8" />',
+        '<meta name="viewport" content="width=device-width, initial-scale=1" />',
         f"<title>{escape(args.title)}</title>",
-        "<style>body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; margin: 24px; color: #111; } table { border-collapse: collapse; width: 100%; margin: 8px 0 24px; } th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; font-size: 13px; } th { background: #f3f3f3; }</style>",
+        '<style>body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 24px; color: #111; } table { border-collapse: collapse; width: 100%; margin: 8px 0 24px; } th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; font-size: 13px; } th { background: #f3f3f3; }</style>',
         "</head><body>",
         f"<h1>{escape(args.title)}</h1>",
-        f"<p><a href=\"https://github.com/llvm/circt/pull/{args.pr_number}\">{escape(args.pr_title)}</a><br/>",
+        f'<p><a href="https://github.com/llvm/circt/pull/{args.pr_number}">{escape(args.pr_title)}</a><br/>',
         f"Commit: <code>{escape(args.base_sha[:8])}</code> -> <code>{escape(args.head_sha[:8])}</code><br/>",
         f"Version: <code>{escape(args.before_version)}</code> -> <code>{escape(args.after_version)}</code></p>",
         f"<h2>{escape(args.label_a)} vs {escape(args.label_b)} ({escape(args.label_a)}/{escape(args.label_b)})</h2>",
@@ -208,7 +218,7 @@ def run_pr(args: argparse.Namespace) -> int:
         html_parts.extend(
             [
                 f"<h2>{escape(args.label_a)} vs {escape(args.ref_label)} ({escape(args.label_a)}/{escape(args.ref_label)})</h2>",
-                f"<table><thead><tr><th>Mode</th><th>Before Ratio</th><th>After Ratio</th><th>Ratio Delta (After/Before)</th></tr></thead><tbody>",
+                "<table><thead><tr><th>Mode</th><th>Before Ratio</th><th>After Ratio</th><th>Ratio Delta (After/Before)</th></tr></thead><tbody>",
                 f"<tr><td>LUT Mapping</td><td>{fmt(ref_before_lut)}</td><td>{fmt(ref_after_lut)}</td><td>{fmt((ref_after_lut / ref_before_lut) if (ref_before_lut and ref_after_lut) else None)}</td></tr>",
                 f"<tr><td>SOP Balancing</td><td>{fmt(ref_before_sop)}</td><td>{fmt(ref_after_sop)}</td><td>{fmt((ref_after_sop / ref_before_sop) if (ref_before_sop and ref_after_sop) else None)}</td></tr>",
                 "</tbody></table>",
@@ -228,18 +238,26 @@ def run_pr(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Unified pass benchmark reporting tool")
+    parser = argparse.ArgumentParser(
+        description="Unified pass benchmark reporting tool"
+    )
     sub = parser.add_subparsers(dest="mode", required=True)
 
-    single = sub.add_parser("single", help="Single-run comparison from A.json vs B.json")
+    single = sub.add_parser(
+        "single", help="Single-run comparison from A.json vs B.json"
+    )
     single.add_argument("--a", type=Path, required=True, help="A summary JSON")
     single.add_argument("--b", type=Path, required=True, help="B summary JSON")
     single.add_argument("--label-a", default="CIRCT")
     single.add_argument("--label-b", default="ABC")
     single.add_argument("--version", default="")
     single.add_argument("--title", default="Pass Benchmark Report")
-    single.add_argument("--markdown-out", type=Path, default=Path("pass-benchmark-report.md"))
-    single.add_argument("--html-out", type=Path, default=Path("pass-benchmark-report.html"))
+    single.add_argument(
+        "--markdown-out", type=Path, default=Path("pass-benchmark-report.md")
+    )
+    single.add_argument(
+        "--html-out", type=Path, default=Path("pass-benchmark-report.html")
+    )
     single.set_defaults(func=run_single)
 
     pr = sub.add_parser("pr", help="PR comparison from before.json vs after.json")
@@ -247,8 +265,12 @@ def build_parser() -> argparse.ArgumentParser:
     pr.add_argument("--after", type=Path, required=True, help="After summary JSON")
     pr.add_argument("--label-a", default="CIRCT(PR)")
     pr.add_argument("--label-b", default="CIRCT(Base)")
-    pr.add_argument("--ref-before", type=Path, help="Optional reference before JSON (e.g. ABC base)")
-    pr.add_argument("--ref-after", type=Path, help="Optional reference after JSON (e.g. ABC PR)")
+    pr.add_argument(
+        "--ref-before", type=Path, help="Optional reference before JSON (e.g. ABC base)"
+    )
+    pr.add_argument(
+        "--ref-after", type=Path, help="Optional reference after JSON (e.g. ABC PR)"
+    )
     pr.add_argument("--ref-label", default="ABC")
     pr.add_argument("--before-version", required=True)
     pr.add_argument("--after-version", required=True)
