@@ -31,6 +31,10 @@ source .venv/bin/activate
 
 ## Running Tests
 
+Suite-specific parameter docs:
+- Combinational suite: `benchmarks/comb/README.md`
+- Pass benchmark suite: `benchmarks/pass/README.md`
+
 ```bash
 # Make sure yosys, circt-synth, circt-verilog and circt-translate are in PATH.
 # Run all benchmarks
@@ -78,28 +82,9 @@ compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.j
 compare-results circt-summary.json yosys-summary.json -o report.html --equiv-check -j 4
 ```
 
-### Available Lit Parameters
-
-| Parameter | Default | Description |
-|---|---|---|
-| `SYNTH_TOOL` | `circt` | Synthesis tool: `circt` or `yosys` |
-| `TECH_MAP` | `mockturtle` | Technology mapper for `%judge`: `mockturtle` or `abc` |
-| `ABC_COMMANDS` | _(empty)_ | ABC commands run via `%AIG_TOOL` between synthesis and judging (e.g. `"compress2rs;"`) |
-| `BW` | `16` | Bitwidth for parameterized benchmarks |
-| `TEST_OUTPUT_DIR` | `build` | Directory for lit test outputs |
-| `CIRCT_SYNTH_EXTRA_ARGS` | _(empty)_ | Extra flags passed to `circt-synth` |
-| `TV_SOLVER` | _(empty)_ | SMT solver command for TV (e.g. `bitwuzla` or `z3`); when set, TV is automatically enabled |
-| `KEEP_TV_ARTIFACTS` | _(empty)_ | Retain translation validation per-pass MLIR dumps and SMT-LIB inputs for debugging |
-
-### Lit Substitutions
-
-| Substitution | Description |
-|---|---|
-| `%SYNTH_TOOL` | Synthesis pipeline (SV → AIG) |
-| `%AIG_TOOL` | AIG optimization layer (`run-abc-opt`); no-op when `ABC_COMMANDS` is empty |
-| `%judge` | AIG evaluation tool (`mockturtle-aig-judge` or `abc-aig-judge`) |
-| `%submit` | Stores benchmark results as JSON |
-| `%BW` | Bitwidth parameter |
+Detailed lit parameters are documented per suite:
+- `benchmarks/comb/README.md`
+- `benchmarks/pass/README.md`
 
 ### ABC Aliases (`benchmarks/abc.rc`)
 
