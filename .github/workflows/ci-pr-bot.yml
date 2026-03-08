@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   dispatch:
-    # Only run when the comment contains the trigger phrase
+    # Only run when the comment contains one of the trigger phrases
     if: contains(github.event.comment.body, '@circt-tracker-bot check-pr')
     runs-on: ubuntu-latest
 
@@ -35,13 +35,18 @@ jobs:
         if: steps.auth.outputs.authorized == 'true'
         run: |
           COMMENT="${{ github.event.comment.body }}"
-          # Try check-pr-quick first (more specific match)
-          PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr-quick \K[0-9]+' | head -1)
+          # Try check-pr-pass first, then check-pr-quick, then check-pr.
+          PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr-pass \K[0-9]+' | head -1)
           if [ -n "$PR_NUM" ]; then
-            echo "quick=true" >> $GITHUB_OUTPUT
+            echo "mode=pass" >> $GITHUB_OUTPUT
           else
-            PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr \K[0-9]+' | head -1)
-            echo "quick=false" >> $GITHUB_OUTPUT
+            PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr-quick \K[0-9]+' | head -1)
+            if [ -n "$PR_NUM" ]; then
+              echo "mode=quick" >> $GITHUB_OUTPUT
+            else
+              PR_NUM=$(echo "$COMMENT" | grep -oP '@circt-tracker-bot check-pr \K[0-9]+' | head -1)
+              echo "mode=full" >> $GITHUB_OUTPUT
+            fi
           fi
           if [ -z "$PR_NUM" ]; then
             echo "::error::Could not parse PR number from comment"
@@ -68,7 +73,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "${{ steps.parse.outputs.quick }}" = "true" ]; then
+          if [ "${{ steps.parse.outputs.mode }}" = "pass" ]; then
+            gh workflow run ci-pr-pass-benchmark.yml \
+              --repo "${{ github.repository }}" \
+              --field pr_number="${{ steps.parse.outputs.pr_number }}"
+          elif [ "${{ steps.parse.outputs.mode }}" = "quick" ]; then
             gh workflow run ci-pr-benchmark.yml \
               --repo "${{ github.repository }}" \
               --field pr_number="${{ steps.parse.outputs.pr_number }}" \
@@ -83,7 +92,7 @@ jobs:
               --field bitwidths="16,48" \
               --field issue_number="${{ github.event.issue.number }}"
           fi
-          echo "Dispatched benchmark for CIRCT PR #${{ steps.parse.outputs.pr_number }} (quick=${{ steps.parse.outputs.quick }})"
+          echo "Dispatched benchmark for CIRCT PR #${{ steps.parse.outputs.pr_number }} (mode=${{ steps.parse.outputs.mode }})"
 
       - name: Post acknowledgment comment
         if: steps.auth.outputs.authorized == 'true'
@@ -91,11 +100,14 @@ jobs:
         with:
           script: |
             const prNumber = '${{ steps.parse.outputs.pr_number }}';
-            const isQuick = '${{ steps.parse.outputs.quick }}' === 'true';
-            const workflowUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/ci-pr-benchmark.yml`;
-            const modeNote = isQuick
-              ? '⚡ Running in **quick mode** (no translation validation or equivalence check).'
-              : '🔍 Running **full verification** (with translation validation and equivalence check).';
+            const mode = '${{ steps.parse.outputs.mode }}';
+            const workflowFile = mode === 'pass' ? 'ci-pr-pass-benchmark.yml' : 'ci-pr-benchmark.yml';
+            const workflowUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/${workflowFile}`;
+            const modeNote = mode === 'pass'
+              ? '🧪 Running **pass benchmark mode** (AIG/pass track only).'
+              : (mode === 'quick'
+                ? '⚡ Running in **quick mode** (no translation validation or equivalence check).'
+                : '🔍 Running **full verification** (with translation validation and equivalence check).');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -105,7 +117,7 @@ jobs:
                 '',
                 modeNote,
                 '',
-                'Building CIRCT from source before and after the PR — this takes a while.',
+                'Building CIRCT from source before and after the PR; this takes a while.',
                 `Results will be posted here when done. [View workflow runs](${workflowUrl})`,
               ].join('\n'),
             });

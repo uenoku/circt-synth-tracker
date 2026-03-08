@@ -145,32 +145,14 @@ jobs:
           BITWUZLA_CACHE_DIR: /tmp/bitwuzla-cache
         run: bash tracker/.github/scripts/install-bitwuzla.sh
 
-      - name: Checkout CIRCT at PR base SHA
-        uses: actions/checkout@v4
-        with:
-          repository: llvm/circt
-          ref: ${{ steps.pr-info.outputs.base_sha }}
-          submodules: false
-          path: circt-base
-
       - name: Build CIRCT at PR base (before)
-        run: |
-          cmake -GNinja circt-base \
-            -B circt-base/build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DLLVM_ENABLE_ASSERTIONS=ON \
-            -DMLIR_DIR=$MLIR_DIR \
-            -DLLVM_DIR=$LLVM_DIR \
-            -DLLVM_USE_LINKER=lld \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
-            -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
-            -DBUILD_SHARED_LIBS=ON \
-            -DLLVM_LINK_LLVM_DYLIB=OFF \
-            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-          ninja -C circt-base/build -j$(nproc) circt-synth
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          ref: ${{ steps.pr-info.outputs.base_sha }}
+          checkout_path: circt-base
+          build_path: circt-base/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
 
       - name: Run benchmarks (before)
         run: |
@@ -192,32 +174,14 @@ jobs:
           aggregate-results --tool "base" --version "$BEFORE_VERSION" \
             --results-dir build_before -o before-summary.json
 
-      - name: Checkout CIRCT at PR head SHA
-        uses: actions/checkout@v4
-        with:
-          repository: llvm/circt
-          ref: ${{ steps.pr-info.outputs.head_sha }}
-          submodules: false
-          path: circt-pr
-
       - name: Build CIRCT at PR head (after)
-        run: |
-          cmake -GNinja circt-pr \
-            -B circt-pr/build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DLLVM_ENABLE_ASSERTIONS=ON \
-            -DMLIR_DIR=$MLIR_DIR \
-            -DLLVM_DIR=$LLVM_DIR \
-            -DLLVM_USE_LINKER=lld \
-            -DCMAKE_C_COMPILER=clang \
-            -DBUILD_SHARED_LIBS=ON \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
-            -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
-            -DLLVM_LINK_LLVM_DYLIB=OFF \
-            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-          ninja -C circt-pr/build -j$(nproc) circt-synth
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          ref: ${{ steps.pr-info.outputs.head_sha }}
+          checkout_path: circt-pr
+          build_path: circt-pr/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
 
       - name: Run benchmarks (after)
         run: |

@@ -1,0 +1,300 @@
+name: CIRCT PR Pass Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'CIRCT PR number to benchmark (e.g. 12345)'
+        required: true
+        type: string
+      lut_sizes:
+        description: 'Comma-separated LUT sizes K (e.g. "6,8")'
+        required: false
+        default: '6,8'
+      cut_sizes:
+        description: 'Comma-separated cut sizes C (e.g. "8,25")'
+        required: false
+        default: '8,25'
+
+permissions:
+  contents: write
+  pages: write
+
+# Keep the container image tag in sync with llvm/circt's buildAndTest.yml
+env:
+  CIRCT_CI_IMAGE: ghcr.io/circt/images/circt-ci-build:20260107030736
+
+jobs:
+  benchmark:
+    name: Pass benchmark CIRCT PR #${{ inputs.pr_number }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/circt/images/circt-ci-build:20260107030736
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout tracker repository
+        uses: actions/checkout@v4
+        with:
+          path: tracker
+          submodules: recursive
+
+      - name: Install gh and jq
+        run: |
+          apt-get install -y jq
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+            | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update
+          apt-get install -y gh
+
+      - name: Download pre-built CIRCT (base binaries + LLVM/MLIR install)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=$(gh run list \
+            --repo llvm/circt \
+            --workflow uploadReleaseArtifacts.yml \
+            --branch main \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          echo "Downloading circt-full-shared-linux-x64.tar.gz from run $RUN_ID"
+          gh run download "$RUN_ID" \
+            --repo llvm/circt \
+            --name "circt-full-shared-linux-x64.tar.gz" \
+            --dir .
+          mkdir -p circt-prebuilt
+          tar xzf circt-full-shared-linux-x64.tar.gz -C circt-prebuilt/
+          MLIR_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "MLIRConfig.cmake" -type f -exec dirname {} \; | head -1)
+          LLVM_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "LLVMConfig.cmake" -type f -exec dirname {} \; | head -1)
+          PREBUILT_BIN_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "circt-synth" -type f -exec dirname {} \; | head -1)
+          PREBUILT_LIB_DIR=$(dirname "$(dirname "$LLVM_CMAKE_DIR")")
+          echo "MLIR_DIR=$MLIR_CMAKE_DIR" >> $GITHUB_ENV
+          echo "LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
+          echo "$PREBUILT_BIN_DIR" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=$PREBUILT_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
+      - name: Get PR info from llvm/circt
+        id: pr-info
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${{ inputs.pr_number }}"
+          BASE_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json baseRefOid --jq '.baseRefOid')
+          HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json headRefOid --jq '.headRefOid')
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json title --jq '.title')
+          echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+
+      - name: Setup sccache (for CIRCT compilation)
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: sccache-circt-${{ runner.os }}-20260107030736
+          restore-keys: sccache-circt-${{ runner.os }}-
+          max-size: 1G
+          variant: sccache
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install Python dependencies and build aig-judge
+        working-directory: tracker
+        run: |
+          uv sync
+          uv run prepare
+
+      - name: Build CIRCT at PR base (before)
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          ref: ${{ steps.pr-info.outputs.base_sha }}
+          checkout_path: circt-base
+          build_path: circt-base/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
+
+      - name: Run pass benchmarks (before)
+        run: |
+          export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
+          BEFORE_VERSION=$(circt-synth --version | tail -1 | xargs)
+          echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
+          cd tracker
+          source .venv/bin/activate
+          LUT_SIZES="${{ inputs.lut_sizes || '6,8' }}"
+          CUT_SIZES="${{ inputs.cut_sizes || '8,25' }}"
+          IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
+          IFS=',' read -ra CUT_ARR <<< "$CUT_SIZES"
+          for TOOL in circt abc; do
+            for L in "${LUT_ARR[@]}"; do
+              for C in "${CUT_ARR[@]}"; do
+                lit -v benchmarks/pass/ \
+                  -j "$(nproc)" \
+                  -DTEST_OUTPUT_DIR=build_pass_before \
+                  -DLUT_SIZE=$L \
+                  -DCUT_SIZE=$C \
+                  -DTOOL=$TOOL
+              done
+            done
+          done
+          aggregate-results --tool circt-lut-mapping-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-circt-lut-summary.json
+          aggregate-results --tool abc-lut-mapping-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-abc-lut-summary.json
+          aggregate-results --tool circt-sop-balancing-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-circt-sop-summary.json
+          aggregate-results --tool abc-sop-balancing-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-abc-sop-summary.json
+          pass-benchmark-report \
+            --circt-lut before-circt-lut-summary.json \
+            --abc-lut before-abc-lut-summary.json \
+            --circt-sop before-circt-sop-summary.json \
+            --abc-sop before-abc-sop-summary.json \
+            --sweep-lut-sizes "$LUT_SIZES" \
+            --sweep-cut-sizes "$CUT_SIZES" \
+            --markdown-out pr-pass-before.md \
+            --html-out pr-pass-before.html
+
+      - name: Build CIRCT at PR head (after)
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          ref: ${{ steps.pr-info.outputs.head_sha }}
+          checkout_path: circt-pr
+          build_path: circt-pr/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
+
+      - name: Run pass benchmarks (after)
+        run: |
+          export PATH="$GITHUB_WORKSPACE/circt-pr/build/bin:$PATH"
+          AFTER_VERSION=$(circt-synth --version | tail -1 | xargs)
+          echo "CIRCT_VERSION_AFTER=$AFTER_VERSION" >> $GITHUB_ENV
+          cd tracker
+          source .venv/bin/activate
+          LUT_SIZES="${{ inputs.lut_sizes || '6,8' }}"
+          CUT_SIZES="${{ inputs.cut_sizes || '8,25' }}"
+          IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
+          IFS=',' read -ra CUT_ARR <<< "$CUT_SIZES"
+          for TOOL in circt abc; do
+            for L in "${LUT_ARR[@]}"; do
+              for C in "${CUT_ARR[@]}"; do
+                lit -v benchmarks/pass/ \
+                  -j "$(nproc)" \
+                  -DTEST_OUTPUT_DIR=build_pass_after \
+                  -DLUT_SIZE=$L \
+                  -DCUT_SIZE=$C \
+                  -DTOOL=$TOOL
+              done
+            done
+          done
+          aggregate-results --tool circt-lut-mapping-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-circt-lut-summary.json
+          aggregate-results --tool abc-lut-mapping-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-abc-lut-summary.json
+          aggregate-results --tool circt-sop-balancing-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-circt-sop-summary.json
+          aggregate-results --tool abc-sop-balancing-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-abc-sop-summary.json
+          pass-benchmark-report \
+            --circt-lut after-circt-lut-summary.json \
+            --abc-lut after-abc-lut-summary.json \
+            --circt-sop after-circt-sop-summary.json \
+            --abc-sop after-abc-sop-summary.json \
+            --sweep-lut-sizes "$LUT_SIZES" \
+            --sweep-cut-sizes "$CUT_SIZES" \
+            --markdown-out pr-pass-after.md \
+            --html-out pr-pass-after.html
+
+      - name: Build pass before vs after delta table
+        run: |
+          python3 - <<'PY'
+          import json
+          import math
+          from pathlib import Path
+
+          root = Path("tracker")
+
+          def geomean_ratio(circt_file: str, abc_file: str):
+              circt = json.loads((root / circt_file).read_text())
+              abc = json.loads((root / abc_file).read_text())
+              c_b = circt.get("benchmarks", {})
+              a_b = abc.get("benchmarks", {})
+              logs = []
+              for name, c in c_b.items():
+                  a = a_b.get(name)
+                  if not a:
+                      continue
+                  ct = c.get("compile_time_s")
+                  at = a.get("compile_time_s")
+                  if ct and at and ct > 0 and at > 0:
+                      logs.append(math.log(ct / at))
+              if not logs:
+                  return None, 0
+              return math.exp(sum(logs) / len(logs)), len(logs)
+
+          rows = [
+              ("LUT Mapping", "before-circt-lut-summary.json", "before-abc-lut-summary.json", "after-circt-lut-summary.json", "after-abc-lut-summary.json"),
+              ("SOP Balancing", "before-circt-sop-summary.json", "before-abc-sop-summary.json", "after-circt-sop-summary.json", "after-abc-sop-summary.json"),
+          ]
+
+          lines = []
+          lines.append("### Pass Delta (After vs Before)")
+          lines.append("")
+          lines.append("| Mode | Geomean CIRCT/ABC (Before) | Geomean CIRCT/ABC (After) | Delta (After/Before) | Matched Benchmarks |")
+          lines.append("|---|---:|---:|---:|---:|")
+
+          for label, bc, ba, ac, aa in rows:
+              before, n_before = geomean_ratio(bc, ba)
+              after, n_after = geomean_ratio(ac, aa)
+              n = min(n_before, n_after)
+              if before is None or after is None:
+                  lines.append(f"| {label} | n/a | n/a | n/a | {n} |")
+                  continue
+              delta = after / before if before > 0 else float("nan")
+              lines.append(f"| {label} | {before:.4f} | {after:.4f} | {delta:.4f} | {n} |")
+
+          lines.append("")
+          lines.append("Interpretation: lower is better for `CIRCT/ABC`; delta < 1.0 means the PR improved CIRCT relative to ABC.")
+          (root / "pr-pass-delta.md").write_text("\n".join(lines) + "\n")
+          PY
+
+      - name: Post results to GitHub Actions summary
+        if: always()
+        run: |
+          {
+            echo "## CIRCT PR #${{ inputs.pr_number }} Pass Benchmark"
+            echo ""
+            echo "**[${{ steps.pr-info.outputs.pr_title }}](https://github.com/llvm/circt/pull/${{ inputs.pr_number }})**"
+            echo ""
+            echo "| | Before | After |"
+            echo "|---|---|---|"
+            printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
+              "${{ steps.pr-info.outputs.base_sha }}" \
+              "${{ steps.pr-info.outputs.head_sha }}"
+            echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
+            echo ""
+            echo "### Before (base)"
+            [ -f tracker/pr-pass-before.md ] && cat tracker/pr-pass-before.md
+            echo ""
+            echo "### After (head)"
+            [ -f tracker/pr-pass-after.md ] && cat tracker/pr-pass-after.md
+            echo ""
+            [ -f tracker/pr-pass-delta.md ] && cat tracker/pr-pass-delta.md
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload pass benchmark artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-${{ inputs.pr_number }}-pass-benchmark
+          retention-days: 90
+          path: |
+            tracker/build_pass_before/
+            tracker/build_pass_after/
+            tracker/*-summary.json
+            tracker/pr-pass-before.md
+            tracker/pr-pass-before.html
+            tracker/pr-pass-after.md
+            tracker/pr-pass-after.html
+            tracker/pr-pass-delta.md

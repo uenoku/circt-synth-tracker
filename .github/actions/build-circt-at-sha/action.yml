@@ -1,0 +1,50 @@
+name: Build CIRCT At SHA
+description: Checkout llvm/circt at a specific ref and build circt-synth with shared CI settings
+
+inputs:
+  ref:
+    description: 'Git ref (SHA/branch/tag) to checkout from llvm/circt'
+    required: true
+  checkout_path:
+    description: 'Path to checkout CIRCT into'
+    required: true
+  build_path:
+    description: 'Build directory path (for cmake -B and ninja -C)'
+    required: true
+  mlir_dir:
+    description: 'MLIR CMake config directory'
+    required: true
+  llvm_dir:
+    description: 'LLVM CMake config directory'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout CIRCT
+      uses: actions/checkout@v4
+      with:
+        repository: llvm/circt
+        ref: ${{ inputs.ref }}
+        submodules: false
+        path: ${{ inputs.checkout_path }}
+
+    - name: Configure and build circt-synth
+      shell: bash
+      run: |
+        cmake -GNinja "${{ inputs.checkout_path }}" \
+          -B "${{ inputs.build_path }}" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DLLVM_ENABLE_ASSERTIONS=ON \
+          -DMLIR_DIR="${{ inputs.mlir_dir }}" \
+          -DLLVM_DIR="${{ inputs.llvm_dir }}" \
+          -DLLVM_USE_LINKER=lld \
+          -DCMAKE_C_COMPILER=clang \
+          -DCMAKE_CXX_COMPILER=clang++ \
+          -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
+          -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
+          -DBUILD_SHARED_LIBS=ON \
+          -DLLVM_LINK_LLVM_DYLIB=OFF \
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        ninja -C "${{ inputs.build_path }}" -j"$(nproc)" circt-synth
