@@ -219,9 +219,10 @@ def compare_all(
         return
 
     def _is_pass_like(benchmark_data):
-        return isinstance(benchmark_data, dict) and benchmark_data.get(
-            "benchmark_track"
-        ) == "pass"
+        return (
+            isinstance(benchmark_data, dict)
+            and benchmark_data.get("benchmark_track") == "pass"
+        )
 
     # Exclude pass-benchmark-style entries from compare-results outputs.
     filtered = set()
