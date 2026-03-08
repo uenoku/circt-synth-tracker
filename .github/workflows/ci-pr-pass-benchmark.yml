@@ -147,8 +147,8 @@ jobs:
               done
             done
           done
-          aggregate-results --tool 'circt-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before -o circt-base.json
-          aggregate-results --tool 'abc-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before -o abc-base.json
+          aggregate-results --tool 'circt-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before/circt -o circt-base.json
+          aggregate-results --tool 'abc-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before/abc -o abc-base.json
 
       - name: Build CIRCT at PR head (after)
         uses: ./.github/actions/build-circt-at-sha
@@ -183,8 +183,8 @@ jobs:
               done
             done
           done
-          aggregate-results --tool 'circt-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after -o circt-pr.json
-          aggregate-results --tool 'abc-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after -o abc-pr.json
+          aggregate-results --tool 'circt-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after/circt -o circt-pr.json
+          aggregate-results --tool 'abc-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after/abc -o abc-pr.json
 
       - name: Build unified pass PR comparison report
         run: |
