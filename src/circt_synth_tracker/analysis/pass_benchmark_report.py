@@ -31,13 +31,11 @@ def ratios(a: dict, b: dict) -> list[tuple[str, float, float, float]]:
     return out
 
 
-def geomean(values: list[float]) -> float | None:
+def geomean(values: list[float], min_time_s: float = 1e-3) -> float | None:
     if not values:
         return None
-    # ABC/CIRCT timing can be exactly 0.0 for tiny cases; define geomean as 0
-    # in that case to avoid log(0) domain errors.
-    if any(v == 0 for v in values):
-        return 0.0
+    # Ignore very small timings to reduce noise in geomean reporting.
+    values = [v for v in values if v >= min_time_s]
     # Ignore negative/invalid timings defensively.
     values = [v for v in values if v > 0]
     if not values:
@@ -61,13 +59,13 @@ def parse_int_list(value: str) -> list[int]:
 
 
 def sweep_rows_for_lut_sizes(
-    circt: dict, abc: dict, lut_sizes: list[int], cut_sizes: list[int] | None
+    circt: dict, abc: dict, lut_sizes: list[int], cut_sizes: list[int] | None, min_time_s: float
 ) -> dict[int, list[tuple[int, int, float | None, float | None, float | None]]]:
-    return {lut: sweep_rows(circt, abc, lut, cut_sizes) for lut in lut_sizes}
+    return {lut: sweep_rows(circt, abc, lut, cut_sizes, min_time_s) for lut in lut_sizes}
 
 
 def sweep_rows(
-    circt: dict, abc: dict, lut_size: int, cut_sizes: list[int] | None
+    circt: dict, abc: dict, lut_size: int, cut_sizes: list[int] | None, min_time_s: float
 ) -> list[tuple[int, int, float | None, float | None, float | None]]:
     if cut_sizes is None:
         cut_sizes = sorted(
@@ -97,8 +95,8 @@ def sweep_rows(
             cvals.append(float(ct))
             avals.append(float(at))
 
-        cgeo = geomean(cvals)
-        ageo = geomean(avals)
+        cgeo = geomean(cvals, min_time_s=min_time_s)
+        ageo = geomean(avals, min_time_s=min_time_s)
         ratio = None
         if cgeo is not None and ageo is not None:
             ratio = (1.0 if cgeo == 0 else 1.0e9) if ageo == 0 else cgeo / ageo
@@ -119,18 +117,18 @@ def write_markdown(
     with out.open("w") as f:
         f.write("## Pass Benchmark (Report-only)\n\n")
         f.write(f"- CIRCT version: `{version}`\n")
-        f.write(f"- LUT mode geomean (CIRCT/ABC): `{fmt_or_na(lut_geo, 3)}`\n")
-        f.write(f"- SOP mode geomean (CIRCT/ABC): `{fmt_or_na(sop_geo, 3)}`\n")
+        f.write(f"- LUT mode geomean ratio (CIRCT/ABC): `{fmt_or_na(lut_geo, 3)}`\n")
+        f.write(f"- SOP mode geomean ratio (CIRCT/ABC): `{fmt_or_na(sop_geo, 3)}`\n")
         f.write("\n")
 
         f.write("### LUT Mapping\n\n")
-        f.write("| Benchmark | CIRCT pass time (s) | ABC `time` (s) | CIRCT/ABC |\n")
+        f.write("| Benchmark | CIRCT pass time (s) | ABC time (s) | CIRCT/ABC |\n")
         f.write("|---|---:|---:|---:|\n")
         for n, tc, ta, r in lut_rows:
             f.write(f"| {n} | {tc:.4f} | {ta:.4f} | {r:.3f} |\n")
 
         f.write("\n### SOP Balancing\n\n")
-        f.write("| Benchmark | CIRCT pass time (s) | ABC `time` (s) | CIRCT/ABC |\n")
+        f.write("| Benchmark | CIRCT pass time (s) | ABC time (s) | CIRCT/ABC |\n")
         f.write("|---|---:|---:|---:|\n")
         for n, tc, ta, r in sop_rows:
             f.write(f"| {n} | {tc:.4f} | {ta:.4f} | {r:.3f} |\n")
@@ -139,14 +137,14 @@ def write_markdown(
             sop_sweep = sop_sweeps.get(lut_size, [])
             f.write(f"\n### Sweep Summary (lut_size={lut_size})\n\n")
             f.write("#### LUT Mapping\n\n")
-            f.write("| cut_size | compared | CIRCT geo (s) | ABC geo (s) | CIRCT/ABC |\n")
+            f.write("| cut_size | compared | CIRCT geomean (s) | ABC geomean (s) | CIRCT/ABC |\n")
             f.write("|---:|---:|---:|---:|---:|\n")
             for cut, n, cgeo, ageo, ratio in lut_sweep:
                 f.write(
                     f"| {cut} | {n} | {fmt_or_na(cgeo, 6)} | {fmt_or_na(ageo, 6)} | {fmt_or_na(ratio, 4)} |\n"
                 )
             f.write("\n#### SOP Balancing\n\n")
-            f.write("| cut_size | compared | CIRCT geo (s) | ABC geo (s) | CIRCT/ABC |\n")
+            f.write("| cut_size | compared | CIRCT geomean (s) | ABC geomean (s) | CIRCT/ABC |\n")
             f.write("|---:|---:|---:|---:|---:|\n")
             for cut, n, cgeo, ageo, ratio in sop_sweep:
                 f.write(
@@ -183,14 +181,14 @@ def write_html(
   <h2>Sweep Summary (lut_size={lut_size})</h2>
   <h3>LUT Mapping</h3>
   <table>
-    <thead><tr><th>cut_size</th><th>compared</th><th>CIRCT geo (s)</th><th>ABC geo (s)</th><th>CIRCT/ABC</th></tr></thead>
+    <thead><tr><th>cut_size</th><th>compared</th><th>CIRCT geomean (s)</th><th>ABC geomean (s)</th><th>CIRCT/ABC</th></tr></thead>
     <tbody>
       {write_sweep(lut_rows_sweep)}
     </tbody>
   </table>
   <h3>SOP Balancing</h3>
   <table>
-    <thead><tr><th>cut_size</th><th>compared</th><th>CIRCT geo (s)</th><th>ABC geo (s)</th><th>CIRCT/ABC</th></tr></thead>
+    <thead><tr><th>cut_size</th><th>compared</th><th>CIRCT geomean (s)</th><th>ABC geomean (s)</th><th>CIRCT/ABC</th></tr></thead>
     <tbody>
       {write_sweep(sop_rows_sweep)}
     </tbody>
@@ -221,8 +219,8 @@ def write_html(
   <h1>Pass Benchmark Report</h1>
   <p class=\"meta\">CIRCT version: <code>{escape(version)}</code></p>
   <div class=\"cards\">
-    <div class=\"card\"><div class=\"small\">LUT geomean (CIRCT/ABC)</div><div><strong>{fmt_or_na(lut_geo, 4)}</strong></div></div>
-    <div class=\"card\"><div class=\"small\">SOP geomean (CIRCT/ABC)</div><div><strong>{fmt_or_na(sop_geo, 4)}</strong></div></div>
+    <div class=\"card\"><div class=\"small\">LUT geomean ratio (CIRCT/ABC)</div><div><strong>{fmt_or_na(lut_geo, 4)}</strong></div></div>
+    <div class=\"card\"><div class=\"small\">SOP geomean ratio (CIRCT/ABC)</div><div><strong>{fmt_or_na(sop_geo, 4)}</strong></div></div>
     <div class=\"card\"><div class=\"small\">LUT compared benchmarks</div><div><strong>{len(lut_rows)}</strong></div></div>
     <div class=\"card\"><div class=\"small\">SOP compared benchmarks</div><div><strong>{len(sop_rows)}</strong></div></div>
   </div>
@@ -250,15 +248,31 @@ def write_html(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate pass benchmark markdown/html")
-    parser.add_argument("--circt-lut", type=Path, required=True)
-    parser.add_argument("--abc-lut", type=Path, required=True)
-    parser.add_argument("--circt-sop", type=Path, required=True)
-    parser.add_argument("--abc-sop", type=Path, required=True)
-    parser.add_argument("--sweep-lut-sizes", default="")
-    parser.add_argument("--sweep-cut-sizes", default="")
+    parser = argparse.ArgumentParser(
+        description="Generate pass benchmark markdown/html with geomean (CIRCT/ABC)"
+    )
+    parser.add_argument("--circt-lut", type=Path, required=True, help="CIRCT LUT summary JSON")
+    parser.add_argument("--abc-lut", type=Path, required=True, help="ABC LUT summary JSON")
+    parser.add_argument("--circt-sop", type=Path, required=True, help="CIRCT SOP summary JSON")
+    parser.add_argument("--abc-sop", type=Path, required=True, help="ABC SOP summary JSON")
+    parser.add_argument(
+        "--sweep-lut-sizes",
+        default="",
+        help="Comma-separated LUT sizes for sweep tables (for example: 4,6)",
+    )
+    parser.add_argument(
+        "--sweep-cut-sizes",
+        default="",
+        help="Comma-separated cut sizes for sweep tables (for example: 8,12)",
+    )
     parser.add_argument("--markdown-out", type=Path, default=Path("pass-benchmark-report.md"))
     parser.add_argument("--html-out", type=Path, default=Path("pass-benchmark-report.html"))
+    parser.add_argument(
+        "--geomean-min-time",
+        type=float,
+        default=1e-3,
+        help="Ignore per-benchmark times below this threshold (seconds) in geomean calculations",
+    )
     args = parser.parse_args()
 
     circt_lut = load_json(args.circt_lut)
@@ -268,17 +282,21 @@ def main() -> int:
 
     lut_rows = ratios(circt_lut, abc_lut)
     sop_rows = ratios(circt_sop, abc_sop)
-    lut_geo = geomean([r[3] for r in lut_rows])
-    sop_geo = geomean([r[3] for r in sop_rows])
+    lut_geo = geomean([r[3] for r in lut_rows], min_time_s=args.geomean_min_time)
+    sop_geo = geomean([r[3] for r in sop_rows], min_time_s=args.geomean_min_time)
     sweep_cut_sizes = parse_int_list(args.sweep_cut_sizes) if args.sweep_cut_sizes else None
     lut_sizes = parse_int_list(args.sweep_lut_sizes) if args.sweep_lut_sizes else []
     lut_sweeps = (
-        sweep_rows_for_lut_sizes(circt_lut, abc_lut, lut_sizes, sweep_cut_sizes)
+        sweep_rows_for_lut_sizes(
+            circt_lut, abc_lut, lut_sizes, sweep_cut_sizes, args.geomean_min_time
+        )
         if lut_sizes
         else {}
     )
     sop_sweeps = (
-        sweep_rows_for_lut_sizes(circt_sop, abc_sop, lut_sizes, sweep_cut_sizes)
+        sweep_rows_for_lut_sizes(
+            circt_sop, abc_sop, lut_sizes, sweep_cut_sizes, args.geomean_min_time
+        )
         if lut_sizes
         else {}
     )
