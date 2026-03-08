@@ -69,11 +69,12 @@ jobs:
           IFS=',' read -ra LUT_ARR <<< "$LUT_SIZES"
           IFS=',' read -ra CUT_ARR <<< "$CUT_SIZES"
           for TOOL in circt abc; do
+            TOOL_OUT_DIR="build_pass/$TOOL"
             for L in "${LUT_ARR[@]}"; do
               for C in "${CUT_ARR[@]}"; do
                 lit -v benchmarks/pass/ \
                   -j "$(nproc)" \
-                  -DTEST_OUTPUT_DIR=build_pass \
+                  -DTEST_OUTPUT_DIR="$TOOL_OUT_DIR" \
                   -DLUT_SIZE=$L \
                   -DCUT_SIZE=$C \
                   -DTOOL=$TOOL
