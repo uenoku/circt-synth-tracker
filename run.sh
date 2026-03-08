@@ -44,34 +44,8 @@ for L in "${LUT_ARR[@]}"; do
 done
 
 VERSION="$(circt-synth --version | tail -1 | xargs || echo local)"
-aggregate-results --tool circt-lut-mapping-pass --version "${VERSION}" --results-dir "${OUT_DIR}" -o circt-lut-summary.json
-aggregate-results --tool abc-lut-mapping-pass --version "${VERSION}" --results-dir "${OUT_DIR}" -o abc-lut-summary.json
-aggregate-results --tool circt-sop-balancing-pass --version "${VERSION}" --results-dir "${OUT_DIR}" -o circt-sop-summary.json
-aggregate-results --tool abc-sop-balancing-pass --version "${VERSION}" --results-dir "${OUT_DIR}" -o abc-sop-summary.json
-
-VERSION="${VERSION}" python3 - <<'PY'
-import json
-import os
-from pathlib import Path
-
-
-def merge(out, tool, version, a, b):
-    ja = json.loads(Path(a).read_text())
-    jb = json.loads(Path(b).read_text())
-    merged = {
-        "tool": tool,
-        "version": version,
-        "timestamp": ja.get("timestamp", ""),
-        "total_benchmarks": len(ja.get("benchmarks", {})) + len(jb.get("benchmarks", {})),
-        "benchmarks": {**ja.get("benchmarks", {}), **jb.get("benchmarks", {})},
-    }
-    Path(out).write_text(json.dumps(merged, indent=2))
-
-
-version = os.environ.get("VERSION", "local")
-merge("circt-summary.json", "circt-pass", version, "circt-lut-summary.json", "circt-sop-summary.json")
-merge("abc-summary.json", "abc-pass", version, "abc-lut-summary.json", "abc-sop-summary.json")
-PY
+aggregate-results --tool 'circt-*-pass' --version "${VERSION}" --results-dir "${OUT_DIR}" -o circt-summary.json
+aggregate-results --tool 'abc-*-pass' --version "${VERSION}" --results-dir "${OUT_DIR}" -o abc-summary.json
 
 pass-pr-compare-report single \
   --a circt-summary.json \

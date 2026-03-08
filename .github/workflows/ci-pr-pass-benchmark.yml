@@ -146,10 +146,8 @@ jobs:
               done
             done
           done
-          aggregate-results --tool circt-lut-mapping-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-circt-lut-summary.json
-          aggregate-results --tool abc-lut-mapping-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-abc-lut-summary.json
-          aggregate-results --tool circt-sop-balancing-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-circt-sop-summary.json
-          aggregate-results --tool abc-sop-balancing-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-abc-sop-summary.json
+          aggregate-results --tool 'circt-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before -o circt-base.json
+          aggregate-results --tool 'abc-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before -o abc-base.json
 
       - name: Build CIRCT at PR head (after)
         uses: ./.github/actions/build-circt-at-sha
@@ -183,58 +181,8 @@ jobs:
               done
             done
           done
-          aggregate-results --tool circt-lut-mapping-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-circt-lut-summary.json
-          aggregate-results --tool abc-lut-mapping-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-abc-lut-summary.json
-          aggregate-results --tool circt-sop-balancing-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-circt-sop-summary.json
-          aggregate-results --tool abc-sop-balancing-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-abc-sop-summary.json
-
-      - name: Merge per-mode summaries
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          def merge(out, tool, version, a, b):
-              ja = json.loads(Path(a).read_text())
-              jb = json.loads(Path(b).read_text())
-              merged = {
-                  "tool": tool,
-                  "version": version,
-                  "timestamp": ja.get("timestamp", ""),
-                  "total_benchmarks": len(ja.get("benchmarks", {})) + len(jb.get("benchmarks", {})),
-                  "benchmarks": {**ja.get("benchmarks", {}), **jb.get("benchmarks", {})},
-              }
-              Path(out).write_text(json.dumps(merged, indent=2))
-
-          merge(
-              "tracker/circt-base.json",
-              "circt-pass-base",
-              "${{ env.CIRCT_VERSION_BEFORE }}",
-              "tracker/before-circt-lut-summary.json",
-              "tracker/before-circt-sop-summary.json",
-          )
-          merge(
-              "tracker/circt-pr.json",
-              "circt-pass-pr",
-              "${{ env.CIRCT_VERSION_AFTER }}",
-              "tracker/after-circt-lut-summary.json",
-              "tracker/after-circt-sop-summary.json",
-          )
-          merge(
-              "tracker/abc-base.json",
-              "abc-pass-base",
-              "${{ env.CIRCT_VERSION_BEFORE }}",
-              "tracker/before-abc-lut-summary.json",
-              "tracker/before-abc-sop-summary.json",
-          )
-          merge(
-              "tracker/abc-pr.json",
-              "abc-pass-pr",
-              "${{ env.CIRCT_VERSION_AFTER }}",
-              "tracker/after-abc-lut-summary.json",
-              "tracker/after-abc-sop-summary.json",
-          )
-          PY
+          aggregate-results --tool 'circt-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after -o circt-pr.json
+          aggregate-results --tool 'abc-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after -o abc-pr.json
 
       - name: Build unified pass PR comparison report
         run: |

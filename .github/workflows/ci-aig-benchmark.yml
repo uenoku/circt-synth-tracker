@@ -80,32 +80,8 @@ jobs:
       - name: Aggregate pass benchmark results
         run: |
           source .venv/bin/activate
-          aggregate-results --tool circt-lut-mapping-pass --version "$CIRCT_VERSION" --results-dir build_pass -o circt-lut-summary.json
-          aggregate-results --tool abc-lut-mapping-pass --version "$CIRCT_VERSION" --results-dir build_pass -o abc-lut-summary.json
-          aggregate-results --tool circt-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o circt-sop-summary.json
-          aggregate-results --tool abc-sop-balancing-pass --version "$CIRCT_VERSION" --results-dir build_pass -o abc-sop-summary.json
-
-      - name: Merge per-mode summaries
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          def merge(out, tool, version, a, b):
-              ja = json.loads(Path(a).read_text())
-              jb = json.loads(Path(b).read_text())
-              merged = {
-                  "tool": tool,
-                  "version": version,
-                  "timestamp": ja.get("timestamp", ""),
-                  "total_benchmarks": len(ja.get("benchmarks", {})) + len(jb.get("benchmarks", {})),
-                  "benchmarks": {**ja.get("benchmarks", {}), **jb.get("benchmarks", {})},
-              }
-              Path(out).write_text(json.dumps(merged, indent=2))
-
-          merge("circt-summary.json", "circt-pass", "${{ env.CIRCT_VERSION }}", "circt-lut-summary.json", "circt-sop-summary.json")
-          merge("abc-summary.json", "abc-pass", "${{ env.CIRCT_VERSION }}", "abc-lut-summary.json", "abc-sop-summary.json")
-          PY
+          aggregate-results --tool 'circt-*-pass' --version "$CIRCT_VERSION" --results-dir build_pass -o circt-summary.json
+          aggregate-results --tool 'abc-*-pass' --version "$CIRCT_VERSION" --results-dir build_pass -o abc-summary.json
 
       - name: Build pass benchmark reports
         run: |
