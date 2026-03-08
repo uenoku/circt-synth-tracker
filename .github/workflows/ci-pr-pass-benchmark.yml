@@ -150,15 +150,6 @@ jobs:
           aggregate-results --tool abc-lut-mapping-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-abc-lut-summary.json
           aggregate-results --tool circt-sop-balancing-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-circt-sop-summary.json
           aggregate-results --tool abc-sop-balancing-pass --version "$BEFORE_VERSION" --results-dir build_pass_before -o before-abc-sop-summary.json
-          pass-benchmark-report \
-            --circt-lut before-circt-lut-summary.json \
-            --abc-lut before-abc-lut-summary.json \
-            --circt-sop before-circt-sop-summary.json \
-            --abc-sop before-abc-sop-summary.json \
-            --sweep-lut-sizes "$LUT_SIZES" \
-            --sweep-cut-sizes "$CUT_SIZES" \
-            --markdown-out pr-pass-before.md \
-            --html-out pr-pass-before.html
 
       - name: Build CIRCT at PR head (after)
         uses: ./.github/actions/build-circt-at-sha
@@ -196,68 +187,27 @@ jobs:
           aggregate-results --tool abc-lut-mapping-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-abc-lut-summary.json
           aggregate-results --tool circt-sop-balancing-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-circt-sop-summary.json
           aggregate-results --tool abc-sop-balancing-pass --version "$AFTER_VERSION" --results-dir build_pass_after -o after-abc-sop-summary.json
-          pass-benchmark-report \
-            --circt-lut after-circt-lut-summary.json \
-            --abc-lut after-abc-lut-summary.json \
-            --circt-sop after-circt-sop-summary.json \
-            --abc-sop after-abc-sop-summary.json \
-            --sweep-lut-sizes "$LUT_SIZES" \
-            --sweep-cut-sizes "$CUT_SIZES" \
-            --markdown-out pr-pass-after.md \
-            --html-out pr-pass-after.html
-
-      - name: Build pass before vs after delta table
+      - name: Build unified pass PR comparison report
         run: |
-          python3 - <<'PY'
-          import json
-          import math
-          from pathlib import Path
-
-          root = Path("tracker")
-
-          def geomean_ratio(circt_file: str, abc_file: str):
-              circt = json.loads((root / circt_file).read_text())
-              abc = json.loads((root / abc_file).read_text())
-              c_b = circt.get("benchmarks", {})
-              a_b = abc.get("benchmarks", {})
-              logs = []
-              for name, c in c_b.items():
-                  a = a_b.get(name)
-                  if not a:
-                      continue
-                  ct = c.get("compile_time_s")
-                  at = a.get("compile_time_s")
-                  if ct and at and ct > 0 and at > 0:
-                      logs.append(math.log(ct / at))
-              if not logs:
-                  return None, 0
-              return math.exp(sum(logs) / len(logs)), len(logs)
-
-          rows = [
-              ("LUT Mapping", "before-circt-lut-summary.json", "before-abc-lut-summary.json", "after-circt-lut-summary.json", "after-abc-lut-summary.json"),
-              ("SOP Balancing", "before-circt-sop-summary.json", "before-abc-sop-summary.json", "after-circt-sop-summary.json", "after-abc-sop-summary.json"),
-          ]
-
-          lines = []
-          lines.append("### Pass Delta (After vs Before)")
-          lines.append("")
-          lines.append("| Mode | Geomean CIRCT/ABC (Before) | Geomean CIRCT/ABC (After) | Delta (After/Before) | Matched Benchmarks |")
-          lines.append("|---|---:|---:|---:|---:|")
-
-          for label, bc, ba, ac, aa in rows:
-              before, n_before = geomean_ratio(bc, ba)
-              after, n_after = geomean_ratio(ac, aa)
-              n = min(n_before, n_after)
-              if before is None or after is None:
-                  lines.append(f"| {label} | n/a | n/a | n/a | {n} |")
-                  continue
-              delta = after / before if before > 0 else float("nan")
-              lines.append(f"| {label} | {before:.4f} | {after:.4f} | {delta:.4f} | {n} |")
-
-          lines.append("")
-          lines.append("Interpretation: lower is better for `CIRCT/ABC`; delta < 1.0 means the PR improved CIRCT relative to ABC.")
-          (root / "pr-pass-delta.md").write_text("\n".join(lines) + "\n")
-          PY
+          cd tracker
+          source .venv/bin/activate
+          pass-pr-compare-report \
+            --before-circt-lut before-circt-lut-summary.json \
+            --before-circt-sop before-circt-sop-summary.json \
+            --after-circt-lut after-circt-lut-summary.json \
+            --after-circt-sop after-circt-sop-summary.json \
+            --before-abc-lut before-abc-lut-summary.json \
+            --before-abc-sop before-abc-sop-summary.json \
+            --after-abc-lut after-abc-lut-summary.json \
+            --after-abc-sop after-abc-sop-summary.json \
+            --before-version "${CIRCT_VERSION_BEFORE}" \
+            --after-version "${CIRCT_VERSION_AFTER}" \
+            --pr-number "${{ inputs.pr_number }}" \
+            --pr-title "${{ steps.pr-info.outputs.pr_title }}" \
+            --base-sha "${{ steps.pr-info.outputs.base_sha }}" \
+            --head-sha "${{ steps.pr-info.outputs.head_sha }}" \
+            --markdown-out pr-pass-compare.md \
+            --html-out pr-pass-compare.html
 
       - name: Post results to GitHub Actions summary
         if: always()
@@ -274,13 +224,7 @@ jobs:
               "${{ steps.pr-info.outputs.head_sha }}"
             echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
             echo ""
-            echo "### Before (base)"
-            [ -f tracker/pr-pass-before.md ] && cat tracker/pr-pass-before.md
-            echo ""
-            echo "### After (head)"
-            [ -f tracker/pr-pass-after.md ] && cat tracker/pr-pass-after.md
-            echo ""
-            [ -f tracker/pr-pass-delta.md ] && cat tracker/pr-pass-delta.md
+            [ -f tracker/pr-pass-compare.md ] && cat tracker/pr-pass-compare.md
           } >> $GITHUB_STEP_SUMMARY
 
       - name: Upload pass benchmark artifacts
@@ -293,8 +237,26 @@ jobs:
             tracker/build_pass_before/
             tracker/build_pass_after/
             tracker/*-summary.json
-            tracker/pr-pass-before.md
-            tracker/pr-pass-before.html
-            tracker/pr-pass-after.md
-            tracker/pr-pass-after.html
-            tracker/pr-pass-delta.md
+            tracker/pr-pass-compare.md
+            tracker/pr-pass-compare.html
+
+      - name: Prepare deployment files
+        if: always()
+        run: |
+          # Create directory structure for deployment
+          PR_DIR="deploy/pr-pass-benchmarks/pr-${{ inputs.pr_number }}"
+          mkdir -p "$PR_DIR"
+
+          # Publish unified pass comparison report
+          cp tracker/pr-pass-compare.html "$PR_DIR/report-pass.html" || true
+
+          echo "Deployment files prepared:"
+          ls -la deploy/
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          keep_files: true
