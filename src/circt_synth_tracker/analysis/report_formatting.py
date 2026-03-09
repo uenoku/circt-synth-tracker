@@ -78,4 +78,3 @@ def format_metric_cell_html(
         red_val = int(200 - (50 * intensity))
         bg_color = f"rgb(255,{red_val},{red_val})"
     return content, f" style='background-color: {bg_color};'"
-
