@@ -248,6 +248,7 @@ def run_one(
 
         if tool == "circt":
             mlir_in = tdp / "input.mlir"
+            mlir_out = tdp / "circt_out.mlirbc"
             # Convert AIGER -> MLIR once, then benchmark pass execution.
             run_command(
                 [
@@ -259,14 +260,8 @@ def run_one(
                 ]
             )
 
-            circt_pipeline = (
-                "builtin.module("
-                f"hw.module({circt_cmd}),"
-                "synth-print-resource-usage-analysis,"
-                "synth-print-longest-path-analysis{show-top-k-percent=0}"
-                ")"
-            )
-            circt_stdout, circt_stderr, circt_wall = run_command(
+            circt_pipeline = f"builtin.module(hw.module({circt_cmd}))"
+            _, circt_stderr, circt_wall = run_command(
                 [
                     circt_opt,
                     str(mlir_in),
@@ -274,8 +269,9 @@ def run_one(
                     circt_pipeline,
                     "--mlir-timing",
                     "--mlir-timing-display=list",
+                    "--emit-bytecode",
                     "-o",
-                    str(tdp / "circt_out.mlir"),
+                    str(mlir_out),
                 ]
             )
             circt_timings = parse_mlir_timing(circt_stderr)
@@ -289,13 +285,62 @@ def run_one(
                     f"available passes: [{available}]"
                 )
             if output_kind == "aig":
-                aig_count, aig_depth = parse_circt_analysis_output(
-                    circt_stdout, output_kind
-                )
+                aig_count, aig_depth = None, None
             else:
-                lut_count, lut_depth = parse_circt_analysis_output(
-                    circt_stdout, output_kind
+                lut_count, lut_depth = None, None
+
+            # Run analyses separately so one expensive analysis doesn't fail the benchmark run.
+            resource_stdout = ""
+            longest_stdout = ""
+            try:
+                resource_stdout, _, _ = run_command(
+                    [
+                        circt_opt,
+                        str(mlir_out),
+                        "--pass-pipeline",
+                        "builtin.module(synth-print-resource-usage-analysis)",
+                        "-o",
+                        "/dev/null",
+                    ]
                 )
+            except Exception as e:
+                print(
+                    f"WARN {wl.suite}/{wl.name}: resource usage analysis failed, "
+                    f"leaving structural count unknown ({e})",
+                    file=sys.stderr,
+                )
+            try:
+                longest_stdout, _, _ = run_command(
+                    [
+                        circt_opt,
+                        str(mlir_out),
+                        "--pass-pipeline",
+                        "builtin.module(synth-print-longest-path-analysis{show-top-k-percent=0})",
+                        "-o",
+                        "/dev/null",
+                    ]
+                )
+            except Exception as e:
+                print(
+                    f"WARN {wl.suite}/{wl.name}: longest path analysis failed, "
+                    f"leaving structural depth unknown ({e})",
+                    file=sys.stderr,
+                )
+
+            if output_kind == "aig":
+                parsed_count, _ = parse_circt_analysis_output(resource_stdout, output_kind)
+                _, parsed_depth = parse_circt_analysis_output(longest_stdout, output_kind)
+                if parsed_count is not None:
+                    aig_count = parsed_count
+                if parsed_depth is not None:
+                    aig_depth = parsed_depth
+            else:
+                parsed_count, _ = parse_circt_analysis_output(resource_stdout, output_kind)
+                _, parsed_depth = parse_circt_analysis_output(longest_stdout, output_kind)
+                if parsed_count is not None:
+                    lut_count = parsed_count
+                if parsed_depth is not None:
+                    lut_depth = parsed_depth
         else:
             abc_script = f"read {wl.aig_file}; {abc_cmd}; print_stats; time;"
             abc_stdout, abc_stderr, abc_wall = run_command([abc, "-c", abc_script])
