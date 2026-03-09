@@ -86,6 +86,38 @@ def parse_abc_time(output: str) -> float | None:
     return None
 
 
+def parse_abc_structural_stats(output: str) -> dict[str, int]:
+    stats: dict[str, int] = {}
+    nd_match = re.search(r"\bnd\s*=\s*(\d+)\b", output)
+    lev_match = re.search(r"\blev\s*=\s*(\d+)\b", output)
+    and_match = re.search(r"\band\s*=\s*(\d+)\b", output)
+    if nd_match:
+        stats["nd"] = int(nd_match.group(1))
+    if lev_match:
+        stats["lev"] = int(lev_match.group(1))
+    if and_match:
+        stats["and"] = int(and_match.group(1))
+    return stats
+
+
+def parse_circt_analysis_output(output: str, output_kind: str) -> tuple[int | None, int | None]:
+    max_delay = None
+    m = re.search(r"Maximum path delay:\s*(\d+)", output)
+    if m:
+        max_delay = int(m.group(1))
+
+    if output_kind == "aig":
+        m = re.search(r"\bsynth\.aig\.and_inv:\s*(\d+)", output)
+        return (int(m.group(1)) if m else None), max_delay
+
+    lut_total = 0
+    found = False
+    for m in re.finditer(r"\bcomb\.truth_table_\d+:\s*(\d+)", output):
+        lut_total += int(m.group(1))
+        found = True
+    return (lut_total if found else None), max_delay
+
+
 def resolve_tool(path_or_name: str) -> str:
     p = Path(path_or_name)
     if p.exists():
@@ -107,6 +139,7 @@ def load_command_templates(root: Path) -> dict[str, dict[str, str]]:
             "circt": entry.get("circt", ""),
             "abc": entry.get("abc", ""),
             "circt-pass-name": entry.get("circt-pass-name", ""),
+            "output": entry.get("output", ""),
         }
     return templates
 
@@ -126,17 +159,22 @@ def render_command_template(template: str, values: dict[str, int]) -> str:
 
 def command_for_mode(
     templates: dict[str, dict[str, str]], mode: str, lut_size: int, cut_size: int
-) -> tuple[str, str, str]:
+) -> tuple[str, str, str, str]:
     template = templates.get(mode)
     if not template:
         raise ValueError(f"missing mode in commands.json: {mode}")
     target_pass_name = template.get("circt-pass-name", "")
     if not target_pass_name:
         raise ValueError(f"missing 'circt-pass-name' in commands.json: {mode}")
+    output_kind = template.get("output", "")
+    if output_kind not in ("aig", "lut"):
+        raise ValueError(
+            f"missing/invalid 'output' in commands.json: {mode}; expected 'aig' or 'lut'"
+        )
     values = {"lut_k": lut_size, "cut_size": cut_size}
     circt_cmd = render_command_template(template["circt"], values)
     abc_cmd = render_command_template(template["abc"], values)
-    return circt_cmd, abc_cmd, target_pass_name
+    return circt_cmd, abc_cmd, target_pass_name, output_kind
 
 
 def discover_lsils_workloads(benchmarks_root: Path) -> list[Workload]:
@@ -192,7 +230,7 @@ def run_one(
         "cut_size": cut_size,
     }
 
-    circt_cmd, abc_cmd, target_pass_name = command_for_mode(
+    circt_cmd, abc_cmd, target_pass_name, output_kind = command_for_mode(
         command_templates, mode, lut_size, cut_size
     )
 
@@ -219,8 +257,14 @@ def run_one(
                 ]
             )
 
-            circt_pipeline = f"builtin.module(hw.module({circt_cmd}))"
-            _, circt_stderr, circt_wall = run_command(
+            circt_pipeline = (
+                "builtin.module("
+                f"hw.module({circt_cmd}),"
+                "synth-print-resource-usage-analysis,"
+                "synth-print-longest-path-analysis"
+                ")"
+            )
+            circt_stdout, circt_stderr, circt_wall = run_command(
                 [
                     circt_opt,
                     str(mlir_in),
@@ -242,11 +286,26 @@ def run_one(
                     f"failed to match target pass '{target_pass_name}' in MLIR timings. "
                     f"available passes: [{available}]"
                 )
+            if output_kind == "aig":
+                aig_count, aig_depth = parse_circt_analysis_output(
+                    circt_stdout, output_kind
+                )
+            else:
+                lut_count, lut_depth = parse_circt_analysis_output(
+                    circt_stdout, output_kind
+                )
         else:
-            abc_script = f"read {wl.aig_file}; {abc_cmd}; time;"
+            abc_script = f"read {wl.aig_file}; {abc_cmd}; print_stats; time;"
             abc_stdout, abc_stderr, abc_wall = run_command([abc, "-c", abc_script])
             print(f"ABC output:\n{abc_stdout}\n{abc_stderr}")
             abc_elapsed = parse_abc_time(abc_stdout + "\n" + abc_stderr)
+            abc_stats = parse_abc_structural_stats(abc_stdout + "\n" + abc_stderr)
+            if output_kind == "aig":
+                aig_count = abc_stats.get("and", abc_stats.get("nd"))
+                aig_depth = abc_stats.get("lev")
+            else:
+                lut_count = abc_stats.get("nd")
+                lut_depth = abc_stats.get("lev")
 
     if tool == "circt":
         circt_pipeline = f"builtin.module(hw.module({circt_cmd}))"
@@ -262,6 +321,11 @@ def run_one(
                 "matched_passes": circt_matched,
                 "mlir_pass_timings_s": circt_timings,
                 "pipeline": circt_pipeline,
+                **(
+                    {"aig_count": aig_count, "aig_depth": aig_depth}
+                    if output_kind == "aig"
+                    else {"lut_count": lut_count, "lut_depth": lut_depth}
+                ),
             },
         )
     else:
@@ -274,6 +338,11 @@ def run_one(
                 "compile_time_s": abc_elapsed if abc_elapsed is not None else abc_wall,
                 "runner_wall_time_s": abc_wall,
                 "abc_commands": abc_cmd,
+                **(
+                    {"aig_count": aig_count, "aig_depth": aig_depth}
+                    if output_kind == "aig"
+                    else {"lut_count": lut_count, "lut_depth": lut_depth}
+                ),
             },
         )
 

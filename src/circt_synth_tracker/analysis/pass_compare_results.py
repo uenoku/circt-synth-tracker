@@ -28,7 +28,9 @@ def fmt(v: float | None, digits: int = 4) -> str:
     return f"{v:.{digits}f}"
 
 
-def compare_rows(a: dict, b: dict, mode: str) -> list[tuple[str, float, float, float]]:
+def compare_rows_for_metric(
+    a: dict, b: dict, mode: str, metric: str
+) -> list[tuple[str, float, float, float]]:
     rows: list[tuple[str, float, float, float]] = []
     amap = a.get("benchmarks", {})
     bmap = b.get("benchmarks", {})
@@ -37,12 +39,16 @@ def compare_rows(a: dict, b: dict, mode: str) -> list[tuple[str, float, float, f
         bv = bmap[name]
         if av.get("mode") != mode or bv.get("mode") != mode:
             continue
-        at = av.get("compile_time_s")
-        bt = bv.get("compile_time_s")
+        at = av.get(metric)
+        bt = bv.get(metric)
         if at is None or bt is None or at <= 0 or bt <= 0:
             continue
         rows.append((name, float(at), float(bt), float(at) / float(bt)))
     return rows
+
+
+def compare_rows(a: dict, b: dict, mode: str) -> list[tuple[str, float, float, float]]:
+    return compare_rows_for_metric(a, b, mode, "compile_time_s")
 
 
 def geomean_ratio(rows: list[tuple[str, float, float, float]]) -> float | None:
@@ -62,6 +68,51 @@ def rows_html(rows: list[tuple[str, float, float, float]]) -> str:
     )
 
 
+def rows_html_with_struct(
+    a: dict, b: dict, mode: str, label_a: str, label_b: str
+) -> str:
+    amap = a.get("benchmarks", {})
+    bmap = b.get("benchmarks", {})
+    lines: list[str] = []
+    if mode == "lut-mapping":
+        count_key = "lut_count"
+        depth_key = "lut_depth"
+    else:
+        count_key = "aig_count"
+        depth_key = "aig_depth"
+    for name in sorted(set(amap).intersection(bmap)):
+        av = amap[name]
+        bv = bmap[name]
+        if av.get("mode") != mode or bv.get("mode") != mode:
+            continue
+        at = av.get("compile_time_s")
+        bt = bv.get("compile_time_s")
+        if at is None or bt is None or at <= 0 or bt <= 0:
+            continue
+        tr = float(at) / float(bt)
+        ac = av.get(count_key)
+        bc = bv.get(count_key)
+        ar = (float(ac) / float(bc)) if (ac is not None and bc not in (None, 0)) else None
+        ad = av.get(depth_key)
+        bd = bv.get(depth_key)
+        dr = (float(ad) / float(bd)) if (ad is not None and bd not in (None, 0)) else None
+        lines.append(
+            "<tr>"
+            f"<td>{escape(name)}</td>"
+            f"<td>{float(at):.6f}</td>"
+            f"<td>{float(bt):.6f}</td>"
+            f"<td>{fmt(tr)}</td>"
+            f"<td>{fmt(float(ac), 2) if ac is not None else 'n/a'}</td>"
+            f"<td>{fmt(float(bc), 2) if bc is not None else 'n/a'}</td>"
+            f"<td>{fmt(ar)}</td>"
+            f"<td>{fmt(float(ad), 2) if ad is not None else 'n/a'}</td>"
+            f"<td>{fmt(float(bd), 2) if bd is not None else 'n/a'}</td>"
+            f"<td>{fmt(dr)}</td>"
+            "</tr>"
+        )
+    return "\n".join(lines)
+
+
 def render_pair(
     *,
     title: str,
@@ -77,6 +128,10 @@ def render_pair(
     sop_rows = compare_rows(a, b, "sop-balancing")
     lut_ratio = geomean_ratio(lut_rows)
     sop_ratio = geomean_ratio(sop_rows)
+    lut_count_rows = compare_rows_for_metric(a, b, "lut-mapping", "lut_count")
+    lut_depth_rows = compare_rows_for_metric(a, b, "lut-mapping", "lut_depth")
+    aig_count_rows = compare_rows_for_metric(a, b, "sop-balancing", "aig_count")
+    aig_depth_rows = compare_rows_for_metric(a, b, "sop-balancing", "aig_depth")
 
     md = [f"## {title}", ""]
     for line in subtitle_lines or []:
@@ -89,6 +144,13 @@ def render_pair(
             "|---|---:|---:|",
             f"| LUT Mapping | {fmt(lut_ratio)} | {len(lut_rows)} |",
             f"| SOP Balancing | {fmt(sop_ratio)} | {len(sop_rows)} |",
+            "",
+            f"| Structural Metric | Geomean {label_a}/{label_b} | Matched |",
+            "|---|---:|---:|",
+            f"| LUT Count | {fmt(geomean_ratio(lut_count_rows))} | {len(lut_count_rows)} |",
+            f"| LUT Depth | {fmt(geomean_ratio(lut_depth_rows))} | {len(lut_depth_rows)} |",
+            f"| AIG Count | {fmt(geomean_ratio(aig_count_rows))} | {len(aig_count_rows)} |",
+            f"| AIG Depth | {fmt(geomean_ratio(aig_depth_rows))} | {len(aig_depth_rows)} |",
             "",
             f"Interpretation: lower `{label_a}/{label_b}` is better.",
         ]
@@ -116,10 +178,20 @@ def render_pair(
       <tr><td>SOP Balancing</td><td>{fmt(sop_ratio)}</td><td>{len(sop_rows)}</td></tr>
     </tbody>
   </table>
+  <h2>Structural Metrics ({escape(label_a)}/{escape(label_b)})</h2>
+  <table>
+    <thead><tr><th>Metric</th><th>Geomean Ratio</th><th>Matched</th></tr></thead>
+    <tbody>
+      <tr><td>LUT Count</td><td>{fmt(geomean_ratio(lut_count_rows))}</td><td>{len(lut_count_rows)}</td></tr>
+      <tr><td>LUT Depth</td><td>{fmt(geomean_ratio(lut_depth_rows))}</td><td>{len(lut_depth_rows)}</td></tr>
+      <tr><td>AIG Count</td><td>{fmt(geomean_ratio(aig_count_rows))}</td><td>{len(aig_count_rows)}</td></tr>
+      <tr><td>AIG Depth</td><td>{fmt(geomean_ratio(aig_depth_rows))}</td><td>{len(aig_depth_rows)}</td></tr>
+    </tbody>
+  </table>
   <h2>LUT Mapping Details</h2>
-  <table><thead><tr><th>Benchmark</th><th>{escape(label_a)} (s)</th><th>{escape(label_b)} (s)</th><th>{escape(label_a)}/{escape(label_b)}</th></tr></thead><tbody>{rows_html(lut_rows)}</tbody></table>
+  <table><thead><tr><th>Benchmark</th><th>{escape(label_a)} Time (s)</th><th>{escape(label_b)} Time (s)</th><th>Time {escape(label_a)}/{escape(label_b)}</th><th>{escape(label_a)} LUT Count</th><th>{escape(label_b)} LUT Count</th><th>Count {escape(label_a)}/{escape(label_b)}</th><th>{escape(label_a)} LUT Depth</th><th>{escape(label_b)} LUT Depth</th><th>Depth {escape(label_a)}/{escape(label_b)}</th></tr></thead><tbody>{rows_html_with_struct(a, b, "lut-mapping", label_a, label_b)}</tbody></table>
   <h2>SOP Balancing Details</h2>
-  <table><thead><tr><th>Benchmark</th><th>{escape(label_a)} (s)</th><th>{escape(label_b)} (s)</th><th>{escape(label_a)}/{escape(label_b)}</th></tr></thead><tbody>{rows_html(sop_rows)}</tbody></table>
+  <table><thead><tr><th>Benchmark</th><th>{escape(label_a)} Time (s)</th><th>{escape(label_b)} Time (s)</th><th>Time {escape(label_a)}/{escape(label_b)}</th><th>{escape(label_a)} AIG Count</th><th>{escape(label_b)} AIG Count</th><th>Count {escape(label_a)}/{escape(label_b)}</th><th>{escape(label_a)} AIG Depth</th><th>{escape(label_b)} AIG Depth</th><th>Depth {escape(label_a)}/{escape(label_b)}</th></tr></thead><tbody>{rows_html_with_struct(a, b, "sop-balancing", label_a, label_b)}</tbody></table>
 </body></html>"""
     html_out.write_text(html)
 
@@ -146,6 +218,18 @@ def run_pr(args: argparse.Namespace) -> int:
 
     cc_lut_rows = compare_rows(after, before, "lut-mapping")
     cc_sop_rows = compare_rows(after, before, "sop-balancing")
+    cc_lut_count_rows = compare_rows_for_metric(
+        after, before, "lut-mapping", "lut_count"
+    )
+    cc_lut_depth_rows = compare_rows_for_metric(
+        after, before, "lut-mapping", "lut_depth"
+    )
+    cc_aig_count_rows = compare_rows_for_metric(
+        after, before, "sop-balancing", "aig_count"
+    )
+    cc_aig_depth_rows = compare_rows_for_metric(
+        after, before, "sop-balancing", "aig_depth"
+    )
     cc_lut_before = geomean([r[2] for r in cc_lut_rows])
     cc_lut_after = geomean([r[1] for r in cc_lut_rows])
     cc_sop_before = geomean([r[2] for r in cc_sop_rows])
@@ -195,6 +279,19 @@ def run_pr(args: argparse.Namespace) -> int:
             ]
         )
     md.extend(["", "Interpretation: lower ratios are better."])
+    md.extend(
+        [
+            "",
+            f"### Structural Metrics ({args.label_a}/{args.label_b})",
+            "",
+            "| Metric | Geomean Ratio | Matched |",
+            "|---|---:|---:|",
+            f"| LUT Count | {fmt(geomean_ratio(cc_lut_count_rows))} | {len(cc_lut_count_rows)} |",
+            f"| LUT Depth | {fmt(geomean_ratio(cc_lut_depth_rows))} | {len(cc_lut_depth_rows)} |",
+            f"| AIG Count | {fmt(geomean_ratio(cc_aig_count_rows))} | {len(cc_aig_count_rows)} |",
+            f"| AIG Depth | {fmt(geomean_ratio(cc_aig_depth_rows))} | {len(cc_aig_depth_rows)} |",
+        ]
+    )
     args.markdown_out.write_text("\n".join(md) + "\n")
 
     html_parts = [
@@ -226,10 +323,17 @@ def run_pr(args: argparse.Namespace) -> int:
         )
     html_parts.extend(
         [
+            f"<h2>Structural Metrics ({escape(args.label_a)} vs {escape(args.label_b)})</h2>",
+            "<table><thead><tr><th>Metric</th><th>Geomean Ratio</th><th>Matched</th></tr></thead><tbody>",
+            f"<tr><td>LUT Count</td><td>{fmt(geomean_ratio(cc_lut_count_rows))}</td><td>{len(cc_lut_count_rows)}</td></tr>",
+            f"<tr><td>LUT Depth</td><td>{fmt(geomean_ratio(cc_lut_depth_rows))}</td><td>{len(cc_lut_depth_rows)}</td></tr>",
+            f"<tr><td>AIG Count</td><td>{fmt(geomean_ratio(cc_aig_count_rows))}</td><td>{len(cc_aig_count_rows)}</td></tr>",
+            f"<tr><td>AIG Depth</td><td>{fmt(geomean_ratio(cc_aig_depth_rows))}</td><td>{len(cc_aig_depth_rows)}</td></tr>",
+            "</tbody></table>",
             f"<h2>LUT Mapping Details ({escape(args.label_a)} vs {escape(args.label_b)})</h2>",
-            f"<table><thead><tr><th>Benchmark</th><th>{escape(args.label_a)} (s)</th><th>{escape(args.label_b)} (s)</th><th>{escape(args.label_a)}/{escape(args.label_b)}</th></tr></thead><tbody>{rows_html(cc_lut_rows)}</tbody></table>",
+            f"<table><thead><tr><th>Benchmark</th><th>{escape(args.label_a)} Time (s)</th><th>{escape(args.label_b)} Time (s)</th><th>Time {escape(args.label_a)}/{escape(args.label_b)}</th><th>{escape(args.label_a)} LUT Count</th><th>{escape(args.label_b)} LUT Count</th><th>Count {escape(args.label_a)}/{escape(args.label_b)}</th><th>{escape(args.label_a)} LUT Depth</th><th>{escape(args.label_b)} LUT Depth</th><th>Depth {escape(args.label_a)}/{escape(args.label_b)}</th></tr></thead><tbody>{rows_html_with_struct(after, before, 'lut-mapping', args.label_a, args.label_b)}</tbody></table>",
             f"<h2>SOP Balancing Details ({escape(args.label_a)} vs {escape(args.label_b)})</h2>",
-            f"<table><thead><tr><th>Benchmark</th><th>{escape(args.label_a)} (s)</th><th>{escape(args.label_b)} (s)</th><th>{escape(args.label_a)}/{escape(args.label_b)}</th></tr></thead><tbody>{rows_html(cc_sop_rows)}</tbody></table>",
+            f"<table><thead><tr><th>Benchmark</th><th>{escape(args.label_a)} Time (s)</th><th>{escape(args.label_b)} Time (s)</th><th>Time {escape(args.label_a)}/{escape(args.label_b)}</th><th>{escape(args.label_a)} AIG Count</th><th>{escape(args.label_b)} AIG Count</th><th>Count {escape(args.label_a)}/{escape(args.label_b)}</th><th>{escape(args.label_a)} AIG Depth</th><th>{escape(args.label_b)} AIG Depth</th><th>Depth {escape(args.label_a)}/{escape(args.label_b)}</th></tr></thead><tbody>{rows_html_with_struct(after, before, 'sop-balancing', args.label_a, args.label_b)}</tbody></table>",
             "</body></html>",
         ]
     )
