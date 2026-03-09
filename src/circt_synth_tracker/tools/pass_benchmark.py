@@ -100,7 +100,9 @@ def parse_abc_structural_stats(output: str) -> dict[str, int]:
     return stats
 
 
-def parse_circt_analysis_output(output: str, output_kind: str) -> tuple[int | None, int | None]:
+def parse_circt_analysis_output(
+    output: str, output_kind: str
+) -> tuple[int | None, int | None]:
     max_delay = None
     m = re.search(r"Maximum path delay:\s*(\d+)", output)
     if m:
