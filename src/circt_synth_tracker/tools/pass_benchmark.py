@@ -263,7 +263,7 @@ def run_one(
                 "builtin.module("
                 f"hw.module({circt_cmd}),"
                 "synth-print-resource-usage-analysis,"
-                "synth-print-longest-path-analysis"
+                "synth-print-longest-path-analysis{show-top-k-percent=0}"
                 ")"
             )
             circt_stdout, circt_stderr, circt_wall = run_command(
