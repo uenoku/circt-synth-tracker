@@ -242,7 +242,7 @@ jobs:
         if: always()
         run: |
           # Create directory structure for deployment
-          PR_DIR="deploy/pr-pass-benchmarks/pr-${{ inputs.pr_number }}"
+          PR_DIR="deploy/pr-benchmarks/pr-${{ inputs.pr_number }}"
           mkdir -p "$PR_DIR"
 
           # Publish unified pass comparison report

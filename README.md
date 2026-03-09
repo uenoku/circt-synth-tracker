@@ -2,6 +2,7 @@
 
 [![CIRCT Nightly Integration Tests](https://github.com/uenoku/circt-synth-tracker/actions/workflows/ci-nightly.yml/badge.svg)](https://github.com/uenoku/circt-synth-tracker/actions/workflows/ci-nightly.yml)
 [![Report](https://img.shields.io/badge/report-html-blue)](https://uenoku.github.io/circt-synth-tracker/report.html)
+[![Pass Report](https://img.shields.io/badge/pass--report-html-teal)](https://uenoku.github.io/circt-synth-tracker/report-pass.html)
 [![History](https://img.shields.io/badge/history-timeseries-green)](https://uenoku.github.io/circt-synth-tracker/timeseries.html)
 
 > **Note:** This repository is a prototype and under active development.
@@ -197,6 +198,7 @@ the PR benchmark workflow automatically.
 
 The nightly CI publishes a rolling 90-day history to GitHub Pages:
 - [report.html](https://uenoku.github.io/circt-synth-tracker/report.html) — latest comparison
+- [report-pass.html](https://uenoku.github.io/circt-synth-tracker/report-pass.html) — latest pass benchmark comparison (CIRCT vs ABC)
 - [timeseries.html](https://uenoku.github.io/circt-synth-tracker/timeseries.html) — geo-mean trends
 - [history.json](https://uenoku.github.io/circt-synth-tracker/history.json) — raw data
 

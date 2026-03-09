@@ -117,9 +117,8 @@ jobs:
       - name: Prepare deployment files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          DEPLOY_DIR="deploy/pass-benchmarks/main"
-          mkdir -p "$DEPLOY_DIR"
-          cp pass-benchmark-report.html "$DEPLOY_DIR/report-pass.html" || true
+          mkdir -p deploy
+          cp pass-benchmark-report.html "deploy/report-pass.html" || true
           ls -la deploy/
 
       - name: Deploy to GitHub Pages
