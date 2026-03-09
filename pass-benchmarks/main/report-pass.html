@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pass Benchmark (CIRCT vs ABC)</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 24px; color: #111; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0 24px; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; font-size: 13px; }
+    th { background: #f3f3f3; }
+  </style>
+</head><body>
+  <h1>Pass Benchmark (CIRCT vs ABC)</h1>
+  <p>Version: `CIRCT firtool-1.142.0-25-ge8b355b60`</p>
+  <table>
+    <thead><tr><th>Mode</th><th>Geomean CIRCT/ABC</th><th>Matched</th></tr></thead>
+    <tbody>
+      <tr><td>LUT Mapping</td><td>1.3757</td><td>74</td></tr>
+      <tr><td>SOP Balancing</td><td>0.9834</td><td>80</td></tr>
+    </tbody>
+  </table>
+  <h2>LUT Mapping Details</h2>
+  <table><thead><tr><th>Benchmark</th><th>CIRCT (s)</th><th>ABC (s)</th><th>CIRCT/ABC</th></tr></thead><tbody><tr><td>arithmetic_adder_k6_c25@lut-mapping</td><td>0.038400</td><td>0.030000</td><td>1.2800</td></tr>
+<tr><td>arithmetic_adder_k6_c8@lut-mapping</td><td>0.014700</td><td>0.010000</td><td>1.4700</td></tr>
+<tr><td>arithmetic_adder_k8_c25@lut-mapping</td><td>0.083700</td><td>0.060000</td><td>1.3950</td></tr>
+<tr><td>arithmetic_adder_k8_c8@lut-mapping</td><td>0.028300</td><td>0.020000</td><td>1.4150</td></tr>
+<tr><td>arithmetic_bar_k6_c25@lut-mapping</td><td>0.206400</td><td>0.080000</td><td>2.5800</td></tr>
+<tr><td>arithmetic_bar_k6_c8@lut-mapping</td><td>0.067600</td><td>0.040000</td><td>1.6900</td></tr>
+<tr><td>arithmetic_bar_k8_c25@lut-mapping</td><td>0.611500</td><td>0.160000</td><td>3.8219</td></tr>
+<tr><td>arithmetic_bar_k8_c8@lut-mapping</td><td>0.147400</td><td>0.060000</td><td>2.4567</td></tr>
+<tr><td>arithmetic_div_k6_c25@lut-mapping</td><td>5.196500</td><td>5.240000</td><td>0.9917</td></tr>
+<tr><td>arithmetic_div_k6_c8@lut-mapping</td><td>1.476000</td><td>1.650000</td><td>0.8945</td></tr>
+<tr><td>arithmetic_div_k8_c25@lut-mapping</td><td>15.753900</td><td>10.100000</td><td>1.5598</td></tr>
+<tr><td>arithmetic_div_k8_c8@lut-mapping</td><td>3.882100</td><td>2.570000</td><td>1.5105</td></tr>
+<tr><td>arithmetic_hyp_k6_c25@lut-mapping</td><td>20.205100</td><td>22.730000</td><td>0.8889</td></tr>
+<tr><td>arithmetic_hyp_k6_c8@lut-mapping</td><td>5.731700</td><td>6.660000</td><td>0.8606</td></tr>
+<tr><td>arithmetic_hyp_k8_c25@lut-mapping</td><td>61.739100</td><td>39.660000</td><td>1.5567</td></tr>
+<tr><td>arithmetic_hyp_k8_c8@lut-mapping</td><td>14.186000</td><td>9.220000</td><td>1.5386</td></tr>
+<tr><td>arithmetic_log2_k6_c25@lut-mapping</td><td>3.668700</td><td>3.190000</td><td>1.1501</td></tr>
+<tr><td>arithmetic_log2_k6_c8@lut-mapping</td><td>1.038900</td><td>1.060000</td><td>0.9801</td></tr>
+<tr><td>arithmetic_log2_k8_c25@lut-mapping</td><td>16.180600</td><td>7.030000</td><td>2.3017</td></tr>
+<tr><td>arithmetic_log2_k8_c8@lut-mapping</td><td>3.608600</td><td>1.580000</td><td>2.2839</td></tr>
+<tr><td>arithmetic_max_k6_c25@lut-mapping</td><td>0.182500</td><td>0.140000</td><td>1.3036</td></tr>
+<tr><td>arithmetic_max_k6_c8@lut-mapping</td><td>0.053100</td><td>0.060000</td><td>0.8850</td></tr>
+<tr><td>arithmetic_max_k8_c25@lut-mapping</td><td>0.732300</td><td>0.280000</td><td>2.6154</td></tr>
+<tr><td>arithmetic_max_k8_c8@lut-mapping</td><td>0.160200</td><td>0.080000</td><td>2.0025</td></tr>
+<tr><td>arithmetic_multiplier_k6_c25@lut-mapping</td><td>2.599400</td><td>2.510000</td><td>1.0356</td></tr>
+<tr><td>arithmetic_multiplier_k6_c8@lut-mapping</td><td>0.805900</td><td>0.800000</td><td>1.0074</td></tr>
+<tr><td>arithmetic_multiplier_k8_c25@lut-mapping</td><td>8.168800</td><td>4.960000</td><td>1.6469</td></tr>
+<tr><td>arithmetic_multiplier_k8_c8@lut-mapping</td><td>1.904800</td><td>1.180000</td><td>1.6142</td></tr>
+<tr><td>arithmetic_sin_k6_c25@lut-mapping</td><td>0.721100</td><td>0.550000</td><td>1.3111</td></tr>
+<tr><td>arithmetic_sin_k6_c8@lut-mapping</td><td>0.175100</td><td>0.170000</td><td>1.0300</td></tr>
+<tr><td>arithmetic_sin_k8_c25@lut-mapping</td><td>2.013600</td><td>0.930000</td><td>2.1652</td></tr>
+<tr><td>arithmetic_sin_k8_c8@lut-mapping</td><td>0.480100</td><td>0.250000</td><td>1.9204</td></tr>
+<tr><td>arithmetic_sqrt_k6_c25@lut-mapping</td><td>2.876100</td><td>2.080000</td><td>1.3827</td></tr>
+<tr><td>arithmetic_sqrt_k6_c8@lut-mapping</td><td>0.700700</td><td>0.700000</td><td>1.0010</td></tr>
+<tr><td>arithmetic_sqrt_k8_c25@lut-mapping</td><td>7.886100</td><td>4.420000</td><td>1.7842</td></tr>
+<tr><td>arithmetic_sqrt_k8_c8@lut-mapping</td><td>1.797100</td><td>1.120000</td><td>1.6046</td></tr>
+<tr><td>arithmetic_square_k6_c25@lut-mapping</td><td>1.721100</td><td>2.030000</td><td>0.8478</td></tr>
+<tr><td>arithmetic_square_k6_c8@lut-mapping</td><td>0.505200</td><td>0.580000</td><td>0.8710</td></tr>
+<tr><td>arithmetic_square_k8_c25@lut-mapping</td><td>5.858700</td><td>3.460000</td><td>1.6933</td></tr>
+<tr><td>arithmetic_square_k8_c8@lut-mapping</td><td>1.152700</td><td>0.780000</td><td>1.4778</td></tr>
+<tr><td>random_control_arbiter_k6_c25@lut-mapping</td><td>0.533100</td><td>0.380000</td><td>1.4029</td></tr>
+<tr><td>random_control_arbiter_k6_c8@lut-mapping</td><td>0.287000</td><td>0.190000</td><td>1.5105</td></tr>
+<tr><td>random_control_arbiter_k8_c25@lut-mapping</td><td>2.310800</td><td>0.660000</td><td>3.5012</td></tr>
+<tr><td>random_control_arbiter_k8_c8@lut-mapping</td><td>0.789700</td><td>0.260000</td><td>3.0373</td></tr>
+<tr><td>random_control_cavlc_k6_c25@lut-mapping</td><td>0.015900</td><td>0.020000</td><td>0.7950</td></tr>
+<tr><td>random_control_cavlc_k6_c8@lut-mapping</td><td>0.010700</td><td>0.010000</td><td>1.0700</td></tr>
+<tr><td>random_control_cavlc_k8_c25@lut-mapping</td><td>0.065700</td><td>0.040000</td><td>1.6425</td></tr>
+<tr><td>random_control_cavlc_k8_c8@lut-mapping</td><td>0.021600</td><td>0.020000</td><td>1.0800</td></tr>
+<tr><td>random_control_ctrl_k8_c25@lut-mapping</td><td>0.004600</td><td>0.010000</td><td>0.4600</td></tr>
+<tr><td>random_control_dec_k6_c25@lut-mapping</td><td>0.007600</td><td>0.010000</td><td>0.7600</td></tr>
+<tr><td>random_control_dec_k6_c8@lut-mapping</td><td>0.007600</td><td>0.010000</td><td>0.7600</td></tr>
+<tr><td>random_control_dec_k8_c25@lut-mapping</td><td>0.013800</td><td>0.010000</td><td>1.3800</td></tr>
+<tr><td>random_control_dec_k8_c8@lut-mapping</td><td>0.013900</td><td>0.010000</td><td>1.3900</td></tr>
+<tr><td>random_control_i2c_k6_c25@lut-mapping</td><td>0.028100</td><td>0.030000</td><td>0.9367</td></tr>
+<tr><td>random_control_i2c_k6_c8@lut-mapping</td><td>0.018300</td><td>0.020000</td><td>0.9150</td></tr>
+<tr><td>random_control_i2c_k8_c25@lut-mapping</td><td>0.103500</td><td>0.060000</td><td>1.7250</td></tr>
+<tr><td>random_control_i2c_k8_c8@lut-mapping</td><td>0.041200</td><td>0.030000</td><td>1.3733</td></tr>
+<tr><td>random_control_int2float_k8_c25@lut-mapping</td><td>0.015400</td><td>0.010000</td><td>1.5400</td></tr>
+<tr><td>random_control_mem_ctrl_k6_c25@lut-mapping</td><td>2.111700</td><td>2.390000</td><td>0.8836</td></tr>
+<tr><td>random_control_mem_ctrl_k6_c8@lut-mapping</td><td>0.743700</td><td>0.950000</td><td>0.7828</td></tr>
+<tr><td>random_control_mem_ctrl_k8_c25@lut-mapping</td><td>7.740700</td><td>4.580000</td><td>1.6901</td></tr>
+<tr><td>random_control_mem_ctrl_k8_c8@lut-mapping</td><td>2.265700</td><td>1.460000</td><td>1.5518</td></tr>
+<tr><td>random_control_priority_k6_c25@lut-mapping</td><td>0.045100</td><td>0.030000</td><td>1.5033</td></tr>
+<tr><td>random_control_priority_k6_c8@lut-mapping</td><td>0.015800</td><td>0.010000</td><td>1.5800</td></tr>
+<tr><td>random_control_priority_k8_c25@lut-mapping</td><td>0.128100</td><td>0.070000</td><td>1.8300</td></tr>
+<tr><td>random_control_priority_k8_c8@lut-mapping</td><td>0.034500</td><td>0.020000</td><td>1.7250</td></tr>
+<tr><td>random_control_router_k6_c25@lut-mapping</td><td>0.008700</td><td>0.010000</td><td>0.8700</td></tr>
+<tr><td>random_control_router_k6_c8@lut-mapping</td><td>0.005600</td><td>0.010000</td><td>0.5600</td></tr>
+<tr><td>random_control_router_k8_c25@lut-mapping</td><td>0.027900</td><td>0.020000</td><td>1.3950</td></tr>
+<tr><td>random_control_router_k8_c8@lut-mapping</td><td>0.011500</td><td>0.010000</td><td>1.1500</td></tr>
+<tr><td>random_control_voter_k6_c25@lut-mapping</td><td>1.495900</td><td>1.030000</td><td>1.4523</td></tr>
+<tr><td>random_control_voter_k6_c8@lut-mapping</td><td>0.434600</td><td>0.310000</td><td>1.4019</td></tr>
+<tr><td>random_control_voter_k8_c25@lut-mapping</td><td>6.050700</td><td>2.100000</td><td>2.8813</td></tr>
+<tr><td>random_control_voter_k8_c8@lut-mapping</td><td>1.061700</td><td>0.480000</td><td>2.2119</td></tr></tbody></table>
+  <h2>SOP Balancing Details</h2>
+  <table><thead><tr><th>Benchmark</th><th>CIRCT (s)</th><th>ABC (s)</th><th>CIRCT/ABC</th></tr></thead><tbody><tr><td>arithmetic_adder_k6_c25@sop-balancing</td><td>0.053300</td><td>0.060000</td><td>0.8883</td></tr>
+<tr><td>arithmetic_adder_k6_c8@sop-balancing</td><td>0.023200</td><td>0.030000</td><td>0.7733</td></tr>
+<tr><td>arithmetic_adder_k8_c25@sop-balancing</td><td>0.150900</td><td>0.120000</td><td>1.2575</td></tr>
+<tr><td>arithmetic_adder_k8_c8@sop-balancing</td><td>0.040900</td><td>0.040000</td><td>1.0225</td></tr>
+<tr><td>arithmetic_bar_k6_c25@sop-balancing</td><td>0.236700</td><td>0.310000</td><td>0.7635</td></tr>
+<tr><td>arithmetic_bar_k6_c8@sop-balancing</td><td>0.121700</td><td>0.160000</td><td>0.7606</td></tr>
+<tr><td>arithmetic_bar_k8_c25@sop-balancing</td><td>1.087800</td><td>1.050000</td><td>1.0360</td></tr>
+<tr><td>arithmetic_bar_k8_c8@sop-balancing</td><td>0.295000</td><td>0.280000</td><td>1.0536</td></tr>
+<tr><td>arithmetic_div_k6_c25@sop-balancing</td><td>8.461800</td><td>11.180000</td><td>0.7569</td></tr>
+<tr><td>arithmetic_div_k6_c8@sop-balancing</td><td>3.092400</td><td>4.640000</td><td>0.6665</td></tr>
+<tr><td>arithmetic_div_k8_c25@sop-balancing</td><td>28.547700</td><td>31.850000</td><td>0.8963</td></tr>
+<tr><td>arithmetic_div_k8_c8@sop-balancing</td><td>7.196100</td><td>9.370000</td><td>0.7680</td></tr>
+<tr><td>arithmetic_hyp_k6_c25@sop-balancing</td><td>21.898000</td><td>38.990000</td><td>0.5616</td></tr>
+<tr><td>arithmetic_hyp_k6_c8@sop-balancing</td><td>8.728600</td><td>15.500000</td><td>0.5631</td></tr>
+<tr><td>arithmetic_hyp_k8_c25@sop-balancing</td><td>134.636500</td><td>133.330000</td><td>1.0098</td></tr>
+<tr><td>arithmetic_hyp_k8_c8@sop-balancing</td><td>25.494200</td><td>33.570000</td><td>0.7594</td></tr>
+<tr><td>arithmetic_log2_k6_c25@sop-balancing</td><td>5.897400</td><td>9.430000</td><td>0.6254</td></tr>
+<tr><td>arithmetic_log2_k6_c8@sop-balancing</td><td>2.068900</td><td>3.730000</td><td>0.5547</td></tr>
+<tr><td>arithmetic_log2_k8_c25@sop-balancing</td><td>37.688500</td><td>29.790000</td><td>1.2651</td></tr>
+<tr><td>arithmetic_log2_k8_c8@sop-balancing</td><td>8.023900</td><td>8.100000</td><td>0.9906</td></tr>
+<tr><td>arithmetic_max_k6_c25@sop-balancing</td><td>0.258700</td><td>0.260000</td><td>0.9950</td></tr>
+<tr><td>arithmetic_max_k6_c8@sop-balancing</td><td>0.114700</td><td>0.150000</td><td>0.7647</td></tr>
+<tr><td>arithmetic_max_k8_c25@sop-balancing</td><td>1.563500</td><td>0.870000</td><td>1.7971</td></tr>
+<tr><td>arithmetic_max_k8_c8@sop-balancing</td><td>0.379000</td><td>0.280000</td><td>1.3536</td></tr>
+<tr><td>arithmetic_multiplier_k6_c25@sop-balancing</td><td>4.327400</td><td>6.220000</td><td>0.6957</td></tr>
+<tr><td>arithmetic_multiplier_k6_c8@sop-balancing</td><td>1.510900</td><td>2.500000</td><td>0.6044</td></tr>
+<tr><td>arithmetic_multiplier_k8_c25@sop-balancing</td><td>24.106700</td><td>19.090000</td><td>1.2628</td></tr>
+<tr><td>arithmetic_multiplier_k8_c8@sop-balancing</td><td>4.897700</td><td>5.320000</td><td>0.9206</td></tr>
+<tr><td>arithmetic_sin_k6_c25@sop-balancing</td><td>1.271000</td><td>1.700000</td><td>0.7476</td></tr>
+<tr><td>arithmetic_sin_k6_c8@sop-balancing</td><td>0.414200</td><td>0.700000</td><td>0.5917</td></tr>
+<tr><td>arithmetic_sin_k8_c25@sop-balancing</td><td>13.738300</td><td>6.220000</td><td>2.2087</td></tr>
+<tr><td>arithmetic_sin_k8_c8@sop-balancing</td><td>2.499600</td><td>1.700000</td><td>1.4704</td></tr>
+<tr><td>arithmetic_sqrt_k6_c25@sop-balancing</td><td>4.439300</td><td>4.930000</td><td>0.9005</td></tr>
+<tr><td>arithmetic_sqrt_k6_c8@sop-balancing</td><td>1.643300</td><td>2.180000</td><td>0.7538</td></tr>
+<tr><td>arithmetic_sqrt_k8_c25@sop-balancing</td><td>19.047900</td><td>13.620000</td><td>1.3985</td></tr>
+<tr><td>arithmetic_sqrt_k8_c8@sop-balancing</td><td>4.098500</td><td>4.760000</td><td>0.8610</td></tr>
+<tr><td>arithmetic_square_k6_c25@sop-balancing</td><td>2.922100</td><td>5.090000</td><td>0.5741</td></tr>
+<tr><td>arithmetic_square_k6_c8@sop-balancing</td><td>1.044300</td><td>2.210000</td><td>0.4725</td></tr>
+<tr><td>arithmetic_square_k8_c25@sop-balancing</td><td>28.747100</td><td>17.960000</td><td>1.6006</td></tr>
+<tr><td>arithmetic_square_k8_c8@sop-balancing</td><td>4.714800</td><td>4.220000</td><td>1.1173</td></tr>
+<tr><td>random_control_arbiter_k6_c25@sop-balancing</td><td>0.818500</td><td>0.850000</td><td>0.9629</td></tr>
+<tr><td>random_control_arbiter_k6_c8@sop-balancing</td><td>0.458800</td><td>0.710000</td><td>0.6462</td></tr>
+<tr><td>random_control_arbiter_k8_c25@sop-balancing</td><td>2.857400</td><td>2.370000</td><td>1.2057</td></tr>
+<tr><td>random_control_arbiter_k8_c8@sop-balancing</td><td>1.019700</td><td>0.920000</td><td>1.1084</td></tr>
+<tr><td>random_control_cavlc_k6_c25@sop-balancing</td><td>0.038300</td><td>0.040000</td><td>0.9575</td></tr>
+<tr><td>random_control_cavlc_k6_c8@sop-balancing</td><td>0.024800</td><td>0.030000</td><td>0.8267</td></tr>
+<tr><td>random_control_cavlc_k8_c25@sop-balancing</td><td>0.451900</td><td>0.140000</td><td>3.2279</td></tr>
+<tr><td>random_control_cavlc_k8_c8@sop-balancing</td><td>0.151800</td><td>0.060000</td><td>2.5300</td></tr>
+<tr><td>random_control_ctrl_k6_c25@sop-balancing</td><td>0.004900</td><td>0.010000</td><td>0.4900</td></tr>
+<tr><td>random_control_ctrl_k6_c8@sop-balancing</td><td>0.005300</td><td>0.010000</td><td>0.5300</td></tr>
+<tr><td>random_control_ctrl_k8_c25@sop-balancing</td><td>0.020500</td><td>0.010000</td><td>2.0500</td></tr>
+<tr><td>random_control_ctrl_k8_c8@sop-balancing</td><td>0.012200</td><td>0.010000</td><td>1.2200</td></tr>
+<tr><td>random_control_dec_k6_c25@sop-balancing</td><td>0.010100</td><td>0.010000</td><td>1.0100</td></tr>
+<tr><td>random_control_dec_k6_c8@sop-balancing</td><td>0.009800</td><td>0.010000</td><td>0.9800</td></tr>
+<tr><td>random_control_dec_k8_c25@sop-balancing</td><td>0.022000</td><td>0.020000</td><td>1.1000</td></tr>
+<tr><td>random_control_dec_k8_c8@sop-balancing</td><td>0.022400</td><td>0.020000</td><td>1.1200</td></tr>
+<tr><td>random_control_i2c_k6_c25@sop-balancing</td><td>0.047200</td><td>0.070000</td><td>0.6743</td></tr>
+<tr><td>random_control_i2c_k6_c8@sop-balancing</td><td>0.035500</td><td>0.050000</td><td>0.7100</td></tr>
+<tr><td>random_control_i2c_k8_c25@sop-balancing</td><td>0.343300</td><td>0.180000</td><td>1.9072</td></tr>
+<tr><td>random_control_i2c_k8_c8@sop-balancing</td><td>0.127500</td><td>0.090000</td><td>1.4167</td></tr>
+<tr><td>random_control_int2float_k6_c25@sop-balancing</td><td>0.010000</td><td>0.010000</td><td>1.0000</td></tr>
+<tr><td>random_control_int2float_k6_c8@sop-balancing</td><td>0.006900</td><td>0.010000</td><td>0.6900</td></tr>
+<tr><td>random_control_int2float_k8_c25@sop-balancing</td><td>0.105000</td><td>0.030000</td><td>3.5000</td></tr>
+<tr><td>random_control_int2float_k8_c8@sop-balancing</td><td>0.036700</td><td>0.010000</td><td>3.6700</td></tr>
+<tr><td>random_control_mem_ctrl_k6_c25@sop-balancing</td><td>3.631700</td><td>6.060000</td><td>0.5993</td></tr>
+<tr><td>random_control_mem_ctrl_k6_c8@sop-balancing</td><td>1.096200</td><td>2.350000</td><td>0.4665</td></tr>
+<tr><td>random_control_mem_ctrl_k8_c25@sop-balancing</td><td>40.586400</td><td>23.800000</td><td>1.7053</td></tr>
+<tr><td>random_control_mem_ctrl_k8_c8@sop-balancing</td><td>10.987600</td><td>8.350000</td><td>1.3159</td></tr>
+<tr><td>random_control_priority_k6_c25@sop-balancing</td><td>0.071200</td><td>0.090000</td><td>0.7911</td></tr>
+<tr><td>random_control_priority_k6_c8@sop-balancing</td><td>0.028100</td><td>0.040000</td><td>0.7025</td></tr>
+<tr><td>random_control_priority_k8_c25@sop-balancing</td><td>0.302200</td><td>0.240000</td><td>1.2592</td></tr>
+<tr><td>random_control_priority_k8_c8@sop-balancing</td><td>0.080900</td><td>0.070000</td><td>1.1557</td></tr>
+<tr><td>random_control_router_k6_c25@sop-balancing</td><td>0.009300</td><td>0.020000</td><td>0.4650</td></tr>
+<tr><td>random_control_router_k6_c8@sop-balancing</td><td>0.009200</td><td>0.010000</td><td>0.9200</td></tr>
+<tr><td>random_control_router_k8_c25@sop-balancing</td><td>0.108100</td><td>0.050000</td><td>2.1620</td></tr>
+<tr><td>random_control_router_k8_c8@sop-balancing</td><td>0.041800</td><td>0.030000</td><td>1.3933</td></tr>
+<tr><td>random_control_voter_k6_c25@sop-balancing</td><td>2.291800</td><td>2.990000</td><td>0.7665</td></tr>
+<tr><td>random_control_voter_k6_c8@sop-balancing</td><td>0.842800</td><td>1.290000</td><td>0.6533</td></tr>
+<tr><td>random_control_voter_k8_c25@sop-balancing</td><td>14.467800</td><td>9.430000</td><td>1.5342</td></tr>
+<tr><td>random_control_voter_k8_c8@sop-balancing</td><td>2.763200</td><td>2.730000</td><td>1.0122</td></tr></tbody></table>
+</body></html>
