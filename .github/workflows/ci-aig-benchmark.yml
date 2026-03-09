@@ -92,12 +92,12 @@ jobs:
         run: |
           source .venv/bin/activate
           pass-pr-compare-report single \
-            --a circt-summary.json \
-            --b abc-summary.json \
-            --label-a CIRCT \
-            --label-b ABC \
+            --a abc-summary.json \
+            --b circt-summary.json \
+            --label-a ABC \
+            --label-b CIRCT \
             --version "$CIRCT_VERSION" \
-            --title "Pass Benchmark (CIRCT vs ABC)" \
+            --title "Pass Benchmark (ABC vs CIRCT)" \
             --markdown-out pass-benchmark-report.md \
             --html-out pass-benchmark-report.html
 
