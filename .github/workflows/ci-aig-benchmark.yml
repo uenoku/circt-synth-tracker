@@ -18,7 +18,7 @@ on:
       cut_sizes:
         description: 'Comma-separated cut sizes C (e.g. "8,25")'
         required: false
-        default: '8,25'
+        default: '8,15'
 
 permissions:
   contents: write
