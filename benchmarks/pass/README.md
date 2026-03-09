@@ -3,6 +3,10 @@
 This suite runs pass-level compile-time benchmarks on pre-generated LSILS AIG inputs.
 It compares CIRCT pass execution with equivalent ABC commands.
 
+`benchmarks/pass/commands.json` defines each mode and now includes `output`:
+- `output: "lut"`: report `lut_count`/`lut_depth`
+- `output: "aig"`: report `aig_count`/`aig_depth`
+
 ## Run
 
 ```bash

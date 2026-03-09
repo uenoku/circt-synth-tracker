@@ -19,6 +19,8 @@ from pathlib import Path
 
 from tabulate import tabulate
 
+from circt_synth_tracker.analysis.report_formatting import format_metric_cell_html
+
 
 def _run_one_cec(abc, benchmark_name, aig1, aig2):
     """Run CEC on a single benchmark pair. Returns (benchmark_name, status, detail, output)."""
@@ -1125,60 +1127,15 @@ def generate_html_report(
                 area_sky130 = result.get("area_sky130", "N/A")
                 delay_sky130 = result.get("delay_sky130", "N/A")
 
-                # Helper function to format metric with percentage and background color
                 def format_metric(value, baseline, lower_is_better=True):
                     if value == "N/A" or not baseline or tool == baseline_tool:
                         return (str(value), "")  # (content, style)
-
-                    diff = value - baseline
-                    diff_pct = (diff / baseline * 100) if baseline > 0 else 0
-                    abs_pct = abs(diff_pct)
-
-                    # Skip coloring if difference is nearly zero (< 0.01%)
-                    if abs_pct < 0.01:
-                        if diff > 0:
-                            content = (
-                                f"{value} <span class='diff'>(+{diff_pct:.1f}%)</span>"
-                            )
-                        elif diff < 0:
-                            content = (
-                                f"{value} <span class='diff'>({diff_pct:.1f}%)</span>"
-                            )
-                        else:
-                            content = str(value)
-                        return (content, "")
-
-                    # Determine if this is better or worse
-                    is_better = (diff < 0) if lower_is_better else (diff > 0)
-
-                    # Calculate background color based on percentage
-                    # Green for better, red for worse, intensity based on percentage
-                    if is_better:
-                        # Green: scale from light green (0%) to darker green (20%+)
-                        intensity = min(abs_pct / 20.0, 1.0)  # Cap at 20%
-                        # RGB: light green (200,255,200) to darker green (150,255,150)
-                        green_val = int(200 - (50 * intensity))
-                        bg_color = f"rgb({green_val},255,{green_val})"
-                    else:
-                        # Red: scale from light red (0%) to darker red (20%+)
-                        intensity = min(abs_pct / 20.0, 1.0)  # Cap at 20%
-                        # RGB: light red (255,200,200) to darker red (255,150,150)
-                        red_val = int(200 - (50 * intensity))
-                        bg_color = f"rgb(255,{red_val},{red_val})"
-
-                    # Return content and style for the cell
-                    if diff > 0:
-                        content = (
-                            f"{value}<br><span class='diff'>(+{diff_pct:.1f}%)</span>"
-                        )
-                    elif diff < 0:
-                        content = (
-                            f"{value}<br><span class='diff'>({diff_pct:.1f}%)</span>"
-                        )
-                    else:
-                        content = str(value)
-
-                    return (content, f" style='background-color: {bg_color};'")
+                    return format_metric_cell_html(
+                        value,
+                        baseline,
+                        lower_is_better=lower_is_better,
+                        line_break=True,
+                    )
 
                 # Format each metric (lower is better for all these metrics)
                 gates_content, gates_style = format_metric(
