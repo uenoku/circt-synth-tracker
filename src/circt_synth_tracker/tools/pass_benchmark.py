@@ -328,15 +328,23 @@ def run_one(
                 )
 
             if output_kind == "aig":
-                parsed_count, _ = parse_circt_analysis_output(resource_stdout, output_kind)
-                _, parsed_depth = parse_circt_analysis_output(longest_stdout, output_kind)
+                parsed_count, _ = parse_circt_analysis_output(
+                    resource_stdout, output_kind
+                )
+                _, parsed_depth = parse_circt_analysis_output(
+                    longest_stdout, output_kind
+                )
                 if parsed_count is not None:
                     aig_count = parsed_count
                 if parsed_depth is not None:
                     aig_depth = parsed_depth
             else:
-                parsed_count, _ = parse_circt_analysis_output(resource_stdout, output_kind)
-                _, parsed_depth = parse_circt_analysis_output(longest_stdout, output_kind)
+                parsed_count, _ = parse_circt_analysis_output(
+                    resource_stdout, output_kind
+                )
+                _, parsed_depth = parse_circt_analysis_output(
+                    longest_stdout, output_kind
+                )
                 if parsed_count is not None:
                     lut_count = parsed_count
                 if parsed_depth is not None:
