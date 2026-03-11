@@ -23,6 +23,14 @@ on:
         description: 'Extra arguments to pass to circt-synth for both base and PR runs (e.g. "--max-threads=1")'
         required: false
         default: ''
+      extra_circt_synth_args_base:
+        description: 'Extra arguments to pass to circt-synth for the base run only'
+        required: false
+        default: ''
+      extra_circt_synth_args_pr:
+        description: 'Extra arguments to pass to circt-synth for the PR run only'
+        required: false
+        default: ''
       equiv_check:
         description: 'Run equivalence check (--equiv-check) during CIRCT synthesis'
         required: false
@@ -168,6 +176,8 @@ jobs:
           ABC_COMMANDS="${{ inputs.abc_commands }}"
           ABC_PARAM="${ABC_COMMANDS:+-DABC_COMMANDS=\"$ABC_COMMANDS\"}"
           EXTRA_ARGS="${{ inputs.extra_circt_synth_args }}"
+          BASE_EXTRA="${{ inputs.extra_circt_synth_args_base }}"
+          [ -n "$BASE_EXTRA" ] && EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }$BASE_EXTRA"
           EXTRA_PARAM="${EXTRA_ARGS:+-DCIRCT_SYNTH_EXTRA_ARGS=\"$EXTRA_ARGS\"}"
           TV_PARAM=""
           [ "${{ inputs.enable_tv }}" = "true" ] && TV_PARAM="-DTV_SOLVER=bitwuzla"
@@ -199,6 +209,8 @@ jobs:
           ABC_COMMANDS="${{ inputs.abc_commands }}"
           ABC_PARAM="${ABC_COMMANDS:+-DABC_COMMANDS=\"$ABC_COMMANDS\"}"
           EXTRA_ARGS="${{ inputs.extra_circt_synth_args }}"
+          PR_EXTRA="${{ inputs.extra_circt_synth_args_pr }}"
+          [ -n "$PR_EXTRA" ] && EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }$PR_EXTRA"
           EXTRA_PARAM="${EXTRA_ARGS:+-DCIRCT_SYNTH_EXTRA_ARGS=\"$EXTRA_ARGS\"}"
           TV_PARAM=""
           [ "${{ inputs.enable_tv }}" = "true" ] && TV_PARAM="-DTV_SOLVER=bitwuzla"
