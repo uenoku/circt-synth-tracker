@@ -38,11 +38,29 @@ runs:
       shell: bash
       run: |
         cd "${{ inputs.checkout_path }}"
-        if ! git apply "$GITHUB_WORKSPACE/${{ inputs.patch }}" --3way; then
+        PATCH_FILE="$GITHUB_WORKSPACE/${{ inputs.patch }}"
+        EXPECTED_COUNT=$(grep -c "^diff --git" "$PATCH_FILE")
+        echo "Patch contains $EXPECTED_COUNT diff block(s)"
+        if ! git apply "$PATCH_FILE" --3way; then
           echo "::error::Failed to apply patch '${{ inputs.patch }}' to CIRCT at ${{ inputs.ref }}"
           exit 1
         fi
-        echo "Applied patch: ${{ inputs.patch }}"
+        # Verify all diff blocks were applied. git apply --3way can silently skip
+        # blocks when neither 3-way merge nor direct application succeeds, yet still
+        # return exit code 0. Detect this by comparing the expected number of changed
+        # files (from the patch) with the actual number of changes in the working tree.
+        # Count modified/deleted tracked files and newly added (untracked) files separately
+        # to correctly handle patches that add new files.
+        MODIFIED=$(git diff --name-only HEAD | wc -l)
+        NEW=$(git ls-files --others --exclude-standard | wc -l)
+        ACTUAL_COUNT=$((MODIFIED + NEW))
+        if [ "$ACTUAL_COUNT" -lt "$EXPECTED_COUNT" ]; then
+          echo "::error::Patch '${{ inputs.patch }}' was not fully applied to CIRCT at ${{ inputs.ref }}: expected $EXPECTED_COUNT file change(s), but only $ACTUAL_COUNT were applied. Some diff blocks were silently skipped by 'git apply --3way'."
+          echo "Git status:"
+          git status
+          exit 1
+        fi
+        echo "Applied patch: ${{ inputs.patch }} ($ACTUAL_COUNT/$EXPECTED_COUNT file(s) changed)"
 
     - name: Configure and build circt-synth
       shell: bash
