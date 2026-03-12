@@ -160,6 +160,7 @@ jobs:
           mlir_dir: ${{ env.MLIR_DIR }}
           llvm_dir: ${{ env.LLVM_DIR }}
           patch: pr.patch
+          patch_base_sha: ${{ steps.pr-info.outputs.base_sha }}
 
       - name: Run pass benchmarks (after)
         run: |
