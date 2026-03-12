@@ -63,6 +63,12 @@ jobs:
         shell: bash
 
     steps:
+      - name: Checkout tracker repository (root, for local actions)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
+
       - name: Checkout tracker repository
         uses: actions/checkout@v4
         with:
