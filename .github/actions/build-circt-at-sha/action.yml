@@ -106,6 +106,7 @@ runs:
         if [ -n "${{ inputs.build_log_path }}" ]; then
           mkdir -p "$(dirname "${{ inputs.build_log_path }}")"
           run_build 2>&1 | tee "${{ inputs.build_log_path }}"
+          exit "${PIPESTATUS[0]}"
         else
           run_build
         fi

@@ -211,10 +211,6 @@ jobs:
           patch_base_sha: ${{ steps.pr-info.outputs.base_sha }}
           build_log_path: circt-pr/build/build.log
 
-      - name: Mark CIRCT build failure
-        if: steps.build-circt.outcome == 'failure'
-        run: echo "CIRCT_VERSION_AFTER=build failed" >> $GITHUB_ENV
-
       - name: Write build failure report
         if: steps.build-circt.outcome == 'failure'
         run: |
@@ -279,7 +275,7 @@ jobs:
             printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
               "$ARTIFACT_SHA" \
               "${{ steps.pr-info.outputs.head_sha }}"
-            echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
+            echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER:-build failed}\` |"
             echo ""
             if [ -f tracker/pr-report.md ]; then
               cat tracker/pr-report.md
@@ -310,7 +306,7 @@ jobs:
             const baseSha = '${{ env.ARTIFACT_SHA }}'.slice(0, 8);
             const headSha = '${{ steps.pr-info.outputs.head_sha }}'.slice(0, 8);
             const beforeVer = process.env.CIRCT_VERSION_BEFORE || 'unknown';
-            const afterVer = process.env.CIRCT_VERSION_AFTER || 'unknown';
+            const afterVer = process.env.CIRCT_VERSION_AFTER || 'build failed';
 
             // Construct GitHub Pages URL
             const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-benchmarks/pr-${prNumber}/report.html`;

@@ -165,10 +165,6 @@ jobs:
           patch_base_sha: ${{ steps.pr-info.outputs.base_sha }}
           build_log_path: circt-pr/build/build.log
 
-      - name: Mark CIRCT build failure
-        if: steps.build-circt.outcome == 'failure'
-        run: echo "CIRCT_VERSION_AFTER=build failed" >> $GITHUB_ENV
-
       - name: Write build failure report
         if: steps.build-circt.outcome == 'failure'
         run: |
@@ -246,7 +242,7 @@ jobs:
             printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
               "$ARTIFACT_SHA" \
               "${{ steps.pr-info.outputs.head_sha }}"
-            echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
+            echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER:-build failed}\` |"
             echo ""
             [ -f tracker/pr-pass-compare.md ] && cat tracker/pr-pass-compare.md
           } >> $GITHUB_STEP_SUMMARY

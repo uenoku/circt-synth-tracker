@@ -10,14 +10,19 @@ from pathlib import Path
 
 
 def extract_log_excerpt(log_text: str, max_lines: int) -> str:
-    lines = [line.rstrip() for line in log_text.splitlines() if line.strip()]
+    """Return a concise build-log excerpt centered around the first failure."""
+    lines = [line.rstrip() for line in log_text.splitlines()]
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    while lines and not lines[-1].strip():
+        lines.pop()
     if not lines:
         return "No build log output was captured."
 
     failure_indices = [
         index
         for index, line in enumerate(lines)
-        if "error:" in line or line.startswith("FAILED:")
+        if "error:" in line.lower() or line.startswith(("FAILED:", "failed:"))
     ]
     if failure_indices:
         start = max(0, failure_indices[0] - 5)
@@ -32,6 +37,7 @@ def extract_log_excerpt(log_text: str, max_lines: int) -> str:
 
 
 def render_markdown(summary: str, details: list[str], log_excerpt: str) -> str:
+    """Render the Markdown body used in workflow summaries and issue comments."""
     lines = [
         "## Status",
         "",
@@ -49,6 +55,7 @@ def render_markdown(summary: str, details: list[str], log_excerpt: str) -> str:
 
 
 def render_html(title: str, summary: str, details: list[str], log_excerpt: str) -> str:
+    """Render a standalone HTML page for GitHub Pages/artifact browsing."""
     detail_items = "".join(f"<li>{escape(detail)}</li>" for detail in details)
     return f"""<!doctype html>
 <html lang="en"><head>
@@ -84,6 +91,7 @@ def write_report(
     json_out: Path | None,
     max_log_lines: int,
 ) -> None:
+    """Write Markdown/HTML(/JSON) fallback reports for a CIRCT build failure."""
     log_excerpt = extract_log_excerpt(log_path.read_text(), max_lines=max_log_lines)
     markdown_out.write_text(render_markdown(summary, details, log_excerpt))
     html_out.write_text(render_html(title, summary, details, log_excerpt))
