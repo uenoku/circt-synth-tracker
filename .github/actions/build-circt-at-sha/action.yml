@@ -21,6 +21,10 @@ inputs:
     description: 'Optional path to a patch file (relative to GITHUB_WORKSPACE) to apply after checkout'
     required: false
     default: ''
+  patch_base_sha:
+    description: 'Optional: SHA of the commit the patch was generated from (i.e. the PR base commit). If provided, this commit is fetched before applying the patch so that git apply --3way has the necessary blobs for a proper 3-way merge, even when the checkout ref has diverged from the patch base.'
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -41,6 +45,17 @@ runs:
         PATCH_FILE="$GITHUB_WORKSPACE/${{ inputs.patch }}"
         EXPECTED_COUNT=$(grep -c "^diff --git" "$PATCH_FILE")
         echo "Patch contains $EXPECTED_COUNT diff block(s)"
+        # Fetch the PR's base commit so that git apply --3way has the necessary blob
+        # OIDs. Without this, git cannot find the "old" side of each hunk (the index
+        # lines in the patch point to blobs from the base commit, not ARTIFACT_SHA),
+        # causing it to fall back to direct application. Direct application silently
+        # skips diff blocks whose context lines don't match the current file content
+        # (e.g. when ARTIFACT_SHA has independently advanced past the PR's base), while
+        # still exiting 0. Fetching the base commit enables the proper 3-way merge path.
+        if [ -n "${{ inputs.patch_base_sha }}" ]; then
+          echo "Fetching patch base commit ${{ inputs.patch_base_sha }} for 3-way merge..."
+          git fetch --depth=1 origin "${{ inputs.patch_base_sha }}"
+        fi
         if ! git apply "$PATCH_FILE" --3way; then
           echo "::error::Failed to apply patch '${{ inputs.patch }}' to CIRCT at ${{ inputs.ref }}"
           exit 1
