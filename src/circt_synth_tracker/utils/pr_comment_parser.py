@@ -18,6 +18,7 @@ class BenchmarkCommand:
 
 
 def _parse_pr_number(value):
+    """Return a PR number from a numeric string or CIRCT GitHub PR URL."""
     if value.isdigit():
         return value
     if match := PR_URL_RE.fullmatch(value):
@@ -26,6 +27,11 @@ def _parse_pr_number(value):
 
 
 def _parse_tokens(tokens):
+    """Parse bot command tokens into a benchmark command.
+
+    Expected tokens contain `@circt-tracker-bot`, a supported check-pr command,
+    a PR number or CIRCT PR URL, and optional `--extra-args` syntax.
+    """
     for index, token in enumerate(tokens):
         if token != "@circt-tracker-bot" or index + 2 >= len(tokens):
             continue
@@ -64,6 +70,12 @@ def _parse_tokens(tokens):
 
 
 def parse_benchmark_comment(comment):
+    """Parse the first supported benchmark command found in a comment body.
+
+    The parser scans comment lines individually so the command can appear inside
+    a larger multi-line comment. It raises `ValueError` when it finds a bot
+    command with invalid syntax or when no supported command is present.
+    """
     last_error = None
     for line in comment.splitlines():
         stripped = line.strip()

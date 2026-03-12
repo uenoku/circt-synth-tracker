@@ -18,6 +18,7 @@ def test_parse_pr_url_for_quick_mode():
 
     assert command.mode == "quick"
     assert command.pr_number == "98765"
+    assert command.extra_args == ""
 
 
 def test_parse_extra_args_with_equals_syntax():

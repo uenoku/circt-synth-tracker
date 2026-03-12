@@ -157,9 +157,9 @@ Supports optional inputs:
 SMT Translation Validation runs automatically for CIRCT using Bitwuzla.
 
 ### PR Benchmark (`ci-pr-benchmark.yml`)
-Triggered manually (or via `@circt-tracker-bot check-pr <N>` or
-`@circt-tracker-bot check-pr https://github.com/llvm/circt/pull/<N>` comment)
-to benchmark
+Triggered manually, or via an `@circt-tracker-bot check-pr <N>` or
+`@circt-tracker-bot check-pr https://github.com/llvm/circt/pull/<N>` comment, to
+benchmark
 a specific CIRCT PR. Builds CIRCT from source at the PR base and head SHAs,
 runs benchmarks, and posts a before/after comparison.
 
