@@ -157,12 +157,15 @@ Supports optional inputs:
 SMT Translation Validation runs automatically for CIRCT using Bitwuzla.
 
 ### PR Benchmark (`ci-pr-benchmark.yml`)
-Triggered manually (or via `@tracker-bot check-pr <N>` comment) to benchmark
+Triggered manually, or via an `@circt-tracker-bot check-pr <N>` or
+`@circt-tracker-bot check-pr https://github.com/llvm/circt/pull/<N>` comment, to
+benchmark
 a specific CIRCT PR. Builds CIRCT from source at the PR base and head SHAs,
 runs benchmarks, and posts a before/after comparison.
 
 Supports optional inputs:
 - `abc_commands`: apply ABC optimization
+- `extra_circt_synth_args`: extra flags to pass through to `circt-synth`
 - `equiv_check`: run CEC between the before/after AIG outputs
 
 SMT Translation Validation runs automatically on both the base and head builds using Bitwuzla.
@@ -191,8 +194,9 @@ This enables before/after comparisons such as:
 - or both, while keeping the same benchmark set and LUT/CUT sweep.
 
 ### PR Bot (`ci-pr-bot.yml`)
-Listens for `@tracker-bot check-pr <N>` comments on issues and dispatches
-the PR benchmark workflow automatically.
+Listens for `@circt-tracker-bot check-pr <N>` comments on issues and dispatches
+the PR benchmark workflow automatically. The bot also accepts a full GitHub PR
+URL and optional `--extra-args="..."` syntax for CIRCT benchmark runs.
 
 ## Time Series Tracking
 
