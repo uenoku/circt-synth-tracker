@@ -17,6 +17,10 @@ inputs:
   llvm_dir:
     description: 'LLVM CMake config directory'
     required: true
+  patch:
+    description: 'Optional path to a patch file (relative to GITHUB_WORKSPACE) to apply after checkout'
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -28,6 +32,17 @@ runs:
         ref: ${{ inputs.ref }}
         submodules: false
         path: ${{ inputs.checkout_path }}
+
+    - name: Apply patch
+      if: ${{ inputs.patch != '' }}
+      shell: bash
+      run: |
+        cd "${{ inputs.checkout_path }}"
+        if ! git apply "$GITHUB_WORKSPACE/${{ inputs.patch }}" --3way; then
+          echo "::error::Failed to apply patch '${{ inputs.patch }}' to CIRCT at ${{ inputs.ref }}"
+          exit 1
+        fi
+        echo "Applied patch: ${{ inputs.patch }}"
 
     - name: Configure and build circt-synth
       shell: bash
