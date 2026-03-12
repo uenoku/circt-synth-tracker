@@ -23,7 +23,7 @@ def test_write_report_includes_build_error_excerpt(tmp_path):
     write_report(
         title="CIRCT PR Benchmark Build Failure",
         summary="The CIRCT PR build failed before post-patch benchmarks could run.",
-        details=["After benchmarks were skipped."],
+        details=["Post-patch benchmarks were skipped."],
         log_path=log_path,
         markdown_out=markdown_out,
         html_out=html_out,
@@ -37,6 +37,6 @@ def test_write_report_includes_build_error_excerpt(tmp_path):
 
     assert "build failed before post-patch benchmarks could run" in markdown
     assert "reuseSubsets" in markdown
-    assert "After benchmarks were skipped." in html
+    assert "Post-patch benchmarks were skipped." in html
     assert payload["status"] == "build-failed"
     assert "reuseSubsets" in payload["log_excerpt"]
