@@ -1,7 +1,6 @@
-from dataclasses import dataclass
 import re
 import shlex
-
+from dataclasses import dataclass
 
 PR_URL_RE = re.compile(r"^https://github\.com/llvm/circt/pull/(\d+)(?:[/?#].*)?$")
 MODE_BY_COMMAND = {
