@@ -198,6 +198,8 @@ jobs:
             --results-dir build_before -o before-summary.json
 
       - name: Build CIRCT at artifact SHA + PR diff (after)
+        id: build-circt
+        continue-on-error: true
         uses: ./.github/actions/build-circt-at-sha
         with:
           ref: ${{ env.ARTIFACT_SHA }}
@@ -207,8 +209,29 @@ jobs:
           llvm_dir: ${{ env.LLVM_DIR }}
           patch: pr.patch
           patch_base_sha: ${{ steps.pr-info.outputs.base_sha }}
+          build_log_path: circt-pr/build/build.log
+
+      - name: Mark CIRCT build failure
+        if: steps.build-circt.outcome == 'failure'
+        run: echo "CIRCT_VERSION_AFTER=build failed" >> $GITHUB_ENV
+
+      - name: Write build failure report
+        if: steps.build-circt.outcome == 'failure'
+        run: |
+          cd tracker
+          source .venv/bin/activate
+          python -m circt_synth_tracker.utils.build_failure_report \
+            --title "CIRCT PR Benchmark Build Failure" \
+            --summary "The CIRCT PR build failed before post-patch benchmarks could run." \
+            --detail "The patched CIRCT checkout did not produce a usable circt-synth binary." \
+            --detail "See the workflow logs for the full configure/build output." \
+            --log "$GITHUB_WORKSPACE/circt-pr/build/build.log" \
+            --markdown-out pr-report.md \
+            --html-out pr-report.html \
+            --json-out pr-report.json
 
       - name: Run benchmarks (after)
+        if: steps.build-circt.outcome == 'success'
         run: |
           export PATH="$GITHUB_WORKSPACE/circt-pr/build/bin:$PATH"
           AFTER_VERSION=$(circt-synth --version | tail -1 | xargs)
@@ -233,6 +256,7 @@ jobs:
             --results-dir build_after -o after-summary.json
 
       - name: Compare before vs after
+        if: steps.build-circt.outcome == 'success'
         run: |
           cd tracker
           source .venv/bin/activate
@@ -367,3 +391,9 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy
           keep_files: true
+
+      - name: Fail job for CIRCT build failure
+        if: steps.build-circt.outcome == 'failure'
+        run: |
+          echo "::error::CIRCT PR build failed before after-benchmark results could be generated."
+          exit 1

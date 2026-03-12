@@ -25,6 +25,10 @@ inputs:
     description: 'Optional: SHA of the commit the patch was generated from (i.e. the PR base commit). If provided, this commit is fetched before applying the patch so that git apply --3way has the necessary blobs for a proper 3-way merge, even when the checkout ref has diverged from the patch base.'
     required: false
     default: ''
+  build_log_path:
+    description: 'Optional path to capture the configure/build log with tee for later reporting'
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -80,19 +84,42 @@ runs:
     - name: Configure and build circt-synth
       shell: bash
       run: |
-        cmake -GNinja "${{ inputs.checkout_path }}" \
-          -B "${{ inputs.build_path }}" \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DLLVM_ENABLE_ASSERTIONS=ON \
-          -DMLIR_DIR="${{ inputs.mlir_dir }}" \
-          -DLLVM_DIR="${{ inputs.llvm_dir }}" \
-          -DLLVM_USE_LINKER=lld \
-          -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ \
-          -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
-          -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
-          -DBUILD_SHARED_LIBS=ON \
-          -DLLVM_LINK_LLVM_DYLIB=OFF \
-          -DCMAKE_C_COMPILER_LAUNCHER=sccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-        ninja -C "${{ inputs.build_path }}" -j"$(nproc)" circt-synth
+        set -o pipefail
+        if [ -n "${{ inputs.build_log_path }}" ]; then
+          mkdir -p "$(dirname "${{ inputs.build_log_path }}")"
+          {
+            cmake -GNinja "${{ inputs.checkout_path }}" \
+              -B "${{ inputs.build_path }}" \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DLLVM_ENABLE_ASSERTIONS=ON \
+              -DMLIR_DIR="${{ inputs.mlir_dir }}" \
+              -DLLVM_DIR="${{ inputs.llvm_dir }}" \
+              -DLLVM_USE_LINKER=lld \
+              -DCMAKE_C_COMPILER=clang \
+              -DCMAKE_CXX_COMPILER=clang++ \
+              -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
+              -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
+              -DBUILD_SHARED_LIBS=ON \
+              -DLLVM_LINK_LLVM_DYLIB=OFF \
+              -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+            ninja -C "${{ inputs.build_path }}" -j"$(nproc)" circt-synth
+          } 2>&1 | tee "${{ inputs.build_log_path }}"
+        else
+          cmake -GNinja "${{ inputs.checkout_path }}" \
+            -B "${{ inputs.build_path }}" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLLVM_ENABLE_ASSERTIONS=ON \
+            -DMLIR_DIR="${{ inputs.mlir_dir }}" \
+            -DLLVM_DIR="${{ inputs.llvm_dir }}" \
+            -DLLVM_USE_LINKER=lld \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCIRCT_ENABLE_BINDINGS_PYTHON=OFF \
+            -DCIRCT_SLANG_FRONTEND_ENABLED=OFF \
+            -DBUILD_SHARED_LIBS=ON \
+            -DLLVM_LINK_LLVM_DYLIB=OFF \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          ninja -C "${{ inputs.build_path }}" -j"$(nproc)" circt-synth
+        fi
