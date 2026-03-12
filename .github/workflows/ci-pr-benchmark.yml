@@ -98,6 +98,10 @@ jobs:
             --limit 1 \
             --json databaseId \
             --jq '.[0].databaseId')
+          # Get the commit SHA for the downloaded artifact run
+          ARTIFACT_SHA=$(gh run view "$RUN_ID" --repo llvm/circt --json headSha --jq '.headSha')
+          echo "ARTIFACT_SHA=$ARTIFACT_SHA" >> $GITHUB_ENV
+          echo "Artifact build commit: ${ARTIFACT_SHA:0:8}"
           echo "Downloading circt-full-shared-linux-x64.tar.gz from run $RUN_ID"
           gh run download "$RUN_ID" \
             --repo llvm/circt \
@@ -130,6 +134,13 @@ jobs:
           echo "PR: $PR_NUMBER - $PR_TITLE"
           echo "Base: ${BASE_SHA:0:8}"
           echo "Head: ${HEAD_SHA:0:8}"
+          # Save the PR diff to be applied on top of the artifact commit
+          gh pr diff "$PR_NUMBER" --repo llvm/circt > "$GITHUB_WORKSPACE/pr.patch"
+          if [ ! -s "$GITHUB_WORKSPACE/pr.patch" ]; then
+            echo "::error::PR diff is empty or could not be retrieved for PR #$PR_NUMBER"
+            exit 1
+          fi
+          echo "Saved PR diff to pr.patch ($(wc -l < "$GITHUB_WORKSPACE/pr.patch") lines)"
 
       - name: Setup sccache (for CIRCT compilation)
         uses: hendrikmuhs/ccache-action@v1.2
@@ -163,18 +174,8 @@ jobs:
           BITWUZLA_CACHE_DIR: /tmp/bitwuzla-cache
         run: bash tracker/.github/scripts/install-bitwuzla.sh
 
-      - name: Build CIRCT at PR base (before)
-        uses: ./.github/actions/build-circt-at-sha
-        with:
-          ref: ${{ steps.pr-info.outputs.base_sha }}
-          checkout_path: circt-base
-          build_path: circt-base/build
-          mlir_dir: ${{ env.MLIR_DIR }}
-          llvm_dir: ${{ env.LLVM_DIR }}
-
       - name: Run benchmarks (before)
         run: |
-          export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
           BEFORE_VERSION=$(circt-synth --version | tail -1 | xargs)
           echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
           cd tracker
@@ -196,14 +197,15 @@ jobs:
           aggregate-results --tool "base" --version "$BEFORE_VERSION" \
             --results-dir build_before -o before-summary.json
 
-      - name: Build CIRCT at PR head (after)
+      - name: Build CIRCT at artifact SHA + PR diff (after)
         uses: ./.github/actions/build-circt-at-sha
         with:
-          ref: ${{ steps.pr-info.outputs.head_sha }}
+          ref: ${{ env.ARTIFACT_SHA }}
           checkout_path: circt-pr
           build_path: circt-pr/build
           mlir_dir: ${{ env.MLIR_DIR }}
           llvm_dir: ${{ env.LLVM_DIR }}
+          patch: pr.patch
 
       - name: Run benchmarks (after)
         run: |
@@ -250,7 +252,7 @@ jobs:
             echo "| | Before | After |"
             echo "|---|---|---|"
             printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
-              "${{ steps.pr-info.outputs.base_sha }}" \
+              "$ARTIFACT_SHA" \
               "${{ steps.pr-info.outputs.head_sha }}"
             echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
             echo ""
@@ -280,7 +282,7 @@ jobs:
             }
             const prNumber = '${{ inputs.pr_number }}';
             const prTitle = '${{ steps.pr-info.outputs.pr_title }}';
-            const baseSha = '${{ steps.pr-info.outputs.base_sha }}'.slice(0, 8);
+            const baseSha = '${{ env.ARTIFACT_SHA }}'.slice(0, 8);
             const headSha = '${{ steps.pr-info.outputs.head_sha }}'.slice(0, 8);
             const beforeVer = process.env.CIRCT_VERSION_BEFORE || 'unknown';
             const afterVer = process.env.CIRCT_VERSION_AFTER || 'unknown';
