@@ -76,6 +76,9 @@ jobs:
             --dir .
           mkdir -p circt-prebuilt
           tar xzf circt-full-shared-linux-x64.tar.gz -C circt-prebuilt/
+          # Avoid stale CIRCT headers from the prebuilt artifact shadowing
+          # headers generated/used by the PR checkout.
+          find "$GITHUB_WORKSPACE/circt-prebuilt" -type d -path "*/include/circt" -prune -exec rm -rf {} +
           MLIR_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "MLIRConfig.cmake" -type f -exec dirname {} \; | head -1)
           LLVM_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "LLVMConfig.cmake" -type f -exec dirname {} \; | head -1)
           PREBUILT_BIN_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "circt-synth" -type f -exec dirname {} \; | head -1)
