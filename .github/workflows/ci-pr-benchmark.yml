@@ -37,10 +37,10 @@ on:
         type: boolean
         default: true
       enable_tv:
-        description: 'Enable translation validation (TV) with bitwuzla'
+        description: 'Enable translation validation (TV) with bitwuzla (opt-in, disabled by default as it is expensive)'
         required: false
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: write

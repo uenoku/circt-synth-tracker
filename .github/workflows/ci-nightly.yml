@@ -20,7 +20,7 @@ on:
         type: boolean
         default: false
       enable_tv:
-        description: 'Enable translation validation (TV) with bitwuzla (always enabled for scheduled and push runs)'
+        description: 'Enable translation validation (TV) with bitwuzla (opt-in only, disabled by default as it is expensive)'
         required: false
         type: boolean
         default: false
@@ -95,8 +95,8 @@ jobs:
           else
             echo "EQUIV_CHECK=false" >> $GITHUB_ENV
           fi
-          # Enable TV for scheduled/push runs, or when manually opted-in
-          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.enable_tv }}" = "true" ]; then
+          # TV is opt-in only (disabled by default) because it is expensive
+          if [ "${{ inputs.enable_tv }}" = "true" ]; then
             echo "ENABLE_TV=true" >> $GITHUB_ENV
           else
             echo "ENABLE_TV=false" >> $GITHUB_ENV
