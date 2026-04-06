@@ -29,15 +29,12 @@ jobs:
           script: |
             const allowed = ['OWNER', 'MEMBER', 'COLLABORATOR'];
             const assoc = context.payload.comment.author_association;
-            const login = context.payload.comment.user.login;
-            // Also allow automated dispatch from the watcher workflow.
-            const isBot = login === 'github-actions[bot]';
-            if (!allowed.includes(assoc) && !isBot) {
+            if (!allowed.includes(assoc)) {
               core.setOutput('authorized', 'false');
-              console.log(`Unauthorized: ${login} (${assoc})`);
+              console.log(`Unauthorized: ${context.payload.comment.user.login} (${assoc})`);
             } else {
               core.setOutput('authorized', 'true');
-              console.log(`Authorized: ${login} (${assoc})`);
+              console.log(`Authorized: ${context.payload.comment.user.login} (${assoc})`);
             }
 
       - name: Parse benchmark command from comment
