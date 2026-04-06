@@ -1,0 +1,158 @@
+name: CIRCT PR Watcher
+
+# Polls llvm/circt every 10 minutes for new PRs that modify files under
+# Synth-related paths. When a new matching PR is found, this workflow:
+#   1. Creates a tracking issue in this repository.
+#   2. Dispatches the combinatorial PR benchmark (ci-pr-benchmark.yml).
+#   3. Dispatches the AIG/pass PR benchmark (ci-pr-pass-benchmark.yml).
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  actions: write
+
+jobs:
+  watch:
+    name: Check for new CIRCT Synth PRs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Watch for CIRCT PRs modifying Synth files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Look for PRs created in the last 15 minutes (10-min cron + 5-min buffer).
+            const cutoffMs = 15 * 60 * 1000;
+            const cutoffDate = new Date(Date.now() - cutoffMs);
+
+            // Fetch the most-recent open PRs from llvm/circt.
+            const { data: prs } = await github.rest.pulls.list({
+              owner: 'llvm',
+              repo: 'circt',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 30,
+            });
+
+            const recentPrs = prs.filter(pr => new Date(pr.created_at) >= cutoffDate);
+            core.info(`Found ${recentPrs.length} PR(s) created in the last 15 minutes`);
+
+            for (const pr of recentPrs) {
+              core.info(`Checking PR #${pr.number}: ${pr.title}`);
+
+              // Skip if we already have a tracking issue for this PR.
+              const searchResult = await github.rest.search.issuesAndPullRequests({
+                q: `repo:${context.repo.owner}/${context.repo.repo} is:issue "[Auto] CIRCT PR #${pr.number}" in:title`,
+              });
+              if (searchResult.data.total_count > 0) {
+                core.info(`Tracking issue already exists for PR #${pr.number}, skipping`);
+                continue;
+              }
+
+              // Fetch the list of files changed by this PR (up to 100 per page).
+              // PRs with more than 100 changed files may have incomplete Synth
+              // file detection, but this is uncommon for Synth-focused PRs.
+              const { data: files } = await github.rest.pulls.listFiles({
+                owner: 'llvm',
+                repo: 'circt',
+                pull_number: pr.number,
+                per_page: 100,
+              });
+
+              // Match any file whose path contains "synth" (case-insensitive).
+              const synthFiles = files.filter(f => /synth/i.test(f.filename));
+              if (synthFiles.length === 0) {
+                core.info(`PR #${pr.number} does not modify Synth files, skipping`);
+                continue;
+              }
+
+              core.info(
+                `PR #${pr.number} modifies Synth files: ${synthFiles.map(f => f.filename).join(', ')}`
+              );
+
+              // Create a tracking issue.
+              const issueBody = [
+                `Automatically triggered benchmark for CIRCT PR [#${pr.number}](https://github.com/llvm/circt/pull/${pr.number}).`,
+                '',
+                `**PR Title:** ${pr.title}`,
+                `**Author:** @${pr.user.login}`,
+                `**Created:** ${pr.created_at}`,
+                '',
+                '**Synth files modified:**',
+                ...synthFiles.map(f => `- \`${f.filename}\``),
+                '',
+                '---',
+                '🤖 Benchmarks have been automatically triggered. Combinatorial benchmark results will be posted here when done.',
+              ].join('\n');
+
+              const { data: issue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Auto] CIRCT PR #${pr.number}: ${pr.title}`,
+                body: issueBody,
+              });
+
+              core.info(`Created issue #${issue.number} for CIRCT PR #${pr.number}`);
+
+              // Dispatch the combinatorial benchmark (posts results back to the issue).
+              try {
+                await github.rest.actions.createWorkflowDispatch({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id: 'ci-pr-benchmark.yml',
+                  ref: 'main',
+                  inputs: {
+                    pr_number: String(pr.number),
+                    bitwidths: '16,48',
+                    issue_number: String(issue.number),
+                    equiv_check: 'true',
+                    enable_tv: 'true',
+                  },
+                });
+                core.info(`Dispatched ci-pr-benchmark.yml for PR #${pr.number}`);
+              } catch (err) {
+                core.error(`Failed to dispatch ci-pr-benchmark.yml for PR #${pr.number}: ${err}`);
+              }
+
+              // Dispatch the AIG/pass benchmark.
+              try {
+                await github.rest.actions.createWorkflowDispatch({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id: 'ci-pr-pass-benchmark.yml',
+                  ref: 'main',
+                  inputs: {
+                    pr_number: String(pr.number),
+                  },
+                });
+                core.info(`Dispatched ci-pr-pass-benchmark.yml for PR #${pr.number}`);
+              } catch (err) {
+                core.error(`Failed to dispatch ci-pr-pass-benchmark.yml for PR #${pr.number}: ${err}`);
+              }
+
+              // Post an acknowledgment comment with workflow links.
+              const benchUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/ci-pr-benchmark.yml`;
+              const passUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/ci-pr-pass-benchmark.yml`;
+              const pagesBase = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-benchmarks/pr-${pr.number}`;
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: [
+                  `🤖 Benchmarks triggered for [CIRCT PR #${pr.number}](https://github.com/llvm/circt/pull/${pr.number})!`,
+                  '',
+                  '- 🔍 **Combinatorial benchmark** (with translation validation and equivalence check) — results will be posted here when done',
+                  `- 🧪 **Pass benchmark** (AIG/pass track) — results at [GitHub Pages](${pagesBase}/report-pass.html) when done`,
+                  '',
+                  'Building CIRCT from source before and after the PR; this takes a while.',
+                  '',
+                  `[View combinatorial workflow runs](${benchUrl}) | [View pass benchmark runs](${passUrl})`,
+                ].join('\n'),
+              });
+            }
