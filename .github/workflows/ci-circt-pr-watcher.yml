@@ -1,0 +1,120 @@
+name: CIRCT PR Watcher
+
+# Polls llvm/circt every 10 minutes for new PRs that modify files under
+# Synth-related paths. When a new matching PR is found, this workflow:
+#   1. Creates a tracking issue in this repository.
+#   2. Posts @circt-tracker-bot check-pr comments to trigger both benchmarks
+#      through the existing PR bot (ci-pr-bot.yml).
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  watch:
+    name: Check for new CIRCT Synth PRs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Watch for CIRCT PRs modifying Synth files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Look for PRs created in the last 15 minutes (10-min cron + 5-min buffer).
+            const cutoffMs = 15 * 60 * 1000;
+            const cutoffDate = new Date(Date.now() - cutoffMs);
+
+            // Fetch the most-recent open PRs from llvm/circt.
+            const { data: prs } = await github.rest.pulls.list({
+              owner: 'llvm',
+              repo: 'circt',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 30,
+            });
+
+            const recentPrs = prs.filter(pr => new Date(pr.created_at) >= cutoffDate);
+            core.info(`Found ${recentPrs.length} PR(s) created in the last 15 minutes`);
+
+            for (const pr of recentPrs) {
+              core.info(`Checking PR #${pr.number}: ${pr.title}`);
+
+              // Skip if we already have a tracking issue for this PR.
+              const searchResult = await github.rest.search.issuesAndPullRequests({
+                q: `repo:${context.repo.owner}/${context.repo.repo} is:issue "[Auto] CIRCT PR #${pr.number}" in:title`,
+              });
+              if (searchResult.data.total_count > 0) {
+                core.info(`Tracking issue already exists for PR #${pr.number}, skipping`);
+                continue;
+              }
+
+              // Fetch the list of files changed by this PR (up to 100 per page).
+              // PRs with more than 100 changed files may have incomplete Synth
+              // file detection, but this is uncommon for Synth-focused PRs.
+              const { data: files } = await github.rest.pulls.listFiles({
+                owner: 'llvm',
+                repo: 'circt',
+                pull_number: pr.number,
+                per_page: 100,
+              });
+
+              // Match any file whose path contains "synth" (case-insensitive).
+              const synthFiles = files.filter(f => /synth/i.test(f.filename));
+              if (synthFiles.length === 0) {
+                core.info(`PR #${pr.number} does not modify Synth files, skipping`);
+                continue;
+              }
+
+              core.info(
+                `PR #${pr.number} modifies Synth files: ${synthFiles.map(f => f.filename).join(', ')}`
+              );
+
+              // Create a tracking issue.
+              const issueBody = [
+                `Automatically triggered benchmark for CIRCT PR [#${pr.number}](https://github.com/llvm/circt/pull/${pr.number}).`,
+                '',
+                `**PR Title:** ${pr.title}`,
+                `**Author:** ${pr.user.login}`,
+                `**Created:** ${pr.created_at}`,
+                '',
+                '**Synth files modified:**',
+                ...synthFiles.map(f => `- \`${f.filename}\``),
+                '',
+                '---',
+                '🤖 Benchmarks will be automatically triggered by the bot below.',
+              ].join('\n');
+
+              const { data: issue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Auto] CIRCT PR #${pr.number}: ${pr.title}`,
+                body: issueBody,
+              });
+
+              core.info(`Created issue #${issue.number} for CIRCT PR #${pr.number}`);
+
+              // Trigger both benchmarks by posting bot commands on the new issue.
+              // ci-pr-bot.yml will pick these up, dispatch the appropriate workflows,
+              // and post acknowledgment comments back to the issue.
+
+              // Combinatorial benchmark (full mode: TV + equiv-check; results posted to issue).
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `@circt-tracker-bot check-pr ${pr.number}`,
+              });
+
+              // AIG/pass benchmark.
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `@circt-tracker-bot check-pr-pass ${pr.number}`,
+              });
+            }
