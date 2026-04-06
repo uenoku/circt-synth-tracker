@@ -29,7 +29,7 @@ jobs:
     name: CIRCT vs ABC Pass Compile Time
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/circt/images/circt-ci-build:20260107030736
+      image: ghcr.io/circt/images/circt-integration-test:v20
     defaults:
       run:
         shell: bash
@@ -40,64 +40,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install gh and jq
-        run: |
-          apt-get update && apt-get install -y jq
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-            | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-            | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          apt-get update
-          apt-get install -y gh
+      - name: Install jq
+        run: apt-get update && apt-get install -y jq
 
-      - name: Download pre-built CIRCT (LLVM/MLIR install)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          RUN_ID=$(gh run list \
-            --repo llvm/circt \
-            --workflow uploadReleaseArtifacts.yml \
-            --branch main \
-            --status success \
-            --limit 1 \
-            --json databaseId \
-            --jq '.[0].databaseId')
-          ARTIFACT_SHA=$(gh run view "$RUN_ID" --repo llvm/circt --json headSha --jq '.headSha')
-          echo "ARTIFACT_SHA=$ARTIFACT_SHA" >> $GITHUB_ENV
-          echo "Artifact build commit: ${ARTIFACT_SHA:0:8}"
-          gh run download "$RUN_ID" \
-            --repo llvm/circt \
-            --name "circt-full-shared-linux-x64.tar.gz" \
-            --dir .
-          mkdir -p circt-prebuilt
-          tar xzf circt-full-shared-linux-x64.tar.gz -C circt-prebuilt/
-          MLIR_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "MLIRConfig.cmake" -type f -exec dirname {} \; | head -1)
-          LLVM_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "LLVMConfig.cmake" -type f -exec dirname {} \; | head -1)
-          PREBUILT_LIB_DIR=$(dirname "$(dirname "$LLVM_CMAKE_DIR")")
-          echo "MLIR_DIR=$MLIR_CMAKE_DIR" >> $GITHUB_ENV
-          echo "LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=$PREBUILT_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
-
-      - name: Setup sccache (for CIRCT compilation)
-        uses: hendrikmuhs/ccache-action@v1.2
+      - name: Install CIRCT nightly
+        uses: circt/install-circt@3f8dda6e1c1965537b5801a43c81c287bac4eae4 # v1.1.1
         with:
-          key: sccache-circt-${{ runner.os }}-20260107030736
-          restore-keys: sccache-circt-${{ runner.os }}-
-          max-size: 1G
-          variant: sccache
-
-      - name: Build CIRCT at artifact SHA with CaDiCaL
-        uses: ./.github/actions/build-circt-at-sha
-        with:
-          ref: ${{ env.ARTIFACT_SHA }}
-          checkout_path: circt-src
-          build_path: circt-src/build
-          mlir_dir: ${{ env.MLIR_DIR }}
-          llvm_dir: ${{ env.LLVM_DIR }}
+          version: 'nightly'
+          github-token: ${{ github.token }}
 
       - name: Add CIRCT to PATH
-        run: echo "$GITHUB_WORKSPACE/circt-src/build/bin" >> $GITHUB_PATH
+        run: echo "$GITHUB_WORKSPACE/circt/bin" >> $GITHUB_PATH
 
       - name: Get CIRCT version
         run: |
