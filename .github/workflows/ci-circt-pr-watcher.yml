@@ -70,9 +70,17 @@ jobs:
                 core.info(`PR #${pr.number} does not modify Synth files, skipping`);
                 continue;
               }
+              const datapathFiles = files.filter(f => /datapath/i.test(f.filename));
+              if (datapathFiles.length === 0) {
+                core.info(`PR #${pr.number} does not modify datapath files, skipping`);
+                continue;
+              }
 
               core.info(
                 `PR #${pr.number} modifies Synth files: ${synthFiles.map(f => f.filename).join(', ')}`
+              );
+              core.info(
+                `PR #${pr.number} modifies datapath files: ${datapathFiles.map(f => f.filename).join(', ')}`
               );
 
               // Create a tracking issue.
@@ -85,6 +93,9 @@ jobs:
                 '',
                 '**Synth files modified:**',
                 ...synthFiles.map(f => `- \`${f.filename}\``),
+                '',
+                '**Datapath files modified:**',
+                ...datapathFiles.map(f => `- \`${f.filename}\``),
                 '',
                 '---',
                 '🤖 Benchmarks have been automatically triggered. Combinatorial benchmark results will be posted here when done.',
