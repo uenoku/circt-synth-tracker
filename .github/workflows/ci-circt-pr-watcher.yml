@@ -3,8 +3,8 @@ name: CIRCT PR Watcher
 # Polls llvm/circt every 10 minutes for new PRs that modify files under
 # Synth-related paths. When a new matching PR is found, this workflow:
 #   1. Creates a tracking issue in this repository.
-#   2. Dispatches the combinatorial PR benchmark (ci-pr-benchmark.yml).
-#   3. Dispatches the AIG/pass PR benchmark (ci-pr-pass-benchmark.yml).
+#   2. Posts @circt-tracker-bot check-pr comments to trigger both benchmarks
+#      through the existing PR bot (ci-pr-bot.yml).
 
 on:
   schedule:
@@ -13,7 +13,6 @@ on:
 
 permissions:
   issues: write
-  actions: write
 
 jobs:
   watch:
@@ -80,14 +79,14 @@ jobs:
                 `Automatically triggered benchmark for CIRCT PR [#${pr.number}](https://github.com/llvm/circt/pull/${pr.number}).`,
                 '',
                 `**PR Title:** ${pr.title}`,
-                `**Author:** @${pr.user.login}`,
+                `**Author:** ${pr.user.login}`,
                 `**Created:** ${pr.created_at}`,
                 '',
                 '**Synth files modified:**',
                 ...synthFiles.map(f => `- \`${f.filename}\``),
                 '',
                 '---',
-                '🤖 Benchmarks have been automatically triggered. Combinatorial benchmark results will be posted here when done.',
+                '🤖 Benchmarks will be automatically triggered by the bot below.',
               ].join('\n');
 
               const { data: issue } = await github.rest.issues.create({
@@ -99,60 +98,23 @@ jobs:
 
               core.info(`Created issue #${issue.number} for CIRCT PR #${pr.number}`);
 
-              // Dispatch the combinatorial benchmark (posts results back to the issue).
-              try {
-                await github.rest.actions.createWorkflowDispatch({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  workflow_id: 'ci-pr-benchmark.yml',
-                  ref: 'main',
-                  inputs: {
-                    pr_number: String(pr.number),
-                    bitwidths: '16,48',
-                    issue_number: String(issue.number),
-                    equiv_check: 'true',
-                    enable_tv: 'true',
-                  },
-                });
-                core.info(`Dispatched ci-pr-benchmark.yml for PR #${pr.number}`);
-              } catch (err) {
-                core.error(`Failed to dispatch ci-pr-benchmark.yml for PR #${pr.number}: ${err}`);
-              }
+              // Trigger both benchmarks by posting bot commands on the new issue.
+              // ci-pr-bot.yml will pick these up, dispatch the appropriate workflows,
+              // and post acknowledgment comments back to the issue.
 
-              // Dispatch the AIG/pass benchmark.
-              try {
-                await github.rest.actions.createWorkflowDispatch({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  workflow_id: 'ci-pr-pass-benchmark.yml',
-                  ref: 'main',
-                  inputs: {
-                    pr_number: String(pr.number),
-                  },
-                });
-                core.info(`Dispatched ci-pr-pass-benchmark.yml for PR #${pr.number}`);
-              } catch (err) {
-                core.error(`Failed to dispatch ci-pr-pass-benchmark.yml for PR #${pr.number}: ${err}`);
-              }
-
-              // Post an acknowledgment comment with workflow links.
-              const benchUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/ci-pr-benchmark.yml`;
-              const passUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/ci-pr-pass-benchmark.yml`;
-              const pagesBase = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-benchmarks/pr-${pr.number}`;
-
+              // Combinatorial benchmark (full mode: TV + equiv-check; results posted to issue).
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                body: [
-                  `🤖 Benchmarks triggered for [CIRCT PR #${pr.number}](https://github.com/llvm/circt/pull/${pr.number})!`,
-                  '',
-                  '- 🔍 **Combinatorial benchmark** (with translation validation and equivalence check) — results will be posted here when done',
-                  `- 🧪 **Pass benchmark** (AIG/pass track) — results at [GitHub Pages](${pagesBase}/report-pass.html) when done`,
-                  '',
-                  'Building CIRCT from source before and after the PR; this takes a while.',
-                  '',
-                  `[View combinatorial workflow runs](${benchUrl}) | [View pass benchmark runs](${passUrl})`,
-                ].join('\n'),
+                body: `@circt-tracker-bot check-pr ${pr.number}`,
+              });
+
+              // AIG/pass benchmark.
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `@circt-tracker-bot check-pr-pass ${pr.number}`,
               });
             }
