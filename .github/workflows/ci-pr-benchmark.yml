@@ -177,8 +177,18 @@ jobs:
           BITWUZLA_CACHE_DIR: /tmp/bitwuzla-cache
         run: bash tracker/.github/scripts/install-bitwuzla.sh
 
+      - name: Build CIRCT at artifact SHA (before)
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          ref: ${{ env.ARTIFACT_SHA }}
+          checkout_path: circt-base
+          build_path: circt-base/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
+
       - name: Run benchmarks (before)
         run: |
+          export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
           BEFORE_VERSION=$(circt-synth --version | tail -1 | xargs)
           echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
           cd tracker
