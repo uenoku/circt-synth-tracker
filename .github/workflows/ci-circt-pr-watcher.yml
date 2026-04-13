@@ -66,13 +66,9 @@ jobs:
 
               // Match any file whose path contains "synth" (case-insensitive).
               const synthFiles = files.filter(f => /synth/i.test(f.filename));
-              if (synthFiles.length === 0) {
-                core.info(`PR #${pr.number} does not modify Synth files, skipping`);
-                continue;
-              }
               const datapathFiles = files.filter(f => /datapath/i.test(f.filename));
-              if (datapathFiles.length === 0) {
-                core.info(`PR #${pr.number} does not modify datapath files, skipping`);
+              if (synthFiles.length === 0 && datapathFiles.length === 0) {
+                core.info(`PR #${pr.number} does not modify Synth and Datapath files, skipping`);
                 continue;
               }
 
