@@ -20,16 +20,16 @@ permissions:
   contents: write
   pages: write
 
-# Keep the container image tag in sync with llvm/circt's buildAndTest.yml
+# Keep the container image tag in sync with the other tracker workflows
 env:
-  CIRCT_CI_IMAGE: ghcr.io/circt/images/circt-ci-build:20260107030736
+  CIRCT_CI_IMAGE: ghcr.io/circt/images/circt-integration-test:v20
 
 jobs:
   benchmark:
     name: Pass benchmark CIRCT PR #${{ inputs.pr_number }}
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/circt/images/circt-ci-build:20260107030736
+      image: ghcr.io/circt/images/circt-integration-test:v20
 
     defaults:
       run:
