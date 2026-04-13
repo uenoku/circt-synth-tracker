@@ -129,7 +129,7 @@ jobs:
           uv run prepare
 
       - name: Build CIRCT at artifact SHA (before)
-        uses: ./.github/actions/build-circt-at-sha
+        uses: ./tracker/.github/actions/build-circt-at-sha
         with:
           ref: ${{ env.ARTIFACT_SHA }}
           checkout_path: circt-base
@@ -165,7 +165,7 @@ jobs:
           aggregate-results --tool 'abc-*-pass' --version "$BEFORE_VERSION" --results-dir build_pass_before/abc -o abc-base.json
 
       - name: Build CIRCT at artifact SHA + PR diff (after)
-        uses: ./.github/actions/build-circt-at-sha
+        uses: ./tracker/.github/actions/build-circt-at-sha
         with:
           ref: ${{ env.ARTIFACT_SHA }}
           checkout_path: circt-pr
