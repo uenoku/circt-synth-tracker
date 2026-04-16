@@ -160,6 +160,10 @@ jobs:
                   'Building CIRCT from source before and after the PR; this takes a while.',
                   '',
                   `[View combinatorial workflow runs](${benchUrl}) | [View pass benchmark runs](${passUrl})`,
+                  '',
+                  '<!--',
+                  `@circt-tracker-bot check-pr ${pr.number}`,
+                  '-->',
                 ].join('\n'),
               });
             }

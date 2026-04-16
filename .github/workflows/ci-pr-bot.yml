@@ -10,10 +10,13 @@ permissions:
 
 jobs:
   dispatch:
-    # Only run when the comment contains one of the trigger phrases
+    # Only run when the comment contains one of the trigger phrases.
+    # Exclude bot-authored comments to prevent self-triggering when the
+    # watcher embeds a parseable bot command in its acknowledgment comment.
     if: >-
-      contains(github.event.comment.body, '@circt-tracker-bot check-pr') ||
-      contains(github.event.comment.body, '@circt-tracker-bot rerun')
+      github.event.comment.user.type != 'Bot' &&
+      (contains(github.event.comment.body, '@circt-tracker-bot check-pr') ||
+      contains(github.event.comment.body, '@circt-tracker-bot rerun'))
     runs-on: ubuntu-latest
 
     steps:
