@@ -194,9 +194,18 @@ This enables before/after comparisons such as:
 - or both, while keeping the same benchmark set and LUT/CUT sweep.
 
 ### PR Bot (`ci-pr-bot.yml`)
-Listens for `@circt-tracker-bot check-pr <N>` comments on issues and dispatches
-the PR benchmark workflow automatically. The bot also accepts a full GitHub PR
-URL and optional `--extra-args="..."` syntax for CIRCT benchmark runs.
+Listens for `@circt-tracker-bot` commands on issues and dispatches benchmark
+workflows automatically. Supported commands:
+
+| Command | Description |
+|---|---|
+| `@circt-tracker-bot check-pr <N>` | Full benchmark (with translation validation and equivalence check) |
+| `@circt-tracker-bot check-pr-quick <N>` | Quick benchmark (no TV or equivalence check) |
+| `@circt-tracker-bot check-pr-pass <N>` | Pass benchmark (AIG/pass track only) |
+| `@circt-tracker-bot rerun` | Re-run the most recent `check-pr*` command in the issue |
+
+The bot also accepts a full GitHub PR URL in place of `<N>` and an optional
+`--extra-args="..."` syntax for CIRCT benchmark runs.
 
 ## Time Series Tracking
 
