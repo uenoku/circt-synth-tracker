@@ -1,0 +1,19 @@
+name: Setup Ubuntu CI Tools
+description: Install additional native-runner packages needed by tracker workflows
+
+inputs:
+  packages:
+    description: 'Space-separated apt packages to install'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Install apt packages
+      if: ${{ inputs.packages != '' }}
+      shell: bash
+      run: |
+        read -r -a packages <<< "${{ inputs.packages }}"
+        sudo apt-get update
+        sudo apt-get install -y "${packages[@]}"
