@@ -83,7 +83,7 @@ runs:
         cmake -GNinja "${{ inputs.checkout_path }}" \
           -B "${{ inputs.build_path }}" \
           -DCMAKE_BUILD_TYPE=Release \
-          -DLLVM_ENABLE_ASSERTIONS=ON \
+          -DLLVM_ENABLE_ASSERTIONS=Off \
           -DMLIR_DIR="${{ inputs.mlir_dir }}" \
           -DLLVM_DIR="${{ inputs.llvm_dir }}" \
           -DLLVM_USE_LINKER=lld \
