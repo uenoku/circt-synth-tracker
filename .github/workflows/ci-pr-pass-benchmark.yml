@@ -41,18 +41,57 @@ jobs:
         with:
           packages: yosys lld
 
+      - name: Get PR info from llvm/circt
+        id: pr-info
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER="${{ inputs.pr_number }}"
+          BASE_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json baseRefOid --jq '.baseRefOid')
+          HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json headRefOid --jq '.headRefOid')
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json title --jq '.title')
+          echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+          # Save the PR diff to be applied on top of the artifact commit
+          gh pr diff "$PR_NUMBER" --repo llvm/circt > "$GITHUB_WORKSPACE/pr.patch"
+          if [ ! -s "$GITHUB_WORKSPACE/pr.patch" ]; then
+            echo "::error::PR diff is empty or could not be retrieved for PR #$PR_NUMBER"
+            exit 1
+          fi
+          echo "Saved PR diff to pr.patch ($(wc -l < "$GITHUB_WORKSPACE/pr.patch") lines)"
+
       - name: Download pre-built CIRCT (base binaries + LLVM/MLIR install)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          BASE_SHA="${{ steps.pr-info.outputs.base_sha }}"
+
+          # Prefer an artifact built at exactly the PR's base commit so the diff applies cleanly.
           RUN_ID=$(gh run list \
             --repo llvm/circt \
             --workflow uploadReleaseArtifacts.yml \
             --branch main \
             --status success \
-            --limit 1 \
-            --json databaseId \
-            --jq '.[0].databaseId')
+            --limit 30 \
+            --json databaseId,headSha | \
+            jq -r --arg sha "$BASE_SHA" \
+              'map(select(.headSha == $sha)) | .[0].databaseId // empty')
+
+          if [ -n "$RUN_ID" ]; then
+            echo "Found artifact run at PR base SHA ${BASE_SHA}: run $RUN_ID"
+          else
+            echo "No artifact run found at PR base SHA ${BASE_SHA}; falling back to latest"
+            RUN_ID=$(gh run list \
+              --repo llvm/circt \
+              --workflow uploadReleaseArtifacts.yml \
+              --branch main \
+              --status success \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId')
+          fi
+
           # Get the commit SHA for the downloaded artifact run
           ARTIFACT_SHA=$(gh run view "$RUN_ID" --repo llvm/circt --json headSha --jq '.headSha')
           echo "ARTIFACT_SHA=$ARTIFACT_SHA" >> $GITHUB_ENV
@@ -75,26 +114,6 @@ jobs:
           echo "LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
           echo "$PREBUILT_BIN_DIR" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=$PREBUILT_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
-
-      - name: Get PR info from llvm/circt
-        id: pr-info
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          PR_NUMBER="${{ inputs.pr_number }}"
-          BASE_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json baseRefOid --jq '.baseRefOid')
-          HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json headRefOid --jq '.headRefOid')
-          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo llvm/circt --json title --jq '.title')
-          echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
-          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
-          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
-          # Save the PR diff to be applied on top of the artifact commit
-          gh pr diff "$PR_NUMBER" --repo llvm/circt > "$GITHUB_WORKSPACE/pr.patch"
-          if [ ! -s "$GITHUB_WORKSPACE/pr.patch" ]; then
-            echo "::error::PR diff is empty or could not be retrieved for PR #$PR_NUMBER"
-            exit 1
-          fi
-          echo "Saved PR diff to pr.patch ($(wc -l < "$GITHUB_WORKSPACE/pr.patch") lines)"
 
       - name: Setup sccache (for CIRCT compilation)
         uses: hendrikmuhs/ccache-action@v1.2
@@ -191,6 +210,10 @@ jobs:
           aggregate-results --tool 'abc-*-pass' --version "$AFTER_VERSION" --results-dir build_pass_after/abc -o abc-pr.json
 
       - name: Build unified pass PR comparison report
+        env:
+          PR_TITLE: ${{ steps.pr-info.outputs.pr_title }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          HEAD_SHA: ${{ steps.pr-info.outputs.head_sha }}
         run: |
           cd tracker
           source .venv/bin/activate
@@ -204,26 +227,30 @@ jobs:
             --ref-label ABC \
             --before-version "${CIRCT_VERSION_BEFORE}" \
             --after-version "${CIRCT_VERSION_AFTER}" \
-            --pr-number "${{ inputs.pr_number }}" \
-            --pr-title "${{ steps.pr-info.outputs.pr_title }}" \
+            --pr-number "$PR_NUMBER" \
+            --pr-title "$PR_TITLE" \
             --base-sha "$ARTIFACT_SHA" \
-            --head-sha "${{ steps.pr-info.outputs.head_sha }}" \
+            --head-sha "$HEAD_SHA" \
             --markdown-out pr-pass-compare.md \
             --html-out pr-pass-compare.html
 
       - name: Post results to GitHub Actions summary
         if: always()
+        env:
+          PR_TITLE: ${{ steps.pr-info.outputs.pr_title }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          HEAD_SHA: ${{ steps.pr-info.outputs.head_sha }}
         run: |
           {
-            echo "## CIRCT PR #${{ inputs.pr_number }} Pass Benchmark"
+            echo "## CIRCT PR #${PR_NUMBER} Pass Benchmark"
             echo ""
-            echo "**[${{ steps.pr-info.outputs.pr_title }}](https://github.com/llvm/circt/pull/${{ inputs.pr_number }})**"
+            echo "**[${PR_TITLE}](https://github.com/llvm/circt/pull/${PR_NUMBER})**"
             echo ""
             echo "| | Before | After |"
             echo "|---|---|---|"
             printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
               "$ARTIFACT_SHA" \
-              "${{ steps.pr-info.outputs.head_sha }}"
+              "$HEAD_SHA"
             echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
             echo ""
             [ -f tracker/pr-pass-compare.md ] && cat tracker/pr-pass-compare.md
