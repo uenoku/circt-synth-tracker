@@ -57,9 +57,7 @@ permissions:
 jobs:
   experiment:
     name: "A=${{ inputs.synth_tool_a }} vs B=${{ inputs.synth_tool_b }}"
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/circt/images/circt-integration-test:v20
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -70,8 +68,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install jq
-        run: apt-get update && apt-get install -y jq
+      - name: Install native runner packages
+        uses: ./.github/actions/setup-ubuntu-ci-tools
+        with:
+          packages: yosys
 
       - name: Install CIRCT nightly
         uses: circt/install-circt@3f8dda6e1c1965537b5801a43c81c287bac4eae4 # v1.1.1
