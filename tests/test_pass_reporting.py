@@ -1,5 +1,4 @@
 import json
-import re
 from argparse import Namespace
 
 import pytest
@@ -12,6 +11,13 @@ from circt_synth_tracker.analysis.pass_timeseries_report import build_chart_data
 def _write_json(path, payload):
     path.write_text(json.dumps(payload))
     return path
+
+
+def _table_cells(section, row_label):
+    for line in section.splitlines():
+        if line.startswith(f"| {row_label} |"):
+            return [cell.strip() for cell in line.strip("|").split("|")]
+    raise AssertionError(f"missing row: {row_label}")
 
 
 @pytest.fixture
@@ -125,14 +131,26 @@ def test_run_pr_report_uses_base_to_pr_order(tmp_path, pass_summaries):
     assert "Geometric Mean ABC (Base) (s)" in markdown
     assert "Geometric Mean ABC (PR) (s)" in markdown
     abc_section = markdown.split("### Base/ABC → PR/ABC", 1)[1]
-    assert re.search(
-        r"\|\s*LUT Mapping\s*\|\s*10\.0000\s*\|\s*5\.0000\s*\|\s*20\.0000\s*\|\s*10\.0000\s*\|\s*0\.5000\s*\|\s*0\.5000\s*\|\s*1\.0000\s*\|",
-        abc_section,
-    )
-    assert re.search(
-        r"\|\s*SOP Balancing\s*\|\s*8\.0000\s*\|\s*12\.0000\s*\|\s*4\.0000\s*\|\s*6\.0000\s*\|\s*2\.0000\s*\|\s*2\.0000\s*\|\s*1\.0000\s*\|",
-        abc_section,
-    )
+    assert _table_cells(abc_section, "LUT Mapping") == [
+        "LUT Mapping",
+        "10.0000",
+        "5.0000",
+        "20.0000",
+        "10.0000",
+        "0.5000",
+        "0.5000",
+        "1.0000",
+    ]
+    assert _table_cells(abc_section, "SOP Balancing") == [
+        "SOP Balancing",
+        "8.0000",
+        "12.0000",
+        "4.0000",
+        "6.0000",
+        "2.0000",
+        "2.0000",
+        "1.0000",
+    ]
     assert "### Structural Metrics (PR/Base)" in markdown
 
     assert "<h2>Base → PR (PR/Base)</h2>" in html
