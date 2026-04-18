@@ -9,7 +9,7 @@ MODE_BY_COMMAND = {
     "check-pr-quick": "quick",
     "check-pr-pass": "pass",
 }
-_EXTRA_ARGS_PLACEHOLDER = "__circt_synth_tracker_extra_args_placeholder__"
+_EXTRA_ARGS_LIST_PLACEHOLDER = "_circt_synth_tracker_extra_args_list_placeholder_"
 
 
 @dataclass(frozen=True)
@@ -75,14 +75,17 @@ def _extract_extra_args_list(line):
     match = re.search(r"(?:^|\s)--extra-args(?:=|\s+)", line)
     if match is None:
         return None, line
-    if match.end() >= len(line):
+    value_start = match.end()
+    while value_start < len(line) and line[value_start].isspace():
+        value_start += 1
+    if value_start >= len(line):
         return None, line
-    if line[match.end()] != "[":
+    if line[value_start] != "[":
         return None, line
 
-    end = _find_list_end(line, match.end())
-    extra_args = _parse_extra_args_list(line[match.end() : end + 1])
-    rewritten = line[: match.end()] + shlex.quote(_EXTRA_ARGS_PLACEHOLDER) + line[end + 1 :]
+    end = _find_list_end(line, value_start)
+    extra_args = _parse_extra_args_list(line[value_start : end + 1])
+    rewritten = line[:value_start] + _EXTRA_ARGS_LIST_PLACEHOLDER + line[end + 1 :]
     return extra_args, rewritten
 
 
@@ -97,7 +100,7 @@ def _parse_extra_args_value(tokens, index, extra_args_override=None):
             raise ValueError("Missing value for --extra-args")
         value = tokens[index]
 
-    if value == _EXTRA_ARGS_PLACEHOLDER and extra_args_override is not None:
+    if value == _EXTRA_ARGS_LIST_PLACEHOLDER and extra_args_override is not None:
         return extra_args_override, index
 
     return value, index

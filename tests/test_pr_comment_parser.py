@@ -57,6 +57,14 @@ def test_parse_extra_args_list_without_spaces():
     assert command.extra_args == "--foo=bar --baz"
 
 
+def test_parse_extra_args_list_with_separate_value():
+    command = parse_benchmark_comment(
+        '@circt-tracker-bot check-pr 42 --extra-args ["--foo=bar", "--baz"]'
+    )
+
+    assert command.extra_args == "--foo=bar --baz"
+
+
 def test_parse_extra_args_list_with_comma_in_argument():
     command = parse_benchmark_comment(
         '@circt-tracker-bot check-pr 42 --extra-args=["--flag=a,b", "--baz"]'
