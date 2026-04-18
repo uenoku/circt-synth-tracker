@@ -162,6 +162,137 @@ def test_run_pr_report_uses_base_to_pr_order(tmp_path, pass_summaries):
     assert "LUT Mapping Details (Base → PR)" in html
 
 
+def test_run_pr_report_works_without_relatives(tmp_path, pass_summaries):
+    base, pr, _, _ = pass_summaries
+    markdown_out = tmp_path / "report-no-rel.md"
+    html_out = tmp_path / "report-no-rel.html"
+
+    args = Namespace(
+        before=_write_json(tmp_path / "base.json", base),
+        after=_write_json(tmp_path / "pr.json", pr),
+        label_a="Base",
+        label_b="PR",
+        ref_before=None,
+        ref_after=None,
+        ref_label="ABC",
+        relative=[],
+        before_version="base-v1",
+        after_version="pr-v1",
+        pr_number="123",
+        pr_title="Improve pass flow",
+        base_sha="12345678deadbeef",
+        head_sha="87654321feedface",
+        title="Pass PR Comparison",
+        markdown_out=markdown_out,
+        html_out=html_out,
+    )
+
+    assert run_pr(args) == 0
+
+    markdown = markdown_out.read_text()
+    html = html_out.read_text()
+
+    assert "### Base → PR (PR/Base)" in markdown
+    assert "### Base/ABC → PR/ABC" not in markdown
+    assert "Geometric Mean ABC" not in markdown
+
+    assert "<h2>Base → PR (PR/Base)</h2>" in html
+    assert "Base/ABC" not in html
+    assert "Geometric Mean ABC" not in html
+
+
+def test_run_pr_report_supports_multiple_relatives(tmp_path, pass_summaries):
+    base, pr, abc_base, abc_pr = pass_summaries
+    alt_base = {
+        "version": "alt-base",
+        "benchmarks": {
+            "adder": {
+                "mode": "lut-mapping",
+                "compile_time_s": 40.0,
+                "lut_count": 130,
+                "lut_depth": 28,
+            },
+            "adder_sop": {
+                "mode": "sop-balancing",
+                "compile_time_s": 16.0,
+                "aig_count": 65,
+                "aig_depth": 13,
+            },
+        },
+    }
+    alt_pr = {
+        "version": "alt-pr",
+        "benchmarks": {
+            "adder": {
+                "mode": "lut-mapping",
+                "compile_time_s": 20.0,
+                "lut_count": 115,
+                "lut_depth": 24,
+            },
+            "adder_sop": {
+                "mode": "sop-balancing",
+                "compile_time_s": 8.0,
+                "aig_count": 61,
+                "aig_depth": 12,
+            },
+        },
+    }
+    markdown_out = tmp_path / "report-multi-rel.md"
+    html_out = tmp_path / "report-multi-rel.html"
+
+    args = Namespace(
+        before=_write_json(tmp_path / "base.json", base),
+        after=_write_json(tmp_path / "pr.json", pr),
+        label_a="Base",
+        label_b="PR",
+        ref_before=None,
+        ref_after=None,
+        ref_label="ABC",
+        relative=[
+            [
+                "ABC",
+                str(_write_json(tmp_path / "abc-base.json", abc_base)),
+                str(_write_json(tmp_path / "abc-pr.json", abc_pr)),
+            ],
+            [
+                "ALT",
+                str(_write_json(tmp_path / "alt-base.json", alt_base)),
+                str(_write_json(tmp_path / "alt-pr.json", alt_pr)),
+            ],
+        ],
+        before_version="base-v1",
+        after_version="pr-v1",
+        pr_number="123",
+        pr_title="Improve pass flow",
+        base_sha="12345678deadbeef",
+        head_sha="87654321feedface",
+        title="Pass PR Comparison",
+        markdown_out=markdown_out,
+        html_out=html_out,
+    )
+
+    assert run_pr(args) == 0
+
+    markdown = markdown_out.read_text()
+    html = html_out.read_text()
+
+    assert "### Base/ABC → PR/ABC" in markdown
+    assert "### Base/ALT → PR/ALT" in markdown
+    assert _table_cells(markdown.split("### Base/ALT → PR/ALT", 1)[1], "LUT Mapping") == [
+        "LUT Mapping",
+        "10.0000",
+        "5.0000",
+        "40.0000",
+        "20.0000",
+        "0.2500",
+        "0.2500",
+        "1.0000",
+    ]
+
+    assert "<h2>Base/ABC → PR/ABC</h2>" in html
+    assert "<h2>Base/ALT → PR/ALT</h2>" in html
+
+
 def test_build_pass_history_entry_and_chart_data(pass_summaries):
     base, _, abc_base, _ = pass_summaries
     entry = build_history_entry(base, abc_base, "2026-04-18")
