@@ -123,7 +123,10 @@ def test_run_pr_report_uses_base_to_pr_order(tmp_path, pass_summaries):
     assert "### Base/ABC → PR/ABC" in markdown
     assert "Geometric Mean ABC (Base) (s)" in markdown
     assert "Geometric Mean ABC (PR) (s)" in markdown
-    assert "| LUT Mapping | 10.0000 | 5.0000 | 20.0000 | 10.0000 | 0.5000 | 0.5000 | 1.0000 |" in markdown
+    assert "| LUT Mapping | 10.0000 | 5.0000 | 20.0000 | 10.0000 |" in markdown
+    assert "| SOP Balancing | 8.0000 | 12.0000 | 4.0000 | 6.0000 |" in markdown
+    assert "| 0.5000 | 0.5000 | 1.0000 |" in markdown
+    assert "| 2.0000 | 2.0000 | 1.0000 |" in markdown
     assert "### Structural Metrics (PR/Base)" in markdown
 
     assert "<h2>Base → PR (PR/Base)</h2>" in html

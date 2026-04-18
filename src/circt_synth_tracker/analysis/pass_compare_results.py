@@ -286,6 +286,17 @@ def run_pr(args: argparse.Namespace) -> int:
         ref_before_sop_abc = geomean([r[2] for r in ref_before_sop_rows])
         ref_after_lut_abc = geomean([r[2] for r in ref_after_lut_rows])
         ref_after_sop_abc = geomean([r[2] for r in ref_after_sop_rows])
+    ref_section_md_header = [
+        "Mode",
+        f"Geometric Mean {args.label_a} (s)",
+        f"Geometric Mean {args.label_b} (s)",
+        f"Geometric Mean {args.ref_label} ({args.label_a}) (s)",
+        f"Geometric Mean {args.ref_label} ({args.label_b}) (s)",
+        f"{args.label_a} Ratio",
+        f"{args.label_b} Ratio",
+        f"Ratio Delta ({args.label_b}/{args.label_a})",
+    ]
+    ref_section_html_header = "".join(f"<th>{escape(col)}</th>" for col in ref_section_md_header)
 
     md = [
         f"## {args.title}",
@@ -307,7 +318,7 @@ def run_pr(args: argparse.Namespace) -> int:
                 "",
                 f"### {args.label_a}/{args.ref_label} → {args.label_b}/{args.ref_label}",
                 "",
-                f"| Mode | Geometric Mean {args.label_a} (s) | Geometric Mean {args.label_b} (s) | Geometric Mean {args.ref_label} ({args.label_a}) (s) | Geometric Mean {args.ref_label} ({args.label_b}) (s) | {args.label_a} Ratio | {args.label_b} Ratio | Ratio Delta ({args.label_b}/{args.label_a}) |",
+                f"| {' | '.join(ref_section_md_header)} |",
                 "|---|---:|---:|---:|---:|---:|---:|---:|",
                 f"| LUT Mapping | {fmt(ref_before_lut_base)} | {fmt(ref_after_lut_base)} | {fmt(ref_before_lut_abc)} | {fmt(ref_after_lut_abc)} | {fmt(ref_before_lut)} | {fmt(ref_after_lut)} | {fmt((ref_after_lut / ref_before_lut) if (ref_before_lut and ref_after_lut) else None)} |",
                 f"| SOP Balancing | {fmt(ref_before_sop_base)} | {fmt(ref_after_sop_base)} | {fmt(ref_before_sop_abc)} | {fmt(ref_after_sop_abc)} | {fmt(ref_before_sop)} | {fmt(ref_after_sop)} | {fmt((ref_after_sop / ref_before_sop) if (ref_before_sop and ref_after_sop) else None)} |",
@@ -350,7 +361,7 @@ def run_pr(args: argparse.Namespace) -> int:
         html_parts.extend(
             [
                 f"<h2>{escape(args.label_a)}/{escape(args.ref_label)} → {escape(args.label_b)}/{escape(args.ref_label)}</h2>",
-                f"<table><thead><tr><th>Mode</th><th>Geometric Mean {escape(args.label_a)} (s)</th><th>Geometric Mean {escape(args.label_b)} (s)</th><th>Geometric Mean {escape(args.ref_label)} ({escape(args.label_a)}) (s)</th><th>Geometric Mean {escape(args.ref_label)} ({escape(args.label_b)}) (s)</th><th>{escape(args.label_a)} Ratio</th><th>{escape(args.label_b)} Ratio</th><th>Ratio Delta ({escape(args.label_b)}/{escape(args.label_a)})</th></tr></thead><tbody>",
+                f"<table><thead><tr>{ref_section_html_header}</tr></thead><tbody>",
                 f"<tr><td>LUT Mapping</td><td>{fmt(ref_before_lut_base)}</td><td>{fmt(ref_after_lut_base)}</td><td>{fmt(ref_before_lut_abc)}</td><td>{fmt(ref_after_lut_abc)}</td><td>{fmt(ref_before_lut)}</td><td>{fmt(ref_after_lut)}</td><td>{fmt((ref_after_lut / ref_before_lut) if (ref_before_lut and ref_after_lut) else None)}</td></tr>",
                 f"<tr><td>SOP Balancing</td><td>{fmt(ref_before_sop_base)}</td><td>{fmt(ref_after_sop_base)}</td><td>{fmt(ref_before_sop_abc)}</td><td>{fmt(ref_after_sop_abc)}</td><td>{fmt(ref_before_sop)}</td><td>{fmt(ref_after_sop)}</td><td>{fmt((ref_after_sop / ref_before_sop) if (ref_before_sop and ref_after_sop) else None)}</td></tr>",
                 "</tbody></table>",
