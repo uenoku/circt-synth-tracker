@@ -104,6 +104,34 @@ jobs:
       - name: Publish summary
         run: cat pass-benchmark-report.md >> $GITHUB_STEP_SUMMARY
 
+      - name: Fetch existing pass history from gh-pages branch
+        if: (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -s -f \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.raw+json" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/pass-history.json?ref=gh-pages" \
+            > pass-history.json || echo "[]" > pass-history.json
+          echo "Pass history entries: $(python3 -c 'import json; print(len(json.load(open("pass-history.json"))))' 2>/dev/null || echo 0)"
+
+      - name: Append results to pass history
+        if: (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+        run: |
+          source .venv/bin/activate
+          append-pass-history \
+            --circt circt-summary.json \
+            --abc abc-summary.json \
+            -o pass-history.json \
+            --max-days 90
+
+      - name: Generate pass time series report
+        if: (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+        run: |
+          source .venv/bin/activate
+          pass-timeseries-report pass-history.json -o pass-timeseries.html
+
       - name: Upload pass benchmark artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -113,12 +141,16 @@ jobs:
             *-summary.json
             pass-benchmark-report.md
             pass-benchmark-report.html
+            pass-history.json
+            pass-timeseries.html
 
       - name: Prepare deployment files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p deploy
           cp pass-benchmark-report.html "deploy/report-pass.html" || true
+          cp pass-history.json "deploy/pass-history.json" || true
+          cp pass-timeseries.html "deploy/pass-timeseries.html" || true
           ls -la deploy/
 
       - name: Deploy to GitHub Pages
