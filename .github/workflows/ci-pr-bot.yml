@@ -129,7 +129,8 @@ jobs:
           if [ "${{ steps.parse.outputs.mode }}" = "pass" ]; then
             gh workflow run ci-pr-pass-benchmark.yml \
               --repo "${{ github.repository }}" \
-              --field pr_number="${{ steps.parse.outputs.pr_number }}"
+              --field pr_number="${{ steps.parse.outputs.pr_number }}" \
+              --field issue_number="${{ github.event.issue.number }}"
           elif [ "${{ steps.parse.outputs.mode }}" = "quick" ]; then
             gh workflow run ci-pr-benchmark.yml \
               --repo "${{ github.repository }}" \
@@ -146,6 +147,10 @@ jobs:
               --field bitwidths="16,48" \
               --field issue_number="${{ github.event.issue.number }}" \
               --field extra_circt_synth_args="${{ steps.parse.outputs.extra_args }}"
+            gh workflow run ci-pr-pass-benchmark.yml \
+              --repo "${{ github.repository }}" \
+              --field pr_number="${{ steps.parse.outputs.pr_number }}" \
+              --field issue_number="${{ github.event.issue.number }}"
           fi
           echo "Dispatched benchmark for CIRCT PR #${{ steps.parse.outputs.pr_number }} (mode=${{ steps.parse.outputs.mode }})"
 
@@ -163,7 +168,7 @@ jobs:
               ? '🧪 Running **pass benchmark mode** (AIG/pass track only).'
               : (mode === 'quick'
                 ? '⚡ Running in **quick mode** (no translation validation or equivalence check).'
-                : '🔍 Running **full verification** (with translation validation and equivalence check).');
+                : '🔍 Running **full verification** (standard benchmark + pass benchmark, with translation validation and equivalence check on the standard flow).');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

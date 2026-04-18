@@ -157,12 +157,12 @@ def render_pair(
         md.append("")
     md.extend(
         [
-            f"| Mode | Geomean {label_a}/{label_b} | Matched |",
+            f"| Mode | Geometric Mean {label_a}/{label_b} | Matched |",
             "|---|---:|---:|",
             f"| LUT Mapping | {format_ratio_with_pct(lut_ratio)} | {len(lut_rows)} |",
             f"| SOP Balancing | {format_ratio_with_pct(sop_ratio)} | {len(sop_rows)} |",
             "",
-            f"| Structural Metric | Geomean {label_a}/{label_b} | Matched |",
+            f"| Structural Metric | Geometric Mean {label_a}/{label_b} | Matched |",
             "|---|---:|---:|",
             f"| LUT Count | {format_ratio_with_pct(geomean_ratio(lut_count_rows))} | {len(lut_count_rows)} |",
             f"| LUT Depth | {format_ratio_with_pct(geomean_ratio(lut_depth_rows))} | {len(lut_depth_rows)} |",
@@ -193,7 +193,7 @@ def render_pair(
   <h1>{escape(title)}</h1>
   {"".join(f"<p>{escape(line)}</p>" for line in (subtitle_lines or []))}
   <table>
-    <thead><tr><th>Mode</th><th>Geomean {escape(label_a)}/{escape(label_b)}</th><th>Matched</th></tr></thead>
+    <thead><tr><th>Mode</th><th>Geometric Mean {escape(label_a)}/{escape(label_b)}</th><th>Matched</th></tr></thead>
     <tbody>
       <tr><td>LUT Mapping</td><td>{format_ratio_with_pct(lut_ratio)}</td><td>{len(lut_rows)}</td></tr>
       <tr><td>SOP Balancing</td><td>{format_ratio_with_pct(sop_ratio)}</td><td>{len(sop_rows)}</td></tr>
@@ -201,7 +201,7 @@ def render_pair(
   </table>
   <h2>Structural Metrics ({escape(label_a)}/{escape(label_b)})</h2>
   <table>
-    <thead><tr><th>Metric</th><th>Geomean Ratio</th><th>Matched</th></tr></thead>
+    <thead><tr><th>Metric</th><th>Geometric Mean Ratio</th><th>Matched</th></tr></thead>
     <tbody>
       <tr><td>LUT Count</td><td>{format_ratio_with_pct(geomean_ratio(lut_count_rows))}</td><td>{len(lut_count_rows)}</td></tr>
       <tr><td>LUT Depth</td><td>{format_ratio_with_pct(geomean_ratio(lut_depth_rows))}</td><td>{len(lut_depth_rows)}</td></tr>
@@ -280,9 +280,9 @@ def run_pr(args: argparse.Namespace) -> int:
         f"- Commit: `{args.base_sha[:8]}` -> `{args.head_sha[:8]}`",
         f"- Version: `{args.before_version}` -> `{args.after_version}`",
         "",
-        f"### {args.label_a} vs {args.label_b} ({args.label_a}/{args.label_b})",
+        f"### {args.label_a} → {args.label_b} ({args.label_b}/{args.label_a})",
         "",
-        f"| Mode | Geomean {args.label_b} (s) | Geomean {args.label_a} (s) | Delta ({args.label_a}/{args.label_b}) | Matched |",
+        f"| Mode | Geometric Mean {args.label_a} (s) | Geometric Mean {args.label_b} (s) | Delta ({args.label_b}/{args.label_a}) | Matched |",
         "|---|---:|---:|---:|---:|",
         f"| LUT Mapping | {fmt(cc_lut_before)} | {fmt(cc_lut_after)} | {fmt(cc_lut_delta)} | {len(cc_lut_rows)} |",
         f"| SOP Balancing | {fmt(cc_sop_before)} | {fmt(cc_sop_after)} | {fmt(cc_sop_delta)} | {len(cc_sop_rows)} |",
@@ -291,9 +291,9 @@ def run_pr(args: argparse.Namespace) -> int:
         md.extend(
             [
                 "",
-                f"### {args.label_a} vs {args.ref_label} ({args.label_a}/{args.ref_label})",
+                f"### {args.label_a}/{args.ref_label} → {args.label_b}/{args.ref_label}",
                 "",
-                "| Mode | Before Ratio | After Ratio | Ratio Delta (After/Before) |",
+                f"| Mode | {args.label_a} Ratio | {args.label_b} Ratio | Ratio Delta ({args.label_b}/{args.label_a}) |",
                 "|---|---:|---:|---:|",
                 f"| LUT Mapping | {fmt(ref_before_lut)} | {fmt(ref_after_lut)} | {fmt((ref_after_lut / ref_before_lut) if (ref_before_lut and ref_after_lut) else None)} |",
                 f"| SOP Balancing | {fmt(ref_before_sop)} | {fmt(ref_after_sop)} | {fmt((ref_after_sop / ref_before_sop) if (ref_before_sop and ref_after_sop) else None)} |",
@@ -303,9 +303,9 @@ def run_pr(args: argparse.Namespace) -> int:
     md.extend(
         [
             "",
-            f"### Structural Metrics ({args.label_a}/{args.label_b})",
+            f"### Structural Metrics ({args.label_b}/{args.label_a})",
             "",
-            "| Metric | Geomean Ratio | Matched |",
+            "| Metric | Geometric Mean Ratio | Matched |",
             "|---|---:|---:|",
             f"| LUT Count | {format_ratio_with_pct(geomean_ratio(cc_lut_count_rows))} | {len(cc_lut_count_rows)} |",
             f"| LUT Depth | {format_ratio_with_pct(geomean_ratio(cc_lut_depth_rows))} | {len(cc_lut_depth_rows)} |",
@@ -326,8 +326,8 @@ def run_pr(args: argparse.Namespace) -> int:
         f'<p><a href="https://github.com/llvm/circt/pull/{args.pr_number}">{escape(args.pr_title)}</a><br/>',
         f"Commit: <code>{escape(args.base_sha[:8])}</code> -> <code>{escape(args.head_sha[:8])}</code><br/>",
         f"Version: <code>{escape(args.before_version)}</code> -> <code>{escape(args.after_version)}</code></p>",
-        f"<h2>{escape(args.label_a)} vs {escape(args.label_b)} ({escape(args.label_a)}/{escape(args.label_b)})</h2>",
-        f"<table><thead><tr><th>Mode</th><th>Geomean {escape(args.label_b)} (s)</th><th>Geomean {escape(args.label_a)} (s)</th><th>Delta ({escape(args.label_a)}/{escape(args.label_b)})</th><th>Matched</th></tr></thead><tbody>",
+        f"<h2>{escape(args.label_a)} → {escape(args.label_b)} ({escape(args.label_b)}/{escape(args.label_a)})</h2>",
+        f"<table><thead><tr><th>Mode</th><th>Geometric Mean {escape(args.label_a)} (s)</th><th>Geometric Mean {escape(args.label_b)} (s)</th><th>Delta ({escape(args.label_b)}/{escape(args.label_a)})</th><th>Matched</th></tr></thead><tbody>",
         f"<tr><td>LUT Mapping</td><td>{fmt(cc_lut_before)}</td><td>{fmt(cc_lut_after)}</td><td>{fmt(cc_lut_delta)}</td><td>{len(cc_lut_rows)}</td></tr>",
         f"<tr><td>SOP Balancing</td><td>{fmt(cc_sop_before)}</td><td>{fmt(cc_sop_after)}</td><td>{fmt(cc_sop_delta)}</td><td>{len(cc_sop_rows)}</td></tr>",
         "</tbody></table>",
@@ -335,8 +335,8 @@ def run_pr(args: argparse.Namespace) -> int:
     if ref_before_lut is not None:
         html_parts.extend(
             [
-                f"<h2>{escape(args.label_a)} vs {escape(args.ref_label)} ({escape(args.label_a)}/{escape(args.ref_label)})</h2>",
-                "<table><thead><tr><th>Mode</th><th>Before Ratio</th><th>After Ratio</th><th>Ratio Delta (After/Before)</th></tr></thead><tbody>",
+                f"<h2>{escape(args.label_a)}/{escape(args.ref_label)} → {escape(args.label_b)}/{escape(args.ref_label)}</h2>",
+                f"<table><thead><tr><th>Mode</th><th>{escape(args.label_a)} Ratio</th><th>{escape(args.label_b)} Ratio</th><th>Ratio Delta ({escape(args.label_b)}/{escape(args.label_a)})</th></tr></thead><tbody>",
                 f"<tr><td>LUT Mapping</td><td>{fmt(ref_before_lut)}</td><td>{fmt(ref_after_lut)}</td><td>{fmt((ref_after_lut / ref_before_lut) if (ref_before_lut and ref_after_lut) else None)}</td></tr>",
                 f"<tr><td>SOP Balancing</td><td>{fmt(ref_before_sop)}</td><td>{fmt(ref_after_sop)}</td><td>{fmt((ref_after_sop / ref_before_sop) if (ref_before_sop and ref_after_sop) else None)}</td></tr>",
                 "</tbody></table>",
@@ -344,17 +344,17 @@ def run_pr(args: argparse.Namespace) -> int:
         )
     html_parts.extend(
         [
-            f"<h2>Structural Metrics ({escape(args.label_a)} vs {escape(args.label_b)})</h2>",
-            "<table><thead><tr><th>Metric</th><th>Geomean Ratio</th><th>Matched</th></tr></thead><tbody>",
+            f"<h2>Structural Metrics ({escape(args.label_b)}/{escape(args.label_a)})</h2>",
+            "<table><thead><tr><th>Metric</th><th>Geometric Mean Ratio</th><th>Matched</th></tr></thead><tbody>",
             f"<tr><td>LUT Count</td><td>{format_ratio_with_pct(geomean_ratio(cc_lut_count_rows))}</td><td>{len(cc_lut_count_rows)}</td></tr>",
             f"<tr><td>LUT Depth</td><td>{format_ratio_with_pct(geomean_ratio(cc_lut_depth_rows))}</td><td>{len(cc_lut_depth_rows)}</td></tr>",
             f"<tr><td>AIG Count</td><td>{format_ratio_with_pct(geomean_ratio(cc_aig_count_rows))}</td><td>{len(cc_aig_count_rows)}</td></tr>",
             f"<tr><td>AIG Depth</td><td>{format_ratio_with_pct(geomean_ratio(cc_aig_depth_rows))}</td><td>{len(cc_aig_depth_rows)}</td></tr>",
             "</tbody></table>",
-            f"<h2>LUT Mapping Details ({escape(args.label_a)} vs {escape(args.label_b)})</h2>",
-            f"<table><thead><tr><th>Benchmark</th><th>{escape(args.label_a)} Time (s)</th><th>{escape(args.label_b)} Time (s)</th><th>{escape(args.label_a)} LUT Count</th><th>{escape(args.label_b)} LUT Count</th><th>{escape(args.label_a)} LUT Depth</th><th>{escape(args.label_b)} LUT Depth</th></tr></thead><tbody>{rows_html_with_struct(after, before, 'lut-mapping', args.label_a, args.label_b)}</tbody></table>",
-            f"<h2>SOP Balancing Details ({escape(args.label_a)} vs {escape(args.label_b)})</h2>",
-            f"<table><thead><tr><th>Benchmark</th><th>{escape(args.label_a)} Time (s)</th><th>{escape(args.label_b)} Time (s)</th><th>{escape(args.label_a)} AIG Count</th><th>{escape(args.label_b)} AIG Count</th><th>{escape(args.label_a)} AIG Depth</th><th>{escape(args.label_b)} AIG Depth</th></tr></thead><tbody>{rows_html_with_struct(after, before, 'sop-balancing', args.label_a, args.label_b)}</tbody></table>",
+            f"<h2>LUT Mapping Details ({escape(args.label_a)} → {escape(args.label_b)})</h2>",
+            f"<table><thead><tr><th>Benchmark</th><th>{escape(args.label_a)} Time (s)</th><th>{escape(args.label_b)} Time (s)</th><th>{escape(args.label_a)} LUT Count</th><th>{escape(args.label_b)} LUT Count</th><th>{escape(args.label_a)} LUT Depth</th><th>{escape(args.label_b)} LUT Depth</th></tr></thead><tbody>{rows_html_with_struct(before, after, 'lut-mapping', args.label_a, args.label_b)}</tbody></table>",
+            f"<h2>SOP Balancing Details ({escape(args.label_a)} → {escape(args.label_b)})</h2>",
+            f"<table><thead><tr><th>Benchmark</th><th>{escape(args.label_a)} Time (s)</th><th>{escape(args.label_b)} Time (s)</th><th>{escape(args.label_a)} AIG Count</th><th>{escape(args.label_b)} AIG Count</th><th>{escape(args.label_a)} AIG Depth</th><th>{escape(args.label_b)} AIG Depth</th></tr></thead><tbody>{rows_html_with_struct(before, after, 'sop-balancing', args.label_a, args.label_b)}</tbody></table>",
             "</body></html>",
         ]
     )
@@ -388,8 +388,8 @@ def build_parser() -> argparse.ArgumentParser:
     pr = sub.add_parser("pr", help="PR comparison from before.json vs after.json")
     pr.add_argument("--before", type=Path, required=True, help="Before summary JSON")
     pr.add_argument("--after", type=Path, required=True, help="After summary JSON")
-    pr.add_argument("--label-a", default="CIRCT(PR)")
-    pr.add_argument("--label-b", default="CIRCT(Base)")
+    pr.add_argument("--label-a", default="Base")
+    pr.add_argument("--label-b", default="PR")
     pr.add_argument(
         "--ref-before", type=Path, help="Optional reference before JSON (e.g. ABC base)"
     )

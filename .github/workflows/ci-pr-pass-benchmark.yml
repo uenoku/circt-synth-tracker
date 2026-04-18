@@ -15,6 +15,10 @@ on:
         description: 'Comma-separated cut sizes C (e.g. "8,15")'
         required: false
         default: '8,15'
+      issue_number:
+        description: 'Tracker issue number to post results to (optional)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -242,8 +246,8 @@ jobs:
           pass-pr-compare-report pr \
             --before circt-base.json \
             --after circt-pr.json \
-            --label-a "PR" \
-            --label-b "Base)" \
+            --label-a "Base" \
+            --label-b "PR" \
             --ref-before abc-base.json \
             --ref-after abc-pr.json \
             --ref-label ABC \
@@ -268,7 +272,7 @@ jobs:
             echo ""
             echo "**[${PR_TITLE}](https://github.com/llvm/circt/pull/${PR_NUMBER})**"
             echo ""
-            echo "| | Before | After |"
+            echo "| | Base | PR |"
             echo "|---|---|---|"
             printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
               "$ARTIFACT_SHA" \
@@ -277,6 +281,47 @@ jobs:
             echo ""
             [ -f tracker/pr-pass-compare.md ] && cat tracker/pr-pass-compare.md
           } >> $GITHUB_STEP_SUMMARY
+
+      - name: Post pass benchmark comment to tracker issue
+        if: always() && inputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const prNumber = '${{ inputs.pr_number }}';
+            const prTitle = '${{ steps.pr-info.outputs.pr_title }}';
+            const baseSha = '${{ env.ARTIFACT_SHA }}'.slice(0, 8);
+            const headSha = '${{ steps.pr-info.outputs.head_sha }}'.slice(0, 8);
+            const baseVer = process.env.CIRCT_VERSION_BEFORE || 'unknown';
+            const prVer = process.env.CIRCT_VERSION_AFTER || 'unknown';
+            const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-benchmarks/pr-${prNumber}/report-pass.html`;
+            let reportBody = '_Report not generated._';
+            try {
+              reportBody = fs.readFileSync('tracker/pr-pass-compare.md', 'utf8');
+            } catch (e) {}
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt('${{ inputs.issue_number }}'),
+              body: [
+                `## Pass benchmark results for CIRCT PR [#${prNumber}](https://github.com/llvm/circt/pull/${prNumber})`,
+                `[📊 View report](${pagesUrl}) | [📦 Artifacts](${runUrl})`,
+                '',
+                `> **${prTitle}**`,
+                '',
+                '| | Base | PR |',
+                '|---|---|---|',
+                `| Commit | \`${baseSha}\` | \`${headSha}\` |`,
+                `| Version | \`${baseVer}\` | \`${prVer}\` |`,
+                '',
+                reportBody,
+              ].join('\n'),
+            });
+        env:
+          CIRCT_VERSION_BEFORE: ${{ env.CIRCT_VERSION_BEFORE }}
+          CIRCT_VERSION_AFTER: ${{ env.CIRCT_VERSION_AFTER }}
 
       - name: Upload pass benchmark artifacts
         uses: actions/upload-artifact@v4

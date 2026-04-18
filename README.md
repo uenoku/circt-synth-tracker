@@ -199,7 +199,7 @@ workflows automatically. Supported commands:
 
 | Command | Description |
 |---|---|
-| `@circt-tracker-bot check-pr <N>` | Full benchmark (with translation validation and equivalence check) |
+| `@circt-tracker-bot check-pr <N>` | Full benchmark (standard benchmark + pass benchmark, with translation validation and equivalence check on the standard flow) |
 | `@circt-tracker-bot check-pr-quick <N>` | Quick benchmark (no TV or equivalence check) |
 | `@circt-tracker-bot check-pr-pass <N>` | Pass benchmark (AIG/pass track only) |
 | `@circt-tracker-bot rerun` | Re-run the most recent `check-pr*` command in the issue |
@@ -214,12 +214,18 @@ The nightly CI publishes a rolling 90-day history to GitHub Pages:
 - [report-pass.html](https://uenoku.github.io/circt-synth-tracker/report-pass.html) — latest pass benchmark comparison (CIRCT vs ABC)
 - [timeseries.html](https://uenoku.github.io/circt-synth-tracker/timeseries.html) — geo-mean trends
 - [history.json](https://uenoku.github.io/circt-synth-tracker/history.json) — raw data
+- [pass-timeseries.html](https://uenoku.github.io/circt-synth-tracker/pass-timeseries.html) — pass benchmark ratio trends
+- [pass-history.json](https://uenoku.github.io/circt-synth-tracker/pass-history.json) — raw pass benchmark history
 
 To generate a local time series report:
 ```bash
 append-history --circt circt-summary.json --yosys yosys-summary.json \
                -o history.json
 timeseries-report history.json -o timeseries.html
+
+append-pass-history --circt circt-summary.json --abc abc-summary.json \
+                    -o pass-history.json
+pass-timeseries-report pass-history.json -o pass-timeseries.html
 ```
 
 ## Command-Line Tools
@@ -239,4 +245,6 @@ Installed via `uv sync`:
 | `compare-results` | Compare two summaries; output HTML / Markdown / JSON. Pass `--cec cec.json` for CEC annotations, or `--equiv-check` to run CEC inline |
 | `append-history` | Append a day's summaries to `history.json` |
 | `timeseries-report` | Generate interactive HTML time series from `history.json` |
+| `append-pass-history` | Append pass benchmark ratios to `pass-history.json` |
+| `pass-timeseries-report` | Generate interactive HTML time series from `pass-history.json` |
 | `prepare` | Build `mockturtle-aig-judge` and fetch `benchmarks/abc.rc` |
