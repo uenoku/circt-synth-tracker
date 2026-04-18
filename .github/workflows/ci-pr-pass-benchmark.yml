@@ -155,8 +155,14 @@ jobs:
 
       - name: Run pass benchmarks (before)
         run: |
-          export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
-          BEFORE_VERSION=$(circt-synth --version | tail -1 | xargs)
+          CIRCT_BINDIR="$GITHUB_WORKSPACE/circt-base/build/bin"
+          CIRCT_LIBDIR="$GITHUB_WORKSPACE/circt-base/build/lib"
+          export PATH="$CIRCT_BINDIR:$PATH"
+          export LD_LIBRARY_PATH="$CIRCT_LIBDIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export CIRCT_SYNTH="$CIRCT_BINDIR/circt-synth"
+          export CIRCT_TRANSLATE="$CIRCT_BINDIR/circt-translate"
+          export CIRCT_OPT="$CIRCT_BINDIR/circt-opt"
+          BEFORE_VERSION=$("$CIRCT_SYNTH" --version | tail -1 | xargs)
           echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
           cd tracker
           source .venv/bin/activate
@@ -193,8 +199,14 @@ jobs:
 
       - name: Run pass benchmarks (after)
         run: |
-          export PATH="$GITHUB_WORKSPACE/circt-pr/build/bin:$PATH"
-          AFTER_VERSION=$(circt-synth --version | tail -1 | xargs)
+          CIRCT_BINDIR="$GITHUB_WORKSPACE/circt-pr/build/bin"
+          CIRCT_LIBDIR="$GITHUB_WORKSPACE/circt-pr/build/lib"
+          export PATH="$CIRCT_BINDIR:$PATH"
+          export LD_LIBRARY_PATH="$CIRCT_LIBDIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export CIRCT_SYNTH="$CIRCT_BINDIR/circt-synth"
+          export CIRCT_TRANSLATE="$CIRCT_BINDIR/circt-translate"
+          export CIRCT_OPT="$CIRCT_BINDIR/circt-opt"
+          AFTER_VERSION=$("$CIRCT_SYNTH" --version | tail -1 | xargs)
           echo "CIRCT_VERSION_AFTER=$AFTER_VERSION" >> $GITHUB_ENV
           cd tracker
           source .venv/bin/activate
