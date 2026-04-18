@@ -196,6 +196,7 @@ jobs:
           llvm_dir: ${{ env.LLVM_DIR }}
           patch: pr.patch
           patch_base_sha: ${{ steps.pr-info.outputs.base_sha }}
+          commit_after_patch: 'true'
 
       - name: Run pass benchmarks (after)
         run: |
