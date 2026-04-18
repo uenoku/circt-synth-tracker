@@ -14,6 +14,7 @@ def _write_json(path, payload):
 
 
 def _table_cells(section, row_label):
+    """Return trimmed cells from the markdown table row with the given label."""
     for line in section.splitlines():
         if line.startswith(f"| {row_label} |"):
             return [cell.strip() for cell in line.strip("|").split("|")]
