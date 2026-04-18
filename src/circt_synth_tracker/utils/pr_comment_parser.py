@@ -1,3 +1,4 @@
+import ast
 import re
 import shlex
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ MODE_BY_COMMAND = {
     "check-pr-quick": "quick",
     "check-pr-pass": "pass",
 }
+_EXTRA_ARGS_LIST_PLACEHOLDER = "_circt_synth_tracker_extra_args_list_placeholder_"
 
 
 @dataclass(frozen=True)
@@ -26,11 +28,89 @@ def _parse_pr_number(value):
     raise ValueError(f"Unsupported PR reference: {value}")
 
 
-def _parse_tokens(tokens):
+def _parse_extra_args_list(value):
+    """Normalize `--extra-args=[...]` syntax into a space-separated string."""
+    try:
+        parts = ast.literal_eval(value)
+    except (SyntaxError, ValueError) as exc:
+        raise ValueError("Invalid --extra-args list") from exc
+    if not isinstance(parts, list):
+        raise ValueError("Invalid --extra-args list")
+    for part in parts:
+        if not isinstance(part, str):
+            raise ValueError("Invalid --extra-args list")
+    return " ".join(parts)
+
+
+def _find_list_end(value, start):
+    """Return the index of the closing bracket for a list literal."""
+    depth = 0
+    quote = None
+    escaped = False
+    for index in range(start, len(value)):
+        char = value[index]
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            continue
+
+        if char in {'"', "'"}:
+            quote = char
+        elif char == "[":
+            depth += 1
+        elif char == "]":
+            depth -= 1
+            if depth == 0:
+                return index
+
+    raise ValueError("Missing closing ] for --extra-args list")
+
+
+def _extract_extra_args_list(line):
+    """Extract and normalize raw list-style `--extra-args=[...]` syntax."""
+    match = re.search(r"(?:^|\s)--extra-args(?:=|\s+)", line)
+    if match is None:
+        return None, line
+    value_start = match.end()
+    while value_start < len(line) and line[value_start].isspace():
+        value_start += 1
+    if value_start >= len(line):
+        return None, line
+    if line[value_start] != "[":
+        return None, line
+
+    end = _find_list_end(line, value_start)
+    extra_args = _parse_extra_args_list(line[value_start : end + 1])
+    rewritten = line[:value_start] + _EXTRA_ARGS_LIST_PLACEHOLDER + line[end + 1 :]
+    return extra_args, rewritten
+
+
+def _parse_extra_args_value(tokens, index, extra_args_override=None):
+    """Parse an `--extra-args` value and return the normalized value and index."""
+    token = tokens[index]
+    if token.startswith("--extra-args="):
+        value = token.split("=", 1)[1]
+    else:
+        index += 1
+        if index >= len(tokens):
+            raise ValueError("Missing value for --extra-args")
+        value = tokens[index]
+
+    if value == _EXTRA_ARGS_LIST_PLACEHOLDER and extra_args_override is not None:
+        return extra_args_override, index
+
+    return value, index
+
+
+def _parse_tokens(tokens, extra_args_override=None):
     """Parse bot command tokens into a benchmark command.
 
     Expected tokens contain `@circt-tracker-bot`, a supported check-pr command,
-    a PR number or CIRCT PR URL, and optional `--extra-args` syntax.
+    a PR number or CIRCT PR URL, and optional `--extra-args=[...]` syntax.
     """
     for index, token in enumerate(tokens):
         if token != "@circt-tracker-bot" or index + 2 >= len(tokens):
@@ -46,13 +126,10 @@ def _parse_tokens(tokens):
         i = 0
         while i < len(remaining):
             token = remaining[i]
-            if token.startswith("--extra-args="):
-                extra_args = token.split("=", 1)[1]
-            elif token == "--extra-args":
-                i += 1
-                if i >= len(remaining):
-                    raise ValueError("Missing value for --extra-args")
-                extra_args = remaining[i]
+            if token.startswith("--extra-args=") or token == "--extra-args":
+                extra_args, i = _parse_extra_args_value(
+                    remaining, i, extra_args_override=extra_args_override
+                )
             else:
                 raise ValueError(f"Unsupported argument: {token}")
             i += 1
@@ -82,13 +159,14 @@ def parse_benchmark_comment(comment):
         if not stripped:
             continue
         try:
+            extra_args_override, stripped = _extract_extra_args_list(stripped)
             tokens = shlex.split(stripped)
         except ValueError as exc:
             if "@circt-tracker-bot" in stripped:
                 raise ValueError(f"Failed to parse comment: {exc}") from exc
             continue
         try:
-            return _parse_tokens(tokens)
+            return _parse_tokens(tokens, extra_args_override=extra_args_override)
         except ValueError as exc:
             if "@circt-tracker-bot" in tokens:
                 last_error = exc
