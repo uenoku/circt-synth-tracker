@@ -25,6 +25,10 @@ inputs:
     description: 'Optional: SHA of the commit the patch was generated from (i.e. the PR base commit). If provided, this commit is fetched before applying the patch so that git apply --3way has the necessary blobs for a proper 3-way merge, even when the checkout ref has diverged from the patch base.'
     required: false
     default: ''
+  commit_after_patch:
+    description: 'When true, create a local commit after applying the patch so version metadata reflects a distinct revision.'
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -76,6 +80,16 @@ runs:
           exit 1
         fi
         echo "Applied patch: ${{ inputs.patch }} ($ACTUAL_COUNT/$EXPECTED_COUNT file(s) changed)"
+
+    - name: Commit patched checkout
+      if: ${{ inputs.patch != '' && inputs.commit_after_patch == 'true' }}
+      shell: bash
+      run: |
+        cd "${{ inputs.checkout_path }}"
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add -A
+        git commit -m "Apply PR patch for benchmark build"
 
     - name: Configure and build circt-synth
       shell: bash
