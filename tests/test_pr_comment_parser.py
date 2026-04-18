@@ -39,6 +39,24 @@ def test_parse_extra_args_with_separate_value():
     assert command.extra_args == "--disable-datapath"
 
 
+def test_parse_extra_args_list_with_equals_syntax():
+    command = parse_benchmark_comment(
+        '@circt-tracker-bot check-pr 42 --extra-args=["--enable-sop-balancing", "--enable-functional-reduction"]'
+    )
+
+    assert command.extra_args == (
+        "--enable-sop-balancing --enable-functional-reduction"
+    )
+
+
+def test_parse_extra_args_list_without_spaces():
+    command = parse_benchmark_comment(
+        '@circt-tracker-bot check-pr 42 --extra-args=["--foo=bar","--baz"]'
+    )
+
+    assert command.extra_args == "--foo=bar --baz"
+
+
 def test_parse_command_from_comment_line():
     command = parse_benchmark_comment(
         "Please run this:\n@circt-tracker-bot check-pr 314 --extra-args=\"--foo=bar\"\nThanks!"
@@ -55,6 +73,7 @@ def test_parse_command_from_comment_line():
         "@circt-tracker-bot check-pr 99 --unknown-flag",
         "@circt-tracker-bot check-pr-pass 99 --extra-args=\"--foo\"",
         "@circt-tracker-bot check-pr 99 --extra-args",
+        '@circt-tracker-bot check-pr 99 --extra-args=["--foo",',
     ],
 )
 def test_reject_invalid_commands(comment):

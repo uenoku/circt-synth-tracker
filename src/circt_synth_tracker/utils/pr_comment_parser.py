@@ -26,11 +26,50 @@ def _parse_pr_number(value):
     raise ValueError(f"Unsupported PR reference: {value}")
 
 
+def _parse_extra_args_list(value):
+    """Normalize `--extra-args=[...]` syntax into a space-separated string."""
+    if not (value.startswith("[") and value.endswith("]")):
+        raise ValueError("Invalid --extra-args list")
+
+    inner = value[1:-1].strip()
+    if not inner:
+        return ""
+
+    parts = [part.strip().strip("\"'") for part in inner.split(",")]
+    if any(not part for part in parts):
+        raise ValueError("Invalid --extra-args list")
+    return " ".join(parts)
+
+
+def _parse_extra_args_value(tokens, index):
+    """Parse an `--extra-args` value and return the normalized value and index."""
+    token = tokens[index]
+    if token.startswith("--extra-args="):
+        value = token.split("=", 1)[1]
+    else:
+        index += 1
+        if index >= len(tokens):
+            raise ValueError("Missing value for --extra-args")
+        value = tokens[index]
+
+    if value.startswith("["):
+        parts = [value]
+        while not parts[-1].endswith("]"):
+            index += 1
+            if index >= len(tokens):
+                raise ValueError("Missing closing ] for --extra-args list")
+            parts.append(tokens[index])
+        value = " ".join(parts)
+        return _parse_extra_args_list(value), index
+
+    return value, index
+
+
 def _parse_tokens(tokens):
     """Parse bot command tokens into a benchmark command.
 
     Expected tokens contain `@circt-tracker-bot`, a supported check-pr command,
-    a PR number or CIRCT PR URL, and optional `--extra-args` syntax.
+    a PR number or CIRCT PR URL, and optional `--extra-args=[...]` syntax.
     """
     for index, token in enumerate(tokens):
         if token != "@circt-tracker-bot" or index + 2 >= len(tokens):
@@ -46,13 +85,8 @@ def _parse_tokens(tokens):
         i = 0
         while i < len(remaining):
             token = remaining[i]
-            if token.startswith("--extra-args="):
-                extra_args = token.split("=", 1)[1]
-            elif token == "--extra-args":
-                i += 1
-                if i >= len(remaining):
-                    raise ValueError("Missing value for --extra-args")
-                extra_args = remaining[i]
+            if token.startswith("--extra-args=") or token == "--extra-args":
+                extra_args, i = _parse_extra_args_value(remaining, i)
             else:
                 raise ValueError(f"Unsupported argument: {token}")
             i += 1
