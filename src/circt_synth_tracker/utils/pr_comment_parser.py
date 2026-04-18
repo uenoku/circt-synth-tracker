@@ -34,8 +34,11 @@ def _parse_extra_args_list(value):
         parts = ast.literal_eval(value)
     except (SyntaxError, ValueError) as exc:
         raise ValueError("Invalid --extra-args list") from exc
-    if not isinstance(parts, list) or any(not isinstance(part, str) for part in parts):
+    if not isinstance(parts, list):
         raise ValueError("Invalid --extra-args list")
+    for part in parts:
+        if not isinstance(part, str):
+            raise ValueError("Invalid --extra-args list")
     return " ".join(parts)
 
 
@@ -96,16 +99,6 @@ def _parse_extra_args_value(tokens, index, extra_args_override=None):
 
     if value == EXTRA_ARGS_PLACEHOLDER and extra_args_override is not None:
         return extra_args_override, index
-
-    if value.startswith("["):
-        parts = [value]
-        while not parts[-1].endswith("]"):
-            index += 1
-            if index >= len(tokens):
-                raise ValueError("Missing closing ] for --extra-args list")
-            parts.append(tokens[index])
-        value = " ".join(parts)
-        return _parse_extra_args_list(value), index
 
     return value, index
 
