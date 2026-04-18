@@ -229,8 +229,8 @@ jobs:
           pass-pr-compare-report pr \
             --before circt-base.json \
             --after circt-pr.json \
-            --label-a CIRCT(PR) \
-            --label-b CIRCT(Base) \
+            --label-a "PR" \
+            --label-b "Base)" \
             --ref-before abc-base.json \
             --ref-after abc-pr.json \
             --ref-label ABC \
