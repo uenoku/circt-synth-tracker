@@ -162,14 +162,18 @@ def summarize_mode_ratios(
 
 
 def build_quick_summary_section(
-    *, label_before: str, label_after: str, before: dict, after: dict
+    *,
+    label_before: str,
+    label_after: str,
+    before: dict,
+    after: dict,
+    include_gap_change_explanation: bool,
 ) -> tuple[list[str], list[str]]:
     md = [
         "### Quick answers",
         "",
         "- Count/depth refers to LUT count/depth for LUT Mapping mode and AIG count/depth for SOP Balancing mode.",
         "- For runtime/count/depth ratios: lower is better; `< 1.0` means better/smaller, `> 1.0` means worse/larger, and `= 1.0` means no change.",
-        "- For gap change ratios such as `(PR/ABC)/(Base/ABC)`: `< 1.0` means the PR moved closer to ABC, `> 1.0` means it moved farther away, and `= 1.0` means no change in the gap.",
         "",
         f"#### Improvement from {label_before} ({label_after}/{label_before})",
         "",
@@ -180,7 +184,6 @@ def build_quick_summary_section(
         "<h2>Quick answers</h2>",
         "<p>Count/depth refers to LUT count/depth for LUT Mapping mode and AIG count/depth for SOP Balancing mode.</p>",
         "<p>For runtime/count/depth ratios: lower is better; <code>&lt; 1.0</code> means better/smaller, <code>&gt; 1.0</code> means worse/larger, and <code>= 1.0</code> means no change.</p>",
-        "<p>For gap change ratios such as <code>(PR/ABC)/(Base/ABC)</code>: <code>&lt; 1.0</code> means the PR moved closer to ABC, <code>&gt; 1.0</code> means it moved farther away, and <code>= 1.0</code> means no change in the gap.</p>",
         f"<h3>Improvement from {escape(label_before)} ({escape(label_after)}/{escape(label_before)})</h3>",
         "<table><thead><tr>"
         f"<th>Mode</th><th>Runtime ({escape(label_after)}/{escape(label_before)})</th>"
@@ -188,6 +191,15 @@ def build_quick_summary_section(
         f"<th>Depth ({escape(label_after)}/{escape(label_before)})</th>"
         "</tr></thead><tbody>",
     ]
+    if include_gap_change_explanation:
+        md.insert(
+            4,
+            "- For gap change ratios such as `(PR/ABC)/(Base/ABC)`: `< 1.0` means the PR moved closer to ABC, `> 1.0` means it moved farther away, and `= 1.0` means no change in the gap.",
+        )
+        html.insert(
+            3,
+            "<p>For gap change ratios such as <code>(PR/ABC)/(Base/ABC)</code>: <code>&lt; 1.0</code> means the PR moved closer to ABC, <code>&gt; 1.0</code> means it moved farther away, and <code>= 1.0</code> means no change in the gap.</p>",
+        )
     for mode in ("lut-mapping", "sop-balancing"):
         runtime_ratio, count_ratio, depth_ratio = summarize_mode_ratios(after, before, mode)
         md.append(
@@ -494,11 +506,13 @@ def run_single(args: argparse.Namespace) -> int:
 def run_pr(args: argparse.Namespace) -> int:
     before = load_json(args.before)
     after = load_json(args.after)
+    relatives = collect_pr_relatives(args)
     quick_summary_md, quick_summary_html = build_quick_summary_section(
         label_before=args.label_a,
         label_after=args.label_b,
         before=before,
         after=after,
+        include_gap_change_explanation=bool(relatives),
     )
 
     cc_lut_rows = compare_rows(after, before, "lut-mapping")
@@ -525,7 +539,6 @@ def run_pr(args: argparse.Namespace) -> int:
     cc_sop_delta = (
         (cc_sop_after / cc_sop_before) if (cc_sop_after and cc_sop_before) else None
     )
-    relatives = collect_pr_relatives(args)
     relative_sections = [
         build_relative_section(
             primary_before=before,
