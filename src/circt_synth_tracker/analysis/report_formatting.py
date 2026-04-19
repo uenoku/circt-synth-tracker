@@ -17,6 +17,8 @@ def format_ratio_with_pct(ratio: float | None, digits: int = 4) -> str:
     if ratio is None:
         return "n/a"
     pct = (ratio - 1.0) * 100.0
+    if abs(pct) < 0.05:
+        pct = 0.0
     return f"{ratio:.{digits}f} ({pct:+.1f}%)"
 
 
