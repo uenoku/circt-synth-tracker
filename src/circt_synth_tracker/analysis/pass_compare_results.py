@@ -168,6 +168,8 @@ def build_quick_summary_section(
         "### Quick answers",
         "",
         "- Count/depth refers to LUT count/depth for LUT Mapping mode and AIG count/depth for SOP Balancing mode.",
+        "- For runtime/count/depth ratios: lower is better; `< 1.0` means better/smaller, `> 1.0` means worse/larger, and `= 1.0` means no change.",
+        "- For gap change ratios such as `(PR/ABC)/(Base/ABC)`: `< 1.0` means the PR moved closer to ABC, `> 1.0` means it moved farther away, and `= 1.0` means no change in the gap.",
         "",
         f"#### Improvement from {label_before} ({label_after}/{label_before})",
         "",
@@ -177,6 +179,8 @@ def build_quick_summary_section(
     html = [
         "<h2>Quick answers</h2>",
         "<p>Count/depth refers to LUT count/depth for LUT Mapping mode and AIG count/depth for SOP Balancing mode.</p>",
+        "<p>For runtime/count/depth ratios: lower is better; <code>&lt; 1.0</code> means better/smaller, <code>&gt; 1.0</code> means worse/larger, and <code>= 1.0</code> means no change.</p>",
+        "<p>For gap change ratios such as <code>(PR/ABC)/(Base/ABC)</code>: <code>&lt; 1.0</code> means the PR moved closer to ABC, <code>&gt; 1.0</code> means it moved farther away, and <code>= 1.0</code> means no change in the gap.</p>",
         f"<h3>Improvement from {escape(label_before)} ({escape(label_after)}/{escape(label_before)})</h3>",
         "<table><thead><tr>"
         f"<th>Mode</th><th>Runtime ({escape(label_after)}/{escape(label_before)})</th>"

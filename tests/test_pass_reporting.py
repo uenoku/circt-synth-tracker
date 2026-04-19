@@ -124,6 +124,14 @@ def test_run_pr_report_uses_base_to_pr_order(tmp_path, pass_summaries):
     html = html_out.read_text()
 
     assert "### Quick answers" in markdown
+    assert (
+        "For runtime/count/depth ratios: lower is better; `< 1.0` means better/smaller, `> 1.0` means worse/larger, and `= 1.0` means no change."
+        in markdown
+    )
+    assert (
+        "For gap change ratios such as `(PR/ABC)/(Base/ABC)`: `< 1.0` means the PR moved closer to ABC, `> 1.0` means it moved farther away, and `= 1.0` means no change in the gap."
+        in markdown
+    )
     assert "#### Improvement from Base (PR/Base)" in markdown
     improvement_section = markdown.split("#### Improvement from Base (PR/Base)", 1)[1]
     assert _table_cells(improvement_section, "LUT Mapping") == [
@@ -202,6 +210,8 @@ def test_run_pr_report_uses_base_to_pr_order(tmp_path, pass_summaries):
     assert "### Structural Metrics (PR/Base)" in markdown
 
     assert "<h2>Quick answers</h2>" in html
+    assert "For runtime/count/depth ratios: lower is better;" in html
+    assert "For gap change ratios such as <code>(PR/ABC)/(Base/ABC)</code>:" in html
     assert "<h3>Improvement from Base (PR/Base)</h3>" in html
     assert "<h3>PR vs ABC (PR/ABC)</h3>" in html
     assert (
