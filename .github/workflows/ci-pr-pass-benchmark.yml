@@ -22,6 +22,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
   pages: write
 
 jobs:
@@ -248,9 +249,7 @@ jobs:
             --after circt-pr.json \
             --label-a "Base" \
             --label-b "PR" \
-            --ref-before abc-base.json \
-            --ref-after abc-pr.json \
-            --ref-label ABC \
+            --relative ABC abc-base.json abc-pr.json \
             --before-version "${CIRCT_VERSION_BEFORE}" \
             --after-version "${CIRCT_VERSION_AFTER}" \
             --pr-number "$PR_NUMBER" \

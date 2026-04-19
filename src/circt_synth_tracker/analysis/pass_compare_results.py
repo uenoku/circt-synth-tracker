@@ -130,6 +130,109 @@ def rows_html_with_struct(
     return "\n".join(lines)
 
 
+def build_relative_section(
+    *,
+    primary_before: dict,
+    primary_after: dict,
+    relative_before: dict,
+    relative_after: dict,
+    label_before: str,
+    label_after: str,
+    relative_label: str,
+) -> tuple[list[str], list[str]]:
+    before_lut_rows = compare_rows(primary_before, relative_before, "lut-mapping")
+    before_sop_rows = compare_rows(primary_before, relative_before, "sop-balancing")
+    after_lut_rows = compare_rows(primary_after, relative_after, "lut-mapping")
+    after_sop_rows = compare_rows(primary_after, relative_after, "sop-balancing")
+
+    before_lut_ratio = geomean_ratio(before_lut_rows)
+    before_sop_ratio = geomean_ratio(before_sop_rows)
+    after_lut_ratio = geomean_ratio(after_lut_rows)
+    after_sop_ratio = geomean_ratio(after_sop_rows)
+
+    header = [
+        "Mode",
+        f"Geometric Mean {label_before} (s)",
+        f"Geometric Mean {label_after} (s)",
+        f"Geometric Mean {relative_label} ({label_before}) (s)",
+        f"Geometric Mean {relative_label} ({label_after}) (s)",
+        f"{label_before} Ratio",
+        f"{label_after} Ratio",
+        f"Ratio Delta ({label_after}/{label_before})",
+    ]
+    html_header = "".join(f"<th>{escape(col)}</th>" for col in header)
+
+    rows = [
+        (
+            "LUT Mapping",
+            geomean([r[1] for r in before_lut_rows]),
+            geomean([r[1] for r in after_lut_rows]),
+            geomean([r[2] for r in before_lut_rows]),
+            geomean([r[2] for r in after_lut_rows]),
+            before_lut_ratio,
+            after_lut_ratio,
+            (
+                (after_lut_ratio / before_lut_ratio)
+                if (before_lut_ratio and after_lut_ratio)
+                else None
+            ),
+        ),
+        (
+            "SOP Balancing",
+            geomean([r[1] for r in before_sop_rows]),
+            geomean([r[1] for r in after_sop_rows]),
+            geomean([r[2] for r in before_sop_rows]),
+            geomean([r[2] for r in after_sop_rows]),
+            before_sop_ratio,
+            after_sop_ratio,
+            (
+                (after_sop_ratio / before_sop_ratio)
+                if (before_sop_ratio and after_sop_ratio)
+                else None
+            ),
+        ),
+    ]
+
+    section_title = f"{label_before}/{relative_label} → {label_after}/{relative_label}"
+    md = ["", f"### {section_title}", "", f"| {' | '.join(header)} |"]
+    md.append("|---|---:|---:|---:|---:|---:|---:|---:|")
+    for name, base, after, rel_base, rel_after, base_ratio, after_ratio, delta in rows:
+        md.append(
+            f"| {name} | {fmt(base)} | {fmt(after)} | {fmt(rel_base)} | {fmt(rel_after)} | "
+            f"{fmt(base_ratio)} | {fmt(after_ratio)} | {fmt(delta)} |"
+        )
+
+    html = [
+        f"<h2>{escape(section_title)}</h2>",
+        f"<table><thead><tr>{html_header}</tr></thead><tbody>",
+    ]
+    for name, base, after, rel_base, rel_after, base_ratio, after_ratio, delta in rows:
+        html.append(
+            f"<tr><td>{escape(name)}</td><td>{fmt(base)}</td><td>{fmt(after)}</td>"
+            f"<td>{fmt(rel_base)}</td><td>{fmt(rel_after)}</td><td>{fmt(base_ratio)}</td>"
+            f"<td>{fmt(after_ratio)}</td><td>{fmt(delta)}</td></tr>"
+        )
+    html.append("</tbody></table>")
+    return md, html
+
+
+def collect_pr_relatives(args: argparse.Namespace) -> list[tuple[str, dict, dict]]:
+    relatives: list[tuple[str, dict, dict]] = []
+    if getattr(args, "ref_before", None) and getattr(args, "ref_after", None):
+        relatives.append(
+            (
+                args.ref_label,
+                load_json(args.ref_before),
+                load_json(args.ref_after),
+            )
+        )
+    for label, before_path, after_path in getattr(args, "relative", []) or []:
+        relatives.append(
+            (label, load_json(Path(before_path)), load_json(Path(after_path)))
+        )
+    return relatives
+
+
 def render_pair(
     *,
     title: str,
@@ -261,17 +364,18 @@ def run_pr(args: argparse.Namespace) -> int:
     cc_sop_delta = (
         (cc_sop_after / cc_sop_before) if (cc_sop_after and cc_sop_before) else None
     )
-
-    ref_before_lut = ref_before_sop = ref_after_lut = ref_after_sop = None
-    if args.ref_before and args.ref_after:
-        ref_before = load_json(args.ref_before)
-        ref_after = load_json(args.ref_after)
-        ref_before_lut = geomean_ratio(compare_rows(before, ref_before, "lut-mapping"))
-        ref_before_sop = geomean_ratio(
-            compare_rows(before, ref_before, "sop-balancing")
+    relative_sections = [
+        build_relative_section(
+            primary_before=before,
+            primary_after=after,
+            relative_before=relative_before,
+            relative_after=relative_after,
+            label_before=args.label_a,
+            label_after=args.label_b,
+            relative_label=relative_label,
         )
-        ref_after_lut = geomean_ratio(compare_rows(after, ref_after, "lut-mapping"))
-        ref_after_sop = geomean_ratio(compare_rows(after, ref_after, "sop-balancing"))
+        for relative_label, relative_before, relative_after in collect_pr_relatives(args)
+    ]
 
     md = [
         f"## {args.title}",
@@ -287,18 +391,8 @@ def run_pr(args: argparse.Namespace) -> int:
         f"| LUT Mapping | {fmt(cc_lut_before)} | {fmt(cc_lut_after)} | {fmt(cc_lut_delta)} | {len(cc_lut_rows)} |",
         f"| SOP Balancing | {fmt(cc_sop_before)} | {fmt(cc_sop_after)} | {fmt(cc_sop_delta)} | {len(cc_sop_rows)} |",
     ]
-    if ref_before_lut is not None:
-        md.extend(
-            [
-                "",
-                f"### {args.label_a}/{args.ref_label} → {args.label_b}/{args.ref_label}",
-                "",
-                f"| Mode | {args.label_a} Ratio | {args.label_b} Ratio | Ratio Delta ({args.label_b}/{args.label_a}) |",
-                "|---|---:|---:|---:|",
-                f"| LUT Mapping | {fmt(ref_before_lut)} | {fmt(ref_after_lut)} | {fmt((ref_after_lut / ref_before_lut) if (ref_before_lut and ref_after_lut) else None)} |",
-                f"| SOP Balancing | {fmt(ref_before_sop)} | {fmt(ref_after_sop)} | {fmt((ref_after_sop / ref_before_sop) if (ref_before_sop and ref_after_sop) else None)} |",
-            ]
-        )
+    for relative_md, _ in relative_sections:
+        md.extend(relative_md)
     md.extend(["", "Interpretation: lower ratios are better."])
     md.extend(
         [
@@ -332,16 +426,8 @@ def run_pr(args: argparse.Namespace) -> int:
         f"<tr><td>SOP Balancing</td><td>{fmt(cc_sop_before)}</td><td>{fmt(cc_sop_after)}</td><td>{fmt(cc_sop_delta)}</td><td>{len(cc_sop_rows)}</td></tr>",
         "</tbody></table>",
     ]
-    if ref_before_lut is not None:
-        html_parts.extend(
-            [
-                f"<h2>{escape(args.label_a)}/{escape(args.ref_label)} → {escape(args.label_b)}/{escape(args.ref_label)}</h2>",
-                f"<table><thead><tr><th>Mode</th><th>{escape(args.label_a)} Ratio</th><th>{escape(args.label_b)} Ratio</th><th>Ratio Delta ({escape(args.label_b)}/{escape(args.label_a)})</th></tr></thead><tbody>",
-                f"<tr><td>LUT Mapping</td><td>{fmt(ref_before_lut)}</td><td>{fmt(ref_after_lut)}</td><td>{fmt((ref_after_lut / ref_before_lut) if (ref_before_lut and ref_after_lut) else None)}</td></tr>",
-                f"<tr><td>SOP Balancing</td><td>{fmt(ref_before_sop)}</td><td>{fmt(ref_after_sop)}</td><td>{fmt((ref_after_sop / ref_before_sop) if (ref_before_sop and ref_after_sop) else None)}</td></tr>",
-                "</tbody></table>",
-            ]
-        )
+    for _, relative_html in relative_sections:
+        html_parts.extend(relative_html)
     html_parts.extend(
         [
             f"<h2>Structural Metrics ({escape(args.label_b)}/{escape(args.label_a)})</h2>",
@@ -397,6 +483,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--ref-after", type=Path, help="Optional reference after JSON (e.g. ABC PR)"
     )
     pr.add_argument("--ref-label", default="ABC")
+    pr.add_argument(
+        "--relative",
+        action="append",
+        nargs=3,
+        metavar=("LABEL", "BEFORE", "AFTER"),
+        default=[],
+        help="Optional relative label and before/after JSON paths; may be repeated",
+    )
     pr.add_argument("--before-version", required=True)
     pr.add_argument("--after-version", required=True)
     pr.add_argument("--pr-number", required=True)
