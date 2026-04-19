@@ -140,9 +140,20 @@ def structural_keys(mode: str) -> tuple[str, str]:
     return "aig_count", "aig_depth"
 
 
+def compute_gap_change_ratio(
+    after_ratio: float | None, before_ratio: float | None
+) -> float | None:
+    return (
+        (after_ratio / before_ratio)
+        if (after_ratio is not None and before_ratio is not None and before_ratio > 0)
+        else None
+    )
+
+
 def summarize_mode_ratios(
     primary: dict, reference: dict, mode: str
 ) -> tuple[float | None, float | None, float | None]:
+    """Return (runtime_ratio, count_ratio, depth_ratio) for a single mode."""
     count_key, depth_key = structural_keys(mode)
     runtime_ratio = geomean_ratio(compare_rows(primary, reference, mode))
     count_ratio = geomean_ratio(compare_rows_for_metric(primary, reference, mode, count_key))
@@ -156,7 +167,7 @@ def build_quick_summary_section(
     md = [
         "### Quick answers",
         "",
-        "- Count/depth means LUT metrics for LUT Mapping and AIG metrics for SOP Balancing.",
+        "- Count/depth refers to LUT count/depth for LUT Mapping mode and AIG count/depth for SOP Balancing mode.",
         "",
         f"#### Improvement from {label_before} ({label_after}/{label_before})",
         "",
@@ -165,7 +176,7 @@ def build_quick_summary_section(
     ]
     html = [
         "<h2>Quick answers</h2>",
-        "<p>Count/depth means LUT metrics for LUT Mapping and AIG metrics for SOP Balancing.</p>",
+        "<p>Count/depth refers to LUT count/depth for LUT Mapping mode and AIG count/depth for SOP Balancing mode.</p>",
         f"<h3>Improvement from {escape(label_before)} ({escape(label_after)}/{escape(label_before)})</h3>",
         "<table><thead><tr>"
         f"<th>Mode</th><th>Runtime ({escape(label_after)}/{escape(label_before)})</th>"
@@ -339,16 +350,9 @@ def build_relative_quick_summary_section(
             primary_after, relative_after, mode
         )
 
-        def delta(after_ratio: float | None, before_ratio: float | None) -> float | None:
-            return (
-                (after_ratio / before_ratio)
-                if (after_ratio is not None and before_ratio is not None and before_ratio > 0)
-                else None
-            )
-
-        runtime_delta = delta(after_runtime, before_runtime)
-        count_delta = delta(after_count, before_count)
-        depth_delta = delta(after_depth, before_depth)
+        runtime_delta = compute_gap_change_ratio(after_runtime, before_runtime)
+        count_delta = compute_gap_change_ratio(after_count, before_count)
+        depth_delta = compute_gap_change_ratio(after_depth, before_depth)
         md.append(
             f"| {mode_label(mode)} | {format_ratio_with_pct(runtime_delta)} | "
             f"{format_ratio_with_pct(count_delta)} | {format_ratio_with_pct(depth_delta)} |"
