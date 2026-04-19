@@ -123,6 +123,61 @@ def test_run_pr_report_uses_base_to_pr_order(tmp_path, pass_summaries):
     markdown = markdown_out.read_text()
     html = html_out.read_text()
 
+    assert "### Quick answers" in markdown
+    assert (
+        "For runtime/count/depth ratios: lower is better; `< 1.0` means better/smaller, `> 1.0` means worse/larger, and `= 1.0` means no change."
+        in markdown
+    )
+    assert (
+        "For gap change ratios such as `(PR/ABC)/(Base/ABC)`: `< 1.0` means the PR moved closer to ABC, `> 1.0` means it moved farther away, and `= 1.0` means no change in the gap."
+        in markdown
+    )
+    assert "#### Improvement from Base (PR/Base)" in markdown
+    improvement_section = markdown.split("#### Improvement from Base (PR/Base)", 1)[1]
+    assert _table_cells(improvement_section, "LUT Mapping") == [
+        "LUT Mapping",
+        "0.5000 (-50.0%)",
+        "0.9000 (-10.0%)",
+        "0.9000 (-10.0%)",
+    ]
+    assert _table_cells(improvement_section, "SOP Balancing") == [
+        "SOP Balancing",
+        "1.5000 (+50.0%)",
+        "1.2000 (+20.0%)",
+        "1.1000 (+10.0%)",
+    ]
+    assert "#### PR vs ABC (PR/ABC)" in markdown
+    pr_vs_abc_section = markdown.split("#### PR vs ABC (PR/ABC)", 1)[1]
+    assert _table_cells(pr_vs_abc_section, "LUT Mapping") == [
+        "LUT Mapping",
+        "0.5000 (-50.0%)",
+        "0.9474 (-5.3%)",
+        "0.9474 (-5.3%)",
+    ]
+    assert _table_cells(pr_vs_abc_section, "SOP Balancing") == [
+        "SOP Balancing",
+        "2.0000 (+100.0%)",
+        "1.0345 (+3.4%)",
+        "1.0000 (+0.0%)",
+    ]
+    assert (
+        "#### ABC gap change from Base to PR ((PR/ABC)/(Base/ABC))" in markdown
+    )
+    abc_gap_section = markdown.split(
+        "#### ABC gap change from Base to PR ((PR/ABC)/(Base/ABC))", 1
+    )[1]
+    assert _table_cells(abc_gap_section, "LUT Mapping") == [
+        "LUT Mapping",
+        "1.0000 (+0.0%)",
+        "1.1368 (+13.7%)",
+        "1.1842 (+18.4%)",
+    ]
+    assert _table_cells(abc_gap_section, "SOP Balancing") == [
+        "SOP Balancing",
+        "1.0000 (+0.0%)",
+        "1.1379 (+13.8%)",
+        "1.2000 (+20.0%)",
+    ]
     assert "### Base → PR (PR/Base)" in markdown
     assert (
         "| Mode | Geometric Mean Base (s) | Geometric Mean PR (s) | Delta (PR/Base) | Matched |"
@@ -154,6 +209,14 @@ def test_run_pr_report_uses_base_to_pr_order(tmp_path, pass_summaries):
     ]
     assert "### Structural Metrics (PR/Base)" in markdown
 
+    assert "<h2>Quick answers</h2>" in html
+    assert "For runtime/count/depth ratios: lower is better;" in html
+    assert "For gap change ratios such as <code>(PR/ABC)/(Base/ABC)</code>:" in html
+    assert "<h3>Improvement from Base (PR/Base)</h3>" in html
+    assert "<h3>PR vs ABC (PR/ABC)</h3>" in html
+    assert (
+        "<h3>ABC gap change from Base to PR ((PR/ABC)/(Base/ABC))</h3>" in html
+    )
     assert "<h2>Base → PR (PR/Base)</h2>" in html
     assert "Geometric Mean Base (s)" in html
     assert "Geometric Mean ABC (Base) (s)" in html
@@ -193,9 +256,11 @@ def test_run_pr_report_works_without_relatives(tmp_path, pass_summaries):
     html = html_out.read_text()
 
     assert "### Base → PR (PR/Base)" in markdown
+    assert "#### PR vs ABC (PR/ABC)" not in markdown
     assert "### Base/ABC → PR/ABC" not in markdown
     assert "Geometric Mean ABC" not in markdown
 
+    assert "<h3>PR vs ABC (PR/ABC)</h3>" not in html
     assert "<h2>Base → PR (PR/Base)</h2>" in html
     assert "Base/ABC" not in html
     assert "Geometric Mean ABC" not in html
@@ -278,6 +343,10 @@ def test_run_pr_report_supports_multiple_relatives(tmp_path, pass_summaries):
 
     assert "### Base/ABC → PR/ABC" in markdown
     assert "### Base/ALT → PR/ALT" in markdown
+    assert "#### PR vs ALT (PR/ALT)" in markdown
+    assert (
+        "#### ALT gap change from Base to PR ((PR/ALT)/(Base/ALT))" in markdown
+    )
     assert _table_cells(markdown.split("### Base/ALT → PR/ALT", 1)[1], "LUT Mapping") == [
         "LUT Mapping",
         "10.0000",
@@ -291,6 +360,7 @@ def test_run_pr_report_supports_multiple_relatives(tmp_path, pass_summaries):
 
     assert "<h2>Base/ABC → PR/ABC</h2>" in html
     assert "<h2>Base/ALT → PR/ALT</h2>" in html
+    assert "<h3>PR vs ALT (PR/ALT)</h3>" in html
 
 
 def test_build_pass_history_entry_and_chart_data(pass_summaries):

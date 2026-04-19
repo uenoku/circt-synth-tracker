@@ -305,7 +305,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: parseInt('${{ inputs.issue_number }}'),
               body: [
-                `## Pass benchmark results for CIRCT PR [#${prNumber}](https://github.com/llvm/circt/pull/${prNumber})`,
+                `## Pass benchmark summary for CIRCT PR [#${prNumber}](https://github.com/llvm/circt/pull/${prNumber})`,
                 `[📊 View report](${pagesUrl}) | [📦 Artifacts](${runUrl})`,
                 '',
                 `> **${prTitle}**`,
