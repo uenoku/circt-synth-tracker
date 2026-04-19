@@ -25,8 +25,8 @@
     "circt_version": "CIRCT firtool-1.144.0-126-g6273dde67",
     "abc_version": "CIRCT firtool-1.144.0-126-g6273dde67",
     "ratios": {
-      "lut_mapping_time": 0.9301541015236895,
-      "sop_balancing_time": 0.741623103215571,
+      "lut_mapping_time": 0.9136767371478745,
+      "sop_balancing_time": 0.6893411326413738,
       "lut_count": 1.246610996270837,
       "lut_depth": 1.0000635361578918,
       "aig_count": 1.7368747435500131,
