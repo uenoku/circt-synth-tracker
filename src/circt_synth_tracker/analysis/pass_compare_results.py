@@ -156,8 +156,12 @@ def summarize_mode_ratios(
     """Return (runtime_ratio, count_ratio, depth_ratio) for a single mode."""
     count_key, depth_key = structural_keys(mode)
     runtime_ratio = geomean_ratio(compare_rows(primary, reference, mode))
-    count_ratio = geomean_ratio(compare_rows_for_metric(primary, reference, mode, count_key))
-    depth_ratio = geomean_ratio(compare_rows_for_metric(primary, reference, mode, depth_key))
+    count_ratio = geomean_ratio(
+        compare_rows_for_metric(primary, reference, mode, count_key)
+    )
+    depth_ratio = geomean_ratio(
+        compare_rows_for_metric(primary, reference, mode, depth_key)
+    )
     return runtime_ratio, count_ratio, depth_ratio
 
 
@@ -201,7 +205,9 @@ def build_quick_summary_section(
             "<p>For gap change ratios such as <code>(PR/ABC)/(Base/ABC)</code>: <code>&lt; 1.0</code> means the PR moved closer to ABC, <code>&gt; 1.0</code> means it moved farther away, and <code>= 1.0</code> means no change in the gap.</p>",
         )
     for mode in ("lut-mapping", "sop-balancing"):
-        runtime_ratio, count_ratio, depth_ratio = summarize_mode_ratios(after, before, mode)
+        runtime_ratio, count_ratio, depth_ratio = summarize_mode_ratios(
+            after, before, mode
+        )
         md.append(
             f"| {mode_label(mode)} | {format_ratio_with_pct(runtime_ratio)} | "
             f"{format_ratio_with_pct(count_ratio)} | {format_ratio_with_pct(depth_ratio)} |"
