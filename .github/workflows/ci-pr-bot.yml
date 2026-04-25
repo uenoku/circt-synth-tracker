@@ -83,8 +83,9 @@ jobs:
       - name: Parse benchmark command from comment
         id: parse
         if: steps.auth.outputs.authorized == 'true'
+        env:
+          COMMENT: ${{ steps.resolve.outputs.body }}
         run: |
-          export COMMENT="${{ steps.resolve.outputs.body }}"
           PYTHONPATH="$GITHUB_WORKSPACE/src" python3 - <<'PY'
           import os
           import sys
