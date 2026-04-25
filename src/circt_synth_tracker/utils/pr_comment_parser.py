@@ -1,4 +1,3 @@
-import ast
 import re
 import shlex
 from dataclasses import dataclass
@@ -10,6 +9,7 @@ MODE_BY_COMMAND = {
     "check-pr-pass": "pass",
 }
 _EXTRA_ARGS_LIST_PLACEHOLDER = "_circt_synth_tracker_extra_args_list_placeholder_"
+_EXTRA_ARGS_SEPARATOR_RE = re.compile(r",\s+(?=-)")
 
 
 @dataclass(frozen=True)
@@ -30,16 +30,54 @@ def _parse_pr_number(value):
 
 def _parse_extra_args_list(value):
     """Normalize `--extra-args=[...]` syntax into a space-separated string."""
-    try:
-        parts = ast.literal_eval(value)
-    except (SyntaxError, ValueError) as exc:
-        raise ValueError("Invalid --extra-args list") from exc
-    if not isinstance(parts, list):
+    if not value.startswith("[") or not value.endswith("]"):
         raise ValueError("Invalid --extra-args list")
-    for part in parts:
-        if not isinstance(part, str):
+
+    parts = []
+    index = 1
+    while index < len(value) - 1:
+        while index < len(value) - 1 and value[index].isspace():
+            index += 1
+        if index >= len(value) - 1:
+            break
+        if value[index] not in {'"', "'"}:
             raise ValueError("Invalid --extra-args list")
+        start = index
+        quote = value[index]
+        index += 1
+        escaped = False
+        while index < len(value) - 1:
+            char = value[index]
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                break
+            index += 1
+        else:
+            raise ValueError("Invalid --extra-args list")
+
+        part = shlex.split(value[start : index + 1])
+        if len(part) != 1:
+            raise ValueError("Invalid --extra-args list")
+        parts.append(part[0])
+        index += 1
+
+        while index < len(value) - 1 and value[index].isspace():
+            index += 1
+        if index >= len(value) - 1:
+            break
+        if value[index] != ",":
+            raise ValueError("Invalid --extra-args list")
+        index += 1
+
     return " ".join(parts)
+
+
+def _normalize_extra_args_value(value):
+    """Normalize shell-style extra args into the space-separated form used later."""
+    return _EXTRA_ARGS_SEPARATOR_RE.sub(" ", value).strip()
 
 
 def _find_list_end(value, start):
@@ -103,7 +141,7 @@ def _parse_extra_args_value(tokens, index, extra_args_override=None):
     if value == _EXTRA_ARGS_LIST_PLACEHOLDER and extra_args_override is not None:
         return extra_args_override, index
 
-    return value, index
+    return _normalize_extra_args_value(value), index
 
 
 def _parse_tokens(tokens, extra_args_override=None):

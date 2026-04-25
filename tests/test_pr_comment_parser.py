@@ -39,6 +39,24 @@ def test_parse_extra_args_with_separate_value():
     assert command.extra_args == "--disable-datapath"
 
 
+def test_parse_extra_args_with_comma_separated_flags():
+    command = parse_benchmark_comment(
+        '@circt-tracker-bot check-pr 42 --extra-args="--enable-functional-reduction, --functional-redcution-conflict-limit=-1"'
+    )
+
+    assert command.extra_args == (
+        "--enable-functional-reduction --functional-redcution-conflict-limit=-1"
+    )
+
+
+def test_parse_extra_args_preserves_commas_inside_argument_values():
+    command = parse_benchmark_comment(
+        '@circt-tracker-bot check-pr 42 --extra-args="--flag=a,b --baz"'
+    )
+
+    assert command.extra_args == "--flag=a,b --baz"
+
+
 def test_parse_extra_args_list_with_equals_syntax():
     command = parse_benchmark_comment(
         '@circt-tracker-bot check-pr 42 --extra-args=["--enable-sop-balancing", "--enable-functional-reduction"]'
