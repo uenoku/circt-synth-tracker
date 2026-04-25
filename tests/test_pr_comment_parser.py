@@ -49,7 +49,7 @@ def test_parse_multiple_extra_args_as_raw_string():
     )
 
 
-def test_parse_extra_args_with_comma_in_argument():
+def test_parse_extra_args_preserves_comma_in_value():
     command = parse_benchmark_comment(
         '@circt-tracker-bot check-pr 42 --extra-args="--flag=a,b --baz"'
     )
