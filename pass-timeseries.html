@@ -18,7 +18,7 @@
 <body>
   <div class="container">
     <h1>Pass Benchmark History</h1>
-    <p class="meta">Entries: 2 | Latest: 2026-04-19 | Ratios below 1.0 mean CIRCT is better than ABC.</p>
+    <p class="meta">Entries: 3 | Latest: 2026-04-25 | Ratios below 1.0 mean CIRCT is better than ABC.</p>
     <div class="charts-grid">
       <div class="chart-card"><canvas id="chart-lut_mapping_time"></canvas></div>
       <div class="chart-card"><canvas id="chart-sop_balancing_time"></canvas></div>
@@ -29,7 +29,7 @@
     </div>
   </div>
   <script>
-    const DATA = {"dates": ["2026-04-18", "2026-04-19"], "circt_versions": ["CIRCT firtool-1.144.0-126-g6273dde67", "CIRCT firtool-1.144.0-126-g6273dde67"], "abc_versions": ["CIRCT firtool-1.144.0-126-g6273dde67", "CIRCT firtool-1.144.0-126-g6273dde67"], "metrics": [{"key": "lut_mapping_time", "label": "LUT Mapping Time Ratio (CIRCT/ABC)", "values": [0.9126189954028531, 0.9056593374885128], "matched": [68, 69]}, {"key": "sop_balancing_time", "label": "SOP Balancing Time Ratio (CIRCT/ABC)", "values": [0.7455107724132153, 0.7582136169658269], "matched": [76, 76]}, {"key": "lut_count", "label": "LUT Count Ratio (CIRCT/ABC)", "values": [1.246610996270837, 1.246610996270837], "matched": [76, 76]}, {"key": "lut_depth", "label": "LUT Depth Ratio (CIRCT/ABC)", "values": [1.0000635361578918, 1.0000635361578918], "matched": [76, 76]}, {"key": "aig_count", "label": "AIG Count Ratio (CIRCT/ABC)", "values": [1.7368747435500131, 1.7368747435500131], "matched": [76, 76]}, {"key": "aig_depth", "label": "AIG Depth Ratio (CIRCT/ABC)", "values": [1.0110461191187867, 1.0110461191187867], "matched": [76, 76]}]};
+    const DATA = {"dates": ["2026-04-18", "2026-04-19", "2026-04-25"], "circt_versions": ["CIRCT firtool-1.144.0-126-g6273dde67", "CIRCT firtool-1.144.0-126-g6273dde67", "CIRCT firtool-1.145.0-6-gd07f832f1"], "abc_versions": ["CIRCT firtool-1.144.0-126-g6273dde67", "CIRCT firtool-1.144.0-126-g6273dde67", "CIRCT firtool-1.145.0-6-gd07f832f1"], "metrics": [{"key": "lut_mapping_time", "label": "LUT Mapping Time Ratio (CIRCT/ABC)", "values": [0.9126189954028531, 0.9056593374885128, 0.886518538418786], "matched": [68, 69, 69]}, {"key": "sop_balancing_time", "label": "SOP Balancing Time Ratio (CIRCT/ABC)", "values": [0.7455107724132153, 0.7582136169658269, 0.663635987462621], "matched": [76, 76, 76]}, {"key": "lut_count", "label": "LUT Count Ratio (CIRCT/ABC)", "values": [1.246610996270837, 1.246610996270837, 1.246610996270837], "matched": [76, 76, 76]}, {"key": "lut_depth", "label": "LUT Depth Ratio (CIRCT/ABC)", "values": [1.0000635361578918, 1.0000635361578918, 1.0000635361578918], "matched": [76, 76, 76]}, {"key": "aig_count", "label": "AIG Count Ratio (CIRCT/ABC)", "values": [1.7368747435500131, 1.7368747435500131, 1.7368747435500131], "matched": [76, 76, 76]}, {"key": "aig_depth", "label": "AIG Depth Ratio (CIRCT/ABC)", "values": [1.0110461191187867, 1.0110461191187867, 1.0110461191187867], "matched": [76, 76, 76]}]};
     function makeChart(metric) {
       const ctx = document.getElementById(`chart-${metric.key}`);
       if (!ctx) return;
