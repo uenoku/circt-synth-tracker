@@ -205,8 +205,7 @@ workflows automatically. Supported commands:
 | `@circt-tracker-bot rerun` | Re-run the most recent `check-pr*` command in the issue |
 
 The bot also accepts a full GitHub PR URL in place of `<N>` and optional
-`--extra-args=["...", "..."]` or `--extra-args="..."` syntax for CIRCT
-benchmark runs.
+`--extra-args="--foo --bar"` syntax for CIRCT benchmark runs.
 
 ## Time Series Tracking
 
