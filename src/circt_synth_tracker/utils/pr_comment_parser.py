@@ -32,6 +32,8 @@ def _parse_extra_args_value(tokens, index):
     token = tokens[index]
     if token.startswith("--extra-args="):
         value = token.split("=", 1)[1]
+        if value == "" and index + 1 < len(tokens) and tokens[index + 1].startswith("["):
+            raise ValueError(_EXTRA_ARGS_LIST_SYNTAX_MESSAGE)
     else:
         index += 1
         if index >= len(tokens):

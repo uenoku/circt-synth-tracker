@@ -75,13 +75,23 @@ def test_rejects_list_style_extra_args_with_guidance():
         )
 
 
-def test_rejects_space_separated_list_style_extra_args_with_guidance():
+def test_rejects_list_style_extra_args_without_equals_with_guidance():
     with pytest.raises(
         ValueError,
         match='List-style --extra-args is no longer supported; use --extra-args="--foo --bar"',
     ):
         parse_benchmark_comment(
             '@circt-tracker-bot check-pr 99 --extra-args ["--foo", "--bar"]'
+        )
+
+
+def test_rejects_list_style_extra_args_with_space_after_equals_with_guidance():
+    with pytest.raises(
+        ValueError,
+        match='List-style --extra-args is no longer supported; use --extra-args="--foo --bar"',
+    ):
+        parse_benchmark_comment(
+            '@circt-tracker-bot check-pr 99 --extra-args= ["--foo", "--bar"]'
         )
 
 
