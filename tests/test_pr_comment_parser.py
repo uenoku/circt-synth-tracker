@@ -39,9 +39,9 @@ def test_parse_extra_args_with_separate_value():
     assert command.extra_args == "--disable-datapath"
 
 
-def test_parse_extra_args_list_with_equals_syntax():
+def test_parse_multiple_extra_args_as_raw_string():
     command = parse_benchmark_comment(
-        '@circt-tracker-bot check-pr 42 --extra-args=["--enable-sop-balancing", "--enable-functional-reduction"]'
+        '@circt-tracker-bot check-pr 42 --extra-args="--enable-sop-balancing --enable-functional-reduction"'
     )
 
     assert command.extra_args == (
@@ -49,28 +49,50 @@ def test_parse_extra_args_list_with_equals_syntax():
     )
 
 
-def test_parse_extra_args_list_without_spaces():
+def test_parse_extra_args_preserves_nested_quotes():
     command = parse_benchmark_comment(
-        '@circt-tracker-bot check-pr 42 --extra-args=["--foo=bar","--baz"]'
+        "@circt-tracker-bot check-pr 42 --extra-args='--flag=\"value with spaces\" --baz'"
     )
 
-    assert command.extra_args == "--foo=bar --baz"
+    assert command.extra_args == '--flag="value with spaces" --baz'
 
 
-def test_parse_extra_args_list_with_separate_value():
+def test_parse_extra_args_preserves_comma_in_value():
     command = parse_benchmark_comment(
-        '@circt-tracker-bot check-pr 42 --extra-args ["--foo=bar", "--baz"]'
-    )
-
-    assert command.extra_args == "--foo=bar --baz"
-
-
-def test_parse_extra_args_list_with_comma_in_argument():
-    command = parse_benchmark_comment(
-        '@circt-tracker-bot check-pr 42 --extra-args=["--flag=a,b", "--baz"]'
+        '@circt-tracker-bot check-pr 42 --extra-args="--flag=a,b --baz"'
     )
 
     assert command.extra_args == "--flag=a,b --baz"
+
+
+def test_rejects_list_style_extra_args_with_guidance():
+    with pytest.raises(
+        ValueError,
+        match='List-style --extra-args is no longer supported; use --extra-args="--foo --bar"',
+    ):
+        parse_benchmark_comment(
+            '@circt-tracker-bot check-pr 99 --extra-args=["--foo", "--bar"]'
+        )
+
+
+def test_rejects_list_style_extra_args_without_equals_with_guidance():
+    with pytest.raises(
+        ValueError,
+        match='List-style --extra-args is no longer supported; use --extra-args="--foo --bar"',
+    ):
+        parse_benchmark_comment(
+            '@circt-tracker-bot check-pr 99 --extra-args ["--foo", "--bar"]'
+        )
+
+
+def test_rejects_list_style_extra_args_with_space_after_equals_with_guidance():
+    with pytest.raises(
+        ValueError,
+        match='List-style --extra-args is no longer supported; use --extra-args="--foo --bar"',
+    ):
+        parse_benchmark_comment(
+            '@circt-tracker-bot check-pr 99 --extra-args= ["--foo", "--bar"]'
+        )
 
 
 def test_parse_command_from_comment_line():
@@ -89,8 +111,6 @@ def test_parse_command_from_comment_line():
         "@circt-tracker-bot check-pr 99 --unknown-flag",
         "@circt-tracker-bot check-pr-pass 99 --extra-args=\"--foo\"",
         "@circt-tracker-bot check-pr 99 --extra-args",
-        '@circt-tracker-bot check-pr 99 --extra-args=["--foo",',
-        "@circt-tracker-bot check-pr 99 --extra-args=[1, 2]",
     ],
 )
 def test_reject_invalid_commands(comment):
