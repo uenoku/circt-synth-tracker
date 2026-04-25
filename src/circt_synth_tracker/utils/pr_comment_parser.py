@@ -8,6 +8,9 @@ MODE_BY_COMMAND = {
     "check-pr-quick": "quick",
     "check-pr-pass": "pass",
 }
+_EXTRA_ARGS_LIST_SYNTAX_MESSAGE = (
+    'List-style --extra-args is no longer supported; use --extra-args="--foo --bar"'
+)
 @dataclass(frozen=True)
 class BenchmarkCommand:
     mode: str
@@ -34,6 +37,8 @@ def _parse_extra_args_value(tokens, index):
         if index >= len(tokens):
             raise ValueError("Missing value for --extra-args")
         value = tokens[index]
+    if value.startswith("["):
+        raise ValueError(_EXTRA_ARGS_LIST_SYNTAX_MESSAGE)
     return value, index
 
 

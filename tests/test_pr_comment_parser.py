@@ -65,6 +65,16 @@ def test_parse_extra_args_preserves_comma_in_value():
     assert command.extra_args == "--flag=a,b --baz"
 
 
+def test_rejects_list_style_extra_args_with_guidance():
+    with pytest.raises(
+        ValueError,
+        match='List-style --extra-args is no longer supported; use --extra-args="--foo --bar"',
+    ):
+        parse_benchmark_comment(
+            '@circt-tracker-bot check-pr 99 --extra-args=["--foo", "--bar"]'
+        )
+
+
 def test_parse_command_from_comment_line():
     command = parse_benchmark_comment(
         "Please run this:\n@circt-tracker-bot check-pr 314 --extra-args=\"--foo=bar\"\nThanks!"
@@ -81,7 +91,6 @@ def test_parse_command_from_comment_line():
         "@circt-tracker-bot check-pr 99 --unknown-flag",
         "@circt-tracker-bot check-pr-pass 99 --extra-args=\"--foo\"",
         "@circt-tracker-bot check-pr 99 --extra-args",
-        '@circt-tracker-bot check-pr 99 --extra-args=["--foo", "--bar"]',
         '@circt-tracker-bot check-pr 99 --extra-args ["--foo", "--bar"]',
     ],
 )
