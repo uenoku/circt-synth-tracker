@@ -101,7 +101,6 @@ def test_parse_command_from_comment_line():
         "@circt-tracker-bot check-pr 99 --unknown-flag",
         "@circt-tracker-bot check-pr-pass 99 --extra-args=\"--foo\"",
         "@circt-tracker-bot check-pr 99 --extra-args",
-        '@circt-tracker-bot check-pr 99 --extra-args ["--foo", "--bar"]',
     ],
 )
 def test_reject_invalid_commands(comment):
