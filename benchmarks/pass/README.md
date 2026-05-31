@@ -35,6 +35,7 @@ Use `lit -D<NAME>=<VALUE>` to set parameters.
 Notes:
 - `SYNTH_TOOL`, `BW`, and `ABC_COMMANDS` are combinational-flow parameters and are not used by the pass benchmark tests.
 - Pass tests use `%PASS_LUT_SIZE` and `%PASS_CUT_SIZE` substitutions internally.
+- SOP balancing reports AIG metrics after structural hashing (`synth-structural-hash` for CIRCT, `strash` for ABC) so structurally equivalent nodes are normalized before comparison.
 - To collect both engines, run pass tests twice (`-DTOOL=circt` and `-DTOOL=abc`) and aggregate both result sets.
 
 ## Sweep example

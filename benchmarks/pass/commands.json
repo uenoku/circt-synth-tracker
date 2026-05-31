@@ -8,8 +8,8 @@
     },
     {
         "name": "sop-balancing",
-        "abc": "if -K ${lut_k} -C ${cut_size} -g",
-        "circt": "synth-sop-balancing{max-cut-input-size=${lut_k} max-cuts-per-root=${cut_size}}",
+        "abc": "if -K ${lut_k} -C ${cut_size} -g; strash",
+        "circt": "synth-sop-balancing{max-cut-input-size=${lut_k} max-cuts-per-root=${cut_size}},synth-structural-hash",
         "circt-pass-name": "SOPBalancing",
         "output": "aig"
     }
