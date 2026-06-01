@@ -40,12 +40,12 @@ def write_pass_tests(pass_tests_dir: Path, benchmarks: list[tuple[str, Path]]) -
             "--mode lut-mapping --lut-size %PASS_LUT_SIZE "
             "--cut-size %PASS_CUT_SIZE --tool %PASS_TOOL "
             f"--input-aig %DATAPATHBENCH_AIG/{top}.aig "
-            f"--name datapathbench_{top}\n"
+            f"--name datapathbench_{top} --suite datapathbench\n"
             "RUN: run-pass-benchmark --benchmarks-root %S/../.. --output-dir %T "
             "--mode sop-balancing --lut-size %PASS_LUT_SIZE "
             "--cut-size %PASS_CUT_SIZE --tool %PASS_TOOL "
             f"--input-aig %DATAPATHBENCH_AIG/{top}.aig "
-            f"--name datapathbench_{top}\n"
+            f"--name datapathbench_{top} --suite datapathbench\n"
         )
 
 
