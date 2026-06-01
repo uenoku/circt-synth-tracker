@@ -42,7 +42,7 @@ Notes:
 ## DatapathBench AIG fixtures
 
 DatapathBench pass tests use checked-in AIG fixtures generated from a fixed set of
-SV sources with `run-circt-synth`:
+SV sources at `BW=16` and `BW=48` with `run-circt-synth`:
 
 ```bash
 benchmarks/aig/datapathbench/generate_aigs.py \

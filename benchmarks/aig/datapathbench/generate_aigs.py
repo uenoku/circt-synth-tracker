@@ -21,9 +21,15 @@ BENCHMARKS = [
     "FmaShareSgn",
 ]
 
+WIDTHS = [16, 48]
+
 
 def benchmark_sv(datapathbench_root: Path, top: str) -> Path:
     return datapathbench_root / "benchmarks" / top / "sv" / f"{top}.sv"
+
+
+def fixture_name(top: str, bw: int) -> str:
+    return f"{top}_{bw}"
 
 
 def run_command(cmd: list[str]) -> None:
@@ -31,21 +37,24 @@ def run_command(cmd: list[str]) -> None:
     subprocess.run(cmd, check=True)
 
 
-def write_pass_tests(pass_tests_dir: Path, benchmarks: list[tuple[str, Path]]) -> None:
+def write_pass_tests(pass_tests_dir: Path,
+                     benchmarks: list[tuple[str, int, Path]]) -> None:
     pass_tests_dir.mkdir(parents=True, exist_ok=True)
-    for top, _ in benchmarks:
-        test_file = pass_tests_dir / f"datapathbench_{top}.test"
+    for top, bw, _ in benchmarks:
+        name = fixture_name(top, bw)
+        benchmark_name = f"datapathbench_{name}"
+        test_file = pass_tests_dir / f"{benchmark_name}.test"
         test_file.write_text(
             "RUN: run-pass-benchmark --benchmarks-root %S/../.. --output-dir %T "
             "--mode lut-mapping --lut-size %PASS_LUT_SIZE "
             "--cut-size %PASS_CUT_SIZE --tool %PASS_TOOL "
-            f"--input-aig %DATAPATHBENCH_AIG/{top}.aig "
-            f"--name datapathbench_{top} --suite datapathbench\n"
+            f"--input-aig %DATAPATHBENCH_AIG/{name}.aig "
+            f"--name {benchmark_name} --suite datapathbench\n"
             "RUN: run-pass-benchmark --benchmarks-root %S/../.. --output-dir %T "
             "--mode sop-balancing --lut-size %PASS_LUT_SIZE "
             "--cut-size %PASS_CUT_SIZE --tool %PASS_TOOL "
-            f"--input-aig %DATAPATHBENCH_AIG/{top}.aig "
-            f"--name datapathbench_{top} --suite datapathbench\n"
+            f"--input-aig %DATAPATHBENCH_AIG/{name}.aig "
+            f"--name {benchmark_name} --suite datapathbench\n"
         )
 
 
@@ -68,9 +77,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--bw",
+        action="append",
         type=int,
-        default=16,
-        help="BW parameter passed to DatapathBench modules",
+        default=[],
+        help=(
+            "BW parameter passed to DatapathBench modules; may be repeated "
+            f"(default: {','.join(str(bw) for bw in WIDTHS)})"
+        ),
     )
     parser.add_argument(
         "--run-circt-synth",
@@ -95,9 +108,13 @@ def main() -> int:
     args = parser.parse_args()
     datapathbench_root = args.datapathbench_root.resolve()
     output_dir = args.output_dir.resolve()
+    widths = args.bw or WIDTHS
 
-    benchmarks = [(top, benchmark_sv(datapathbench_root, top)) for top in BENCHMARKS]
-    missing = [str(sv_file) for _, sv_file in benchmarks if not sv_file.exists()]
+    benchmarks = [
+        (top, bw, benchmark_sv(datapathbench_root, top)) for bw in widths
+        for top in BENCHMARKS
+    ]
+    missing = [str(sv_file) for _, _, sv_file in benchmarks if not sv_file.exists()]
     if missing:
         print("Missing DatapathBench SV file(s):", file=sys.stderr)
         for sv_file in missing:
@@ -105,14 +122,14 @@ def main() -> int:
         return 1
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    for top, sv_file in benchmarks:
-        output_file = output_dir / f"{top}.aig"
+    for top, bw, sv_file in benchmarks:
+        output_file = output_dir / f"{fixture_name(top, bw)}.aig"
         run_command(
             [
                 *shlex.split(args.run_circt_synth),
                 str(sv_file),
                 "--bw",
-                str(args.bw),
+                str(bw),
                 "-top",
                 top,
                 "--circt-verilog",
