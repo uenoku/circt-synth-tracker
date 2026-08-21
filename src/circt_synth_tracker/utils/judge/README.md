@@ -134,11 +134,7 @@ This tool is designed to work with the circt-synth-tracker test suite. Since it 
 import subprocess
 import json
 
-result = subprocess.run(
-    ['aig-judge', 'input.aig'],
-    capture_output=True,
-    text=True
-)
+result = subprocess.run(["aig-judge", "input.aig"], capture_output=True, text=True)
 
 if result.returncode == 0:
     data = json.loads(result.stdout)

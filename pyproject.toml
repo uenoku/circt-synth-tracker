@@ -31,7 +31,7 @@ append-pass-history = "circt_synth_tracker.analysis.append_pass_history:main"
 pass-timeseries-report = "circt_synth_tracker.analysis.pass_timeseries_report:main"
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0.0", "ruff>=0.1.0"]
+dev = ["pytest>=7.0.0", "ruff>=0.16.3"]
 
 [build-system]
 requires = ["hatchling"]
@@ -51,4 +51,4 @@ ignore = ["E501"]
 # use ruff defaults
 
 [dependency-groups]
-dev = ["lit>=18.0.0", "ruff>=0.14.1"]
+dev = ["lit>=18.0.0", "ruff>=0.16.3"]
