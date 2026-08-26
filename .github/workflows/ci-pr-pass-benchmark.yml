@@ -44,7 +44,7 @@ jobs:
       - name: Install native runner packages
         uses: ./tracker/.github/actions/setup-ubuntu-ci-tools
         with:
-          packages: yosys lld
+          packages: lld
 
       - name: Get PR info from llvm/circt
         id: pr-info

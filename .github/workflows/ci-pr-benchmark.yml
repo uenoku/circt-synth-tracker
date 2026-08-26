@@ -72,7 +72,7 @@ jobs:
       - name: Install native runner packages
         uses: ./.github/actions/setup-ubuntu-ci-tools
         with:
-          packages: yosys lld
+          packages: lld
 
       - name: Download pre-built CIRCT (base binaries + LLVM/MLIR install)
         env:
