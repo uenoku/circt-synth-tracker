@@ -209,6 +209,9 @@ __marimo__/
 # Project-specific
 # Lit test outputs
 test-output/
+
+# Generated random arithmetic fuzz tests
+random_tests/tests/
 **/output/
 
 # Custom test configuration (copy from test-config.example.fish)

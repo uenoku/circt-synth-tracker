@@ -41,7 +41,7 @@ build-backend = "hatchling.build"
 packages = ["src/circt_synth_tracker"]
 
 [tool.ruff]
-exclude = ["benchmarks/", "tests/"]
+exclude = ["benchmarks/", "tests/", "random_tests/lit.cfg.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
