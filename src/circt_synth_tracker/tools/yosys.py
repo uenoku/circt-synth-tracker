@@ -122,7 +122,7 @@ def generate_yosys_script(input_file, output_file, top_module, bitwidth):
 
     # Synthesis
     script.append("# Synthesis")
-    script.append("synth")
+    script.append("synth -noabc")
     script.append("")
 
     # Output as AIG
