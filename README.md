@@ -36,8 +36,17 @@ This repository has two benchmark tracks:
 - `comb` (`benchmarks/comb/`): end-to-end combinational synthesis benchmarks
 - `pass` (`benchmarks/pass/`): pass-level compile-time benchmarks
 
-In addition, there is a fuzz-style regression suite that is kept separate
-from the normal benchmarks:
+In addition, there are two suites kept separate from the normal
+benchmarks:
+- `adversarial_tests/`: ten hand-crafted regression benchmarks, each
+  targeting a specific error-prone corner of arithmetic synthesis
+  (mixed-extension multiplies, wrap-vs-widen subtracts, signed compare
+  muxes, shift cast chains, rewidthing identities, signed remainder,
+  truncating FMA). Committed and stable; runs in CI with LEC:
+
+  ```bash
+  lit -v adversarial_tests/ -DRUN_LEC=1
+  ```
 - `random_tests/`: randomly generated adversarial arithmetic combinational
   logic (mixed signedness extensions, part selects, arithmetic shifts,
   ...). See `random_tests/README.md`. It never runs as part of the tracks

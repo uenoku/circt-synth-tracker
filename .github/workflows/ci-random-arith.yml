@@ -1,9 +1,11 @@
 name: Random Arith LEC
 
 # Fuzz-style equivalence checking of randomly generated arithmetic
-# combinational logic (random_tests/). Verifies that circt-synth preserves
-# SystemVerilog semantics on signedness/extension/truncation torture cases.
-# Tests are regenerated in CI from a fixed seed (nothing is committed).
+# combinational logic (random_tests/) plus hand-crafted regression cases
+# targeting known signedness/extension traps (adversarial_tests/).
+# Verifies that circt-synth preserves SystemVerilog semantics.
+# Random tests are regenerated in CI from a fixed seed (nothing is
+# committed); adversarial tests are stable, committed files.
 #
 # A test FAILS the job when:
 #   - synthesis itself crashes (lit failure), or
@@ -100,10 +102,10 @@ jobs:
           source ../.venv/bin/activate
           ./generate_tests.py --seed "$SEED" --num-tests "$NUM_TESTS"
 
-      - name: Run synthesis + LEC
+      - name: Run synthesis + LEC (random + adversarial)
         run: |
           source .venv/bin/activate
-          lit -v random_tests/ \
+          lit -v random_tests/ adversarial_tests/ \
             -DTEST_OUTPUT_DIR=build_random \
             -DRUN_LEC=1 \
             --timeout 300
