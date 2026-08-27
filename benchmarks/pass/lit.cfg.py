@@ -36,3 +36,9 @@ config.substitutions.append(("%PASS_TOOL", tool))
 config.substitutions.append(
     ("%LSILS_AIG", str(benchmarks_root / "aig" / "lsils" / "benchmarks"))
 )
+config.substitutions.append(
+    (
+        "%DATAPATHBENCH_AIG",
+        str(benchmarks_root / "aig" / "datapathbench" / "benchmarks"),
+    )
+)
