@@ -178,6 +178,11 @@ refs and posts a before/after comparison, mirroring the PR benchmark flow.
 Inputs:
 - `circt_repo`: CIRCT repository `owner/repo` to fetch from (default `llvm/circt`)
 - `circt_branch`: branch (or any git ref) to benchmark (required)
+- `base_repo`: repository to resolve `base_ref` from (default: same as
+  `circt_repo`). Set to `llvm/circt` when benchmarking a fork branch
+  against upstream — important because the build reuses the latest nightly
+  LLVM, which only matches recent upstream commits. A stale fork `main`
+  will fail to compile against it (e.g. removed `DenseMap` tombstone API).
 - `base_ref`: ref to compare against (default `main`)
 - `abc_commands`, `extra_circt_synth_args` (+ `_base`/`_branch` variants),
   `equiv_check`, `issue_number` (same meaning as PR benchmark)

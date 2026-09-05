@@ -12,8 +12,13 @@ on:
         description: 'Branch (or any git ref) in circt_repo to benchmark'
         required: true
         type: string
+      base_repo:
+        description: 'CIRCT repository (owner/repo) to resolve base_ref from (defaults to circt_repo). Use llvm/circt when benchmarking a fork branch against upstream, so the base matches the nightly LLVM the build reuses.'
+        required: false
+        default: ''
+        type: string
       base_ref:
-        description: 'Ref in circt_repo to compare against (before)'
+        description: 'Ref to compare against (before), resolved in base_repo'
         required: false
         default: 'main'
         type: string
@@ -59,7 +64,7 @@ permissions:
 
 jobs:
   benchmark:
-    name: Benchmark ${{ inputs.circt_repo }}@${{ inputs.circt_branch }} vs ${{ inputs.base_ref }}
+    name: Benchmark ${{ inputs.circt_repo }}@${{ inputs.circt_branch }} vs base ${{ inputs.base_ref }}
     runs-on: ubuntu-24.04
 
     defaults:
@@ -126,12 +131,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           REPO="${{ inputs.circt_repo }}"
-          BASE_SHA=$(gh api "repos/$REPO/commits/${{ inputs.base_ref }}" --jq '.sha')
+          BASE_REPO="${{ inputs.base_repo }}"
+          [ -z "$BASE_REPO" ] && BASE_REPO="$REPO"
+          echo "base_repo=$BASE_REPO" >> $GITHUB_OUTPUT
+          BASE_SHA=$(gh api "repos/$BASE_REPO/commits/${{ inputs.base_ref }}" --jq '.sha')
           BRANCH_SHA=$(gh api "repos/$REPO/commits/${{ inputs.circt_branch }}" --jq '.sha')
           echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
           echo "branch_sha=$BRANCH_SHA" >> $GITHUB_OUTPUT
-          echo "Base (${{ inputs.base_ref }}): ${BASE_SHA:0:8}"
-          echo "Branch (${{ inputs.circt_branch }}): ${BRANCH_SHA:0:8}"
+          echo "Base ($BASE_REPO@${{ inputs.base_ref }}): ${BASE_SHA:0:8}"
+          echo "Branch ($REPO@${{ inputs.circt_branch }}): ${BRANCH_SHA:0:8}"
           if [ "$BASE_SHA" = "$BRANCH_SHA" ]; then
             echo "::warning::Base and branch resolve to the same commit; the comparison will show no diff."
           fi
@@ -177,7 +185,7 @@ jobs:
       - name: Build CIRCT at base ref (before)
         uses: ./.github/actions/build-circt-at-sha
         with:
-          repository: ${{ inputs.circt_repo }}
+          repository: ${{ steps.refs.outputs.base_repo }}
           ref: ${{ steps.refs.outputs.base_sha }}
           checkout_path: circt-base
           build_path: circt-base/build
@@ -254,9 +262,9 @@ jobs:
           {
             echo "## CIRCT Branch Benchmark: \`${{ inputs.circt_repo }}@${{ inputs.circt_branch }}\`"
             echo ""
-            echo "| | Before (\`${{ inputs.base_ref }}\`) | After (\`${{ inputs.circt_branch }}\`) |"
+            echo "| | Before (\`${{ steps.refs.outputs.base_repo }}@${{ inputs.base_ref }}\`) | After (\`${{ inputs.circt_repo }}@${{ inputs.circt_branch }}\`) |"
             echo "|---|---|---|"
-            echo "| Repo | \`${{ inputs.circt_repo }}\` | \`${{ inputs.circt_repo }}\` |"
+            echo "| Repo | \`${{ steps.refs.outputs.base_repo }}\` | \`${{ inputs.circt_repo }}\` |"
             printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
               "${{ steps.refs.outputs.base_sha }}" \
               "${{ steps.refs.outputs.branch_sha }}"
@@ -286,6 +294,7 @@ jobs:
             }
             const repo = '${{ inputs.circt_repo }}';
             const branch = '${{ inputs.circt_branch }}';
+            const baseRepo = '${{ steps.refs.outputs.base_repo }}';
             const baseRef = '${{ inputs.base_ref }}';
             const baseSha = '${{ steps.refs.outputs.base_sha }}'.slice(0, 8);
             const branchSha = '${{ steps.refs.outputs.branch_sha }}'.slice(0, 8);
@@ -297,7 +306,7 @@ jobs:
             const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/branch-benchmarks/${safeRef}/report.html`;
 
             const body = [
-              `## Benchmark results for CIRCT branch [\`${repo}@${branch}\`](https://github.com/${repo}/tree/${branch}) vs \`${baseRef}\``,
+              `## Benchmark results for CIRCT branch [\`${repo}@${branch}\`](https://github.com/${repo}/tree/${branch}) vs [\`${baseRepo}@${baseRef}\`](https://github.com/${baseRepo}/tree/${baseRef})`,
               `[📊 View report](${pagesUrl}) | [📦 Artifacts](${runUrl})`,
               '',
               '| | Before | After |',
