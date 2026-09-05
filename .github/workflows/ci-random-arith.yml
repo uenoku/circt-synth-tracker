@@ -1,0 +1,170 @@
+name: Random Arith LEC
+
+# Fuzz-style equivalence checking of randomly generated arithmetic
+# combinational logic (random_tests/) plus hand-crafted regression cases
+# targeting known signedness/extension traps (adversarial_tests/).
+# Verifies that circt-synth preserves SystemVerilog semantics.
+# Random tests are regenerated in CI from a fixed seed (nothing is
+# committed); adversarial tests are stable, committed files.
+#
+# A test FAILS the job when:
+#   - synthesis itself crashes (lit failure), or
+#   - any LEC sidecar reports "non-equiv" (synthesis miscompile!), or
+#   - any LEC sidecar reports "error" (tool/version skew).
+# Timeouts are tolerated (wide multipliers are SAT-hard by nature) and are
+# only counted in the summary.
+
+on:
+  schedule:
+    # Nightly at 03:00 UTC (after the CIRCT nightly integration tests)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: 'Generator seed'
+        required: false
+        default: '1'
+      num_tests:
+        description: 'Number of test cases to generate'
+        required: false
+        default: '1000'
+      lec_timeout:
+        description: 'Per-case LEC timeout in seconds'
+        required: false
+        default: '10'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'random_tests/**'
+      - 'src/**'
+      - '.github/workflows/ci-random-arith.yml'
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  # Small fast batch for PR/push gates; scheduled/dispatch runs use the
+  # full batch via NUM_TESTS below.
+  NUM_TESTS: ${{ github.event_name == 'schedule' && '1000' || github.event.inputs.num_tests || '100' }}
+  SEED: ${{ github.event.inputs.seed || '1' }}
+  LEC_TIMEOUT: ${{ github.event.inputs.lec_timeout || '10' }}
+
+jobs:
+  lec-fuzz:
+    name: Generate + Synthesize + Equivalence Check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install native runner packages
+        uses: ./.github/actions/setup-ubuntu-ci-tools
+
+      - name: Install CIRCT nightly
+        uses: circt/install-circt@3f8dda6e1c1965537b5801a43c81c287bac4eae4 # v1.1.1
+        with:
+          version: 'nightly'
+          github-token: ${{ github.token }}
+
+      - name: Add CIRCT to PATH
+        run: |
+          echo "$GITHUB_WORKSPACE/circt/bin" >> $GITHUB_PATH
+
+      - name: Verify environment
+        run: |
+          which circt-synth
+          which circt-verilog
+          which circt-translate
+          # LEC must come from the same build as circt-synth: an older
+          # circt-lec cannot read the `synth` dialect and every check
+          # silently degrades to status "error".
+          which circt-lec || {
+            echo "::error::circt-lec is missing from the CIRCT install;"
+            echo "::error::LEC must use the same binaries as circt-synth."
+            exit 1
+          }
+
+      - name: Setup tracker
+        uses: ./.github/actions/setup-tracker
+
+      - name: Generate tests (seed=$SEED, n=$NUM_TESTS)
+        working-directory: random_tests
+        run: |
+          source ../.venv/bin/activate
+          ./generate_tests.py --seed "$SEED" --num-tests "$NUM_TESTS"
+
+      - name: Run synthesis + LEC (random + adversarial)
+        run: |
+          source .venv/bin/activate
+          lit -v random_tests/ adversarial_tests/ \
+            -DTEST_OUTPUT_DIR=build_random \
+            -DRUN_LEC=1 \
+            --timeout 300
+
+      - name: Aggregate LEC results
+        if: always()
+        run: |
+          source .venv/bin/activate
+          python3 - <<'EOF'
+          import json, os, sys
+          from pathlib import Path
+
+          counts = {"equiv": 0, "non-equiv": 0, "error": 0, "timeout": 0}
+          bad = []
+          for p in Path("build_random").rglob("*.lec"):
+              status = json.loads(p.read_text()).get("lec_status", "error")
+              counts[status] = counts.get(status, 0) + 1
+              if status in ("non-equiv", "error"):
+                  bad.append(str(p))
+
+          total = sum(counts.values())
+          lines = [
+              "## Random Arith LEC Results",
+              "",
+              "| Status | Count |",
+              "|---|---|",
+              f"| Equivalent | {counts['equiv']} |",
+              f"| Timeout (SAT-hard, e.g. multipliers) | {counts['timeout']} |",
+              f"| **NON-EQUIVALENT (miscompile!)** | **{counts['non-equiv']}** |",
+              f"| Tool error | {counts['error']} |",
+              f"| Total | {total} |",
+          ]
+          print("\n".join(lines))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write("\n".join(lines) + "\n")
+
+          if counts["non-equiv"] or counts["error"]:
+              print("Failing sidecars:", *bad[:20], sep="\n  ", file=sys.stderr)
+              sys.exit(
+                  f"LEC FAILED: {counts['non-equiv']} non-equiv, "
+                  f"{counts['error']} errors"
+              )
+          EOF
+
+      - name: Upload failing test cases
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failed-random-arith-cases
+          path: |
+            build_random/**/*.mlir
+            build_random/**/*.sv*
+            build_random/**/*.lec
+          if-no-files-found: ignore
+
+      - name: Upload LEC sidecars
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lec-sidecars-seed-${{ env.SEED }}
+          path: build_random/**/*.lec
+          if-no-files-found: ignore
