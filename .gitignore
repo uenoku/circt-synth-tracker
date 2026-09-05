@@ -219,3 +219,6 @@ judge-build/
 
 # Local helper scripts
 run.sh
+
+# Rust
+server/target/
