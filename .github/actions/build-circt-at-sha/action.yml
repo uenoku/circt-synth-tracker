@@ -2,6 +2,10 @@ name: Build CIRCT At SHA
 description: Checkout llvm/circt at a specific ref and build circt-synth with shared CI settings
 
 inputs:
+  repository:
+    description: 'CIRCT repository (owner/repo) to checkout from'
+    required: false
+    default: 'llvm/circt'
   ref:
     description: 'Git ref (SHA/branch/tag) to checkout from llvm/circt'
     required: true
@@ -36,7 +40,7 @@ runs:
     - name: Checkout CIRCT
       uses: actions/checkout@v4
       with:
-        repository: llvm/circt
+        repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
         submodules: false
         path: ${{ inputs.checkout_path }}

@@ -170,6 +170,21 @@ Supports optional inputs:
 
 SMT Translation Validation runs automatically on both the base and head builds using Bitwuzla.
 
+### Branch Benchmark (`ci-branch-benchmark.yml`)
+Triggered manually to benchmark any branch (or ref) of the CIRCT repository
+— including forks — against a base ref. Builds CIRCT from source at both
+refs and posts a before/after comparison, mirroring the PR benchmark flow.
+
+Inputs:
+- `circt_repo`: CIRCT repository `owner/repo` to fetch from (default `llvm/circt`)
+- `circt_branch`: branch (or any git ref) to benchmark (required)
+- `base_ref`: ref to compare against (default `main`)
+- `abc_commands`, `extra_circt_synth_args` (+ `_base`/`_branch` variants),
+  `equiv_check`, `issue_number` (same meaning as PR benchmark)
+
+SMT Translation Validation runs automatically on both builds using Bitwuzla.
+Reports are published under `branch-benchmarks/<branch>/` on GitHub Pages.
+
 ### Experiment (`ci-experiment.yml`)
 Triggered manually to compare two arbitrary configurations side by side.
 Each configuration independently specifies:

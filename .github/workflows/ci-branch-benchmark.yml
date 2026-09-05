@@ -1,0 +1,374 @@
+name: CIRCT Branch Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      circt_repo:
+        description: 'CIRCT repository (owner/repo) to fetch branches from (e.g. llvm/circt or a fork)'
+        required: false
+        default: 'llvm/circt'
+        type: string
+      circt_branch:
+        description: 'Branch (or any git ref) in circt_repo to benchmark'
+        required: true
+        type: string
+      base_ref:
+        description: 'Ref in circt_repo to compare against (before)'
+        required: false
+        default: 'main'
+        type: string
+      bitwidths:
+        description: 'Comma-separated list of bitwidths to test'
+        required: false
+        default: '16,48'
+      abc_commands:
+        description: 'ABC commands to run on AIG after synthesis via %AIG_TOOL (e.g. "dc2; dc2;")'
+        required: false
+        default: ''
+      issue_number:
+        description: 'Tracker issue number to post results to (optional)'
+        required: false
+        type: string
+      extra_circt_synth_args:
+        description: 'Extra arguments to pass to circt-synth for both base and branch runs'
+        required: false
+        default: ''
+      extra_circt_synth_args_base:
+        description: 'Extra arguments to pass to circt-synth for the base run only'
+        required: false
+        default: ''
+      extra_circt_synth_args_branch:
+        description: 'Extra arguments to pass to circt-synth for the branch run only'
+        required: false
+        default: ''
+      equiv_check:
+        description: 'Run equivalence check (--equiv-check) during comparison'
+        required: false
+        type: boolean
+        default: true
+      enable_tv:
+        description: 'Enable translation validation (TV) with bitwuzla'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  issues: write
+  pages: write
+
+jobs:
+  benchmark:
+    name: Benchmark ${{ inputs.circt_repo }}@${{ inputs.circt_branch }} vs ${{ inputs.base_ref }}
+    runs-on: ubuntu-24.04
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout tracker repository (root, for local actions)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout tracker repository
+        uses: actions/checkout@v4
+        with:
+          path: tracker
+          submodules: recursive
+
+      - name: Install native runner packages
+        uses: ./.github/actions/setup-ubuntu-ci-tools
+        with:
+          packages: lld
+
+      - name: Download pre-built CIRCT (base binaries + LLVM/MLIR install)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=$(gh run list \
+            --repo llvm/circt \
+            --workflow uploadReleaseArtifacts.yml \
+            --branch main \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          # Get the commit SHA for the downloaded artifact run
+          ARTIFACT_SHA=$(gh run view "$RUN_ID" --repo llvm/circt --json headSha --jq '.headSha')
+          echo "ARTIFACT_SHA=$ARTIFACT_SHA" >> $GITHUB_ENV
+          echo "Artifact build commit: ${ARTIFACT_SHA:0:8}"
+          echo "Downloading circt-full-shared-linux-x64.tar.gz from run $RUN_ID"
+          gh run download "$RUN_ID" \
+            --repo llvm/circt \
+            --name "circt-full-shared-linux-x64.tar.gz" \
+            --dir .
+          mkdir -p circt-prebuilt
+          tar xzf circt-full-shared-linux-x64.tar.gz -C circt-prebuilt/
+          # Avoid stale CIRCT headers from the prebuilt artifact shadowing
+          # headers generated/used by the branch checkout.
+          find "$GITHUB_WORKSPACE/circt-prebuilt" -type d -path "*/include/circt" -prune -exec rm -rf {} +
+          # Find the actual cmake dirs in case the tarball has a top-level directory
+          MLIR_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "MLIRConfig.cmake" -type f -exec dirname {} \; | head -1)
+          LLVM_CMAKE_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "LLVMConfig.cmake" -type f -exec dirname {} \; | head -1)
+          PREBUILT_BIN_DIR=$(find "$GITHUB_WORKSPACE/circt-prebuilt" -name "circt-synth" -type f -exec dirname {} \; | head -1)
+          PREBUILT_LIB_DIR=$(dirname "$(dirname "$LLVM_CMAKE_DIR")")
+          echo "MLIR_DIR=$MLIR_CMAKE_DIR" >> $GITHUB_ENV
+          echo "LLVM_DIR=$LLVM_CMAKE_DIR" >> $GITHUB_ENV
+          echo "$PREBUILT_BIN_DIR" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=$PREBUILT_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
+      - name: Resolve branch and base SHAs
+        id: refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="${{ inputs.circt_repo }}"
+          BASE_SHA=$(gh api "repos/$REPO/commits/${{ inputs.base_ref }}" --jq '.sha')
+          BRANCH_SHA=$(gh api "repos/$REPO/commits/${{ inputs.circt_branch }}" --jq '.sha')
+          echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "branch_sha=$BRANCH_SHA" >> $GITHUB_OUTPUT
+          echo "Base (${{ inputs.base_ref }}): ${BASE_SHA:0:8}"
+          echo "Branch (${{ inputs.circt_branch }}): ${BRANCH_SHA:0:8}"
+          if [ "$BASE_SHA" = "$BRANCH_SHA" ]; then
+            echo "::warning::Base and branch resolve to the same commit; the comparison will show no diff."
+          fi
+          # Sanitize the branch name for artifact/Pages paths (refs may contain /).
+          SAFE_REF=$(echo "${{ inputs.circt_branch }}" | tr '/' '-')
+          if [ "$REPO" != "llvm/circt" ]; then
+            SAFE_REF="$(echo "$REPO" | tr '/' '-')-$SAFE_REF"
+          fi
+          echo "safe_ref=$SAFE_REF" >> $GITHUB_OUTPUT
+
+      - name: Setup sccache (for CIRCT compilation)
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: sccache-circt-${{ runner.os }}-20260107030736
+          restore-keys: sccache-circt-${{ runner.os }}-
+          max-size: 1G
+          variant: sccache
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install Python dependencies and build aig-judge
+        working-directory: tracker
+        run: |
+          uv sync
+          uv run prepare
+
+      - name: Cache Bitwuzla
+        uses: actions/cache@v4
+        id: bitwuzla-cache
+        with:
+          path: /tmp/bitwuzla-cache
+          key: bitwuzla-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Download Bitwuzla
+        env:
+          BITWUZLA_CACHE_DIR: /tmp/bitwuzla-cache
+        run: bash tracker/.github/scripts/install-bitwuzla.sh
+
+      - name: Build CIRCT at base ref (before)
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          repository: ${{ inputs.circt_repo }}
+          ref: ${{ steps.refs.outputs.base_sha }}
+          checkout_path: circt-base
+          build_path: circt-base/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
+
+      - name: Run benchmarks (before)
+        run: |
+          export PATH="$GITHUB_WORKSPACE/circt-base/build/bin:$PATH"
+          BEFORE_VERSION=$(circt-synth --version | tail -1 | xargs)
+          echo "CIRCT_VERSION_BEFORE=$BEFORE_VERSION" >> $GITHUB_ENV
+          cd tracker
+          source .venv/bin/activate
+          ABC_COMMANDS="${{ inputs.abc_commands }}"
+          EXTRA_ARGS="${{ inputs.extra_circt_synth_args }}"
+          BASE_EXTRA="${{ inputs.extra_circt_synth_args_base }}"
+          [ -n "$BASE_EXTRA" ] && EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }$BASE_EXTRA"
+          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths || '16,48' }}"
+          for BW in "${BWS[@]}"; do
+            LIT_ARGS=(-v benchmarks/ -DSYNTH_TOOL=circt -DTEST_OUTPUT_DIR=build_before -DBW=$BW)
+            [ -n "$ABC_COMMANDS" ] && LIT_ARGS+=(-DABC_COMMANDS="$ABC_COMMANDS")
+            [ -n "$EXTRA_ARGS" ] && LIT_ARGS+=(-DCIRCT_SYNTH_EXTRA_ARGS="$EXTRA_ARGS")
+            [ "${{ inputs.enable_tv }}" = "true" ] && LIT_ARGS+=(-DTV_SOLVER=bitwuzla)
+            lit "${LIT_ARGS[@]}" || true
+          done
+          aggregate-results --tool "base" --version "$BEFORE_VERSION" \
+            --results-dir build_before -o before-summary.json
+
+      - name: Build CIRCT at branch (after)
+        uses: ./.github/actions/build-circt-at-sha
+        with:
+          repository: ${{ inputs.circt_repo }}
+          ref: ${{ steps.refs.outputs.branch_sha }}
+          checkout_path: circt-branch
+          build_path: circt-branch/build
+          mlir_dir: ${{ env.MLIR_DIR }}
+          llvm_dir: ${{ env.LLVM_DIR }}
+
+      - name: Run benchmarks (after)
+        run: |
+          export PATH="$GITHUB_WORKSPACE/circt-branch/build/bin:$PATH"
+          AFTER_VERSION=$(circt-synth --version | tail -1 | xargs)
+          echo "CIRCT_VERSION_AFTER=$AFTER_VERSION" >> $GITHUB_ENV
+          cd tracker
+          source .venv/bin/activate
+          ABC_COMMANDS="${{ inputs.abc_commands }}"
+          EXTRA_ARGS="${{ inputs.extra_circt_synth_args }}"
+          BRANCH_EXTRA="${{ inputs.extra_circt_synth_args_branch }}"
+          [ -n "$BRANCH_EXTRA" ] && EXTRA_ARGS="${EXTRA_ARGS:+$EXTRA_ARGS }$BRANCH_EXTRA"
+          IFS=',' read -ra BWS <<< "${{ inputs.bitwidths || '16,48' }}"
+          for BW in "${BWS[@]}"; do
+            LIT_ARGS=(-v benchmarks/ -DSYNTH_TOOL=circt -DTEST_OUTPUT_DIR=build_after -DBW=$BW)
+            [ -n "$ABC_COMMANDS" ] && LIT_ARGS+=(-DABC_COMMANDS="$ABC_COMMANDS")
+            [ -n "$EXTRA_ARGS" ] && LIT_ARGS+=(-DCIRCT_SYNTH_EXTRA_ARGS="$EXTRA_ARGS")
+            [ "${{ inputs.enable_tv }}" = "true" ] && LIT_ARGS+=(-DTV_SOLVER=bitwuzla)
+            lit "${LIT_ARGS[@]}" || true
+          done
+          aggregate-results --tool "branch" --version "$AFTER_VERSION" \
+            --results-dir build_after -o after-summary.json
+
+      - name: Compare before vs after
+        run: |
+          cd tracker
+          source .venv/bin/activate
+          EQUIV_FLAG=""
+          [ "${{ inputs.equiv_check }}" = "true" ] && EQUIV_FLAG="--equiv-check"
+          compare-results before-summary.json after-summary.json -o branch-report.html $EQUIV_FLAG
+          compare-results before-summary.json after-summary.json -o branch-report.md $EQUIV_FLAG
+          compare-results before-summary.json after-summary.json -o branch-report.json --format json
+
+      - name: Post results to GitHub Actions summary
+        if: always()
+        run: |
+          {
+            echo "## CIRCT Branch Benchmark: \`${{ inputs.circt_repo }}@${{ inputs.circt_branch }}\`"
+            echo ""
+            echo "| | Before (\`${{ inputs.base_ref }}\`) | After (\`${{ inputs.circt_branch }}\`) |"
+            echo "|---|---|---|"
+            echo "| Repo | \`${{ inputs.circt_repo }}\` | \`${{ inputs.circt_repo }}\` |"
+            printf "| Commit | \`%.8s\` | \`%.8s\` |\n" \
+              "${{ steps.refs.outputs.base_sha }}" \
+              "${{ steps.refs.outputs.branch_sha }}"
+            echo "| Version | \`${CIRCT_VERSION_BEFORE}\` | \`${CIRCT_VERSION_AFTER}\` |"
+            echo ""
+            if [ -f tracker/branch-report.md ]; then
+              cat tracker/branch-report.md
+            fi
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Post results comment to tracker issue
+        if: always() && inputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            let reportBody = '';
+            const MAX_REPORT_SIZE = 20000; // GitHub comment limit is ~65k, use 20k to be safe
+            try {
+              reportBody = fs.readFileSync('tracker/branch-report.md', 'utf8');
+              if (reportBody.length > MAX_REPORT_SIZE) {
+                reportBody = reportBody.substring(0, MAX_REPORT_SIZE) + '\n\n... *(truncated, see full report in artifacts)*';
+              }
+            } catch (e) {
+              reportBody = '_Report not generated._';
+            }
+            const repo = '${{ inputs.circt_repo }}';
+            const branch = '${{ inputs.circt_branch }}';
+            const baseRef = '${{ inputs.base_ref }}';
+            const baseSha = '${{ steps.refs.outputs.base_sha }}'.slice(0, 8);
+            const branchSha = '${{ steps.refs.outputs.branch_sha }}'.slice(0, 8);
+            const beforeVer = process.env.CIRCT_VERSION_BEFORE || 'unknown';
+            const afterVer = process.env.CIRCT_VERSION_AFTER || 'unknown';
+            const safeRef = '${{ steps.refs.outputs.safe_ref }}';
+
+            // Construct GitHub Pages URL
+            const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/branch-benchmarks/${safeRef}/report.html`;
+
+            const body = [
+              `## Benchmark results for CIRCT branch [\`${repo}@${branch}\`](https://github.com/${repo}/tree/${branch}) vs \`${baseRef}\``,
+              `[📊 View report](${pagesUrl}) | [📦 Artifacts](${runUrl})`,
+              '',
+              '| | Before | After |',
+              '|---|---|---|',
+              `| Commit | \`${baseSha}\` | \`${branchSha}\` |`,
+              `| Version | \`${beforeVer}\` | \`${afterVer}\` |`,
+              '',
+              reportBody,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt('${{ inputs.issue_number }}'),
+              body,
+            });
+        env:
+          CIRCT_VERSION_BEFORE: ${{ env.CIRCT_VERSION_BEFORE }}
+          CIRCT_VERSION_AFTER: ${{ env.CIRCT_VERSION_AFTER }}
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: branch-${{ steps.refs.outputs.safe_ref }}-benchmark
+          retention-days: 90
+          path: |
+            tracker/branch-report.html
+            tracker/branch-report.md
+            tracker/branch-report.json
+            tracker/before-summary.json
+            tracker/after-summary.json
+
+      - name: Archive failed TV MLIR files
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: branch-${{ steps.refs.outputs.safe_ref }}-failed-tv-mlir
+          path: |
+            tracker/build_before/**/*.tv-pairs/
+            tracker/build_after/**/*.tv-pairs/
+          if-no-files-found: ignore
+
+      - name: Upload test outputs on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: branch-${{ steps.refs.outputs.safe_ref }}-test-outputs
+          path: |
+            tracker/build_before/
+            tracker/build_after/
+
+      - name: Prepare deployment files
+        if: always()
+        run: |
+          # Create directory structure for deployment
+          BRANCH_DIR="deploy/branch-benchmarks/${{ steps.refs.outputs.safe_ref }}"
+          mkdir -p "$BRANCH_DIR"
+
+          # Copy only HTML report (markdown and JSON are available as artifacts)
+          cp tracker/branch-report.html "$BRANCH_DIR/report.html" || true
+
+          echo "Deployment files prepared:"
+          ls -la deploy/
+
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          keep_files: true
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
