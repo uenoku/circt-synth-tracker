@@ -145,5 +145,26 @@
       "aig_count": 76,
       "aig_depth": 76
     }
+  },
+  {
+    "date": "2026-09-05",
+    "circt_version": "CIRCT firtool-1.158.0-10-ge7f97d48c",
+    "abc_version": "CIRCT firtool-1.158.0-10-ge7f97d48c",
+    "ratios": {
+      "lut_mapping_time": 1.116753364893045,
+      "sop_balancing_time": 0.8420965715936126,
+      "lut_count": 1.2453223806078986,
+      "lut_depth": 1.0000635361578918,
+      "aig_count": 1.4338869041183768,
+      "aig_depth": 1.0110461191187867
+    },
+    "matched": {
+      "lut_mapping_time": 69,
+      "sop_balancing_time": 76,
+      "lut_count": 76,
+      "lut_depth": 76,
+      "aig_count": 76,
+      "aig_depth": 76
+    }
   }
 ]
