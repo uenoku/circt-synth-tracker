@@ -37,6 +37,15 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Fetch TRACE verifier (optional)
+      shell: bash
+      run: |
+        # TRACE is optional: lit degrades %TRACE_VERIFY to SKIP when the
+        # binary is absent, so never fail the workflow here.
+        if [ ! -f trace/trace ]; then
+          git clone --depth 1 https://github.com/jan-kl/trace trace || true
+        fi
+        chmod +x trace/trace 2>/dev/null || true
     - name: Run lit benchmarks
       shell: bash
       run: |

@@ -132,6 +132,30 @@ def main():
                                 pass
                             break
 
+                # Merge TRACE verification sidecar if present.  TRACE is an
+                # optional arithmetic verifier, so absent sidecars are normal.
+                if aig_path:
+                    trace_candidates = [Path(aig_path + ".trace.json")]
+                    inner = Path(aig_path).stem
+                    if "." in inner:
+                        base = inner.rsplit(".", 1)[0]
+                        trace_candidates.append(
+                            Path(aig_path).parent
+                            / (base + Path(aig_path).suffix + ".trace.json")
+                        )
+                    for trace_sidecar in trace_candidates:
+                        if trace_sidecar.exists():
+                            try:
+                                import json as _json
+
+                                trace_data = _json.loads(trace_sidecar.read_text())
+                                for key, value in trace_data.items():
+                                    if key.startswith("trace_"):
+                                        metrics[key] = value
+                            except Exception:
+                                pass
+                            break
+
                 mode = metrics.get("mode")
                 key = f"{benchmark_name}@{mode}" if mode else benchmark_name
                 # If still collides (unexpected), add a numeric suffix.

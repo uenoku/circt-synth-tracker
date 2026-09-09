@@ -1,4 +1,5 @@
 // RUN: %SYNTH_TOOL %s --bw %BW -top add -o %t.aig
+// RUN: %TRACE_VERIFY %t.aig --mode add --trace-binary "$TRACE"
 // RUN: %judge %t.aig | %submit %s --name add
 
 // Simple adder benchmark

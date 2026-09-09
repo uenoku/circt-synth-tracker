@@ -35,6 +35,24 @@ Use `lit -D<NAME>=<VALUE>` to set parameters.
 | `TV_SOLVER` | _(empty)_ | Enables translation validation (TV) and runs this solver (for example `bitwuzla`, `z3`) |
 | `KEEP_TV_ARTIFACTS` | _(empty)_ | Keep per-pass TV IR/SMT artifacts |
 
+### TRACE arithmetic verification
+
+TRACE can be run as an explicit post-synthesis check for benchmarks whose
+function matches TRACE's `add`, `mul`, `mac`, or `dot` specification. It is
+intentionally opt-in because most combinational benchmarks are not one of
+those arithmetic functions and TRACE is not a general equivalence checker.
+
+```text
+// RUN: %SYNTH_TOOL %s --bw %BW -top mul -o %t.aig
+// RUN: %TRACE_VERIFY %t.aig --mode mul --trace-binary "$TRACE"
+// RUN: %judge %t.aig | %submit %s --name mul
+```
+
+`trace-verify` defaults to TRACE's dynamic traversal with phase and conflict
+optimizations, writes `%t.aig.trace.json`, and returns nonzero for a reported
+bug, timeout, or tool error. The sidecar is merged into aggregate result JSON
+as `trace_*` metrics.
+
 ### AIG optimization parameter
 
 | Parameter | Default | Description |

@@ -15,6 +15,9 @@ A testing framework for tracking synthesis quality of the [Circuit IR and Tools 
 - cmake and a C++17-compatible compiler (for building the mockturtle judge)
 - `yosys`, `circt-synth`, `circt-verilog`, `circt-translate` in PATH
 - `abc` or `yosys-abc` in PATH (for ABC-based judging and AIG optimization)
+- TRACE is optional; provide its `trace` binary when running arithmetic
+  verification (a local `trace/trace` binary is discovered automatically;
+  fetch it via `git clone https://github.com/jan-kl/trace trace`)
 
 ## Setup
 
@@ -62,6 +65,10 @@ lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DABC_COMMANDS="resyn"
 # TV verifies each CIRCT synthesis pass preserves circuit semantics using circt-lec + SMT solver
 lit -v benchmarks/comb/ -DSYNTH_TOOL=circt -DTV_SOLVER=bitwuzla  # or -DTV_SOLVER=z3
 
+# Verify an arithmetic synthesis result with TRACE
+uv run trace-verify build/comb/microbenchmarks/8/Output/mul.sv.tmp.aig \
+  --mode mul --trace-binary ./trace/trace
+
 # Run specific circt-synth version
 export CIRCT_SYNTH=/path/to/circt-synth
 lit -v benchmarks/comb/
@@ -102,6 +109,7 @@ ABC alias usage for comb benchmarks is documented in `benchmarks/comb/README.md`
 | `CIRCT_SYNTH`, `CIRCT_VERILOG`, `CIRCT_TRANSLATE` | Override CIRCT binary paths |
 | `YOSYS` | Override Yosys binary path |
 | `ABC` | Override ABC binary path |
+| `TRACE` | Override TRACE binary path for `trace-verify` |
 
 ## Comparing Results
 
@@ -120,6 +128,44 @@ compare-results circt-summary.json yosys-summary.json -o report.html --cec cec.j
 ## SMT Translation Validation
 
 SMT Translation Validation (TV) details and usage are documented in `benchmarks/comb/README.md`.
+
+## TRACE Arithmetic Verification
+
+TRACE is an optional, arithmetic-specific verifier based on the SCA method
+described in [the TRACE paper](https://arxiv.org/abs/2608.16458). It consumes
+the AIGER emitted by the synthesis flow and checks that the AIG implements the
+selected specification polynomial. The `trace-verify` wrapper is important for
+automation because the TRACE binary prints `Result: Buggy` but currently exits
+with status 0 for both correct and buggy results.
+
+```bash
+# Two-operand unsigned multiplier
+TRACE=./trace/trace uv run trace-verify result.aig --mode mul
+
+# Signed MAC, using TRACE's dynamic traversal with phase and conflict
+# optimizations enabled by default
+uv run trace-verify result.aig --mode mac --signed \
+  --trace-binary ./trace/trace --timeout 600
+
+# Dot product with two products
+uv run trace-verify result.aig --mode dot --dot-terms 2 \
+  --trace-binary ./trace/trace
+```
+
+The wrapper writes `<input>.trace.json` by default. It records the verification
+status (`pass`, `fail`, `timeout`, or `error`) and TRACE metrics such as maximum
+polynomial size, substitutions, conflicts, and elapsed time. `aggregate-results`
+automatically merges these `trace_*` fields when the sidecar is next to the AIG.
+
+TRACE is not a general equivalence checker: the mode, signedness, operand
+widths, and output convention must match the circuit. Use SMT TV or ABC CEC for
+arbitrary combinational designs. To add an opt-in check to a lit test, place it
+after synthesis (and, if desired, after AIG optimization):
+
+```text
+// RUN: %SYNTH_TOOL %s --bw %BW -top mul -o %t.aig
+// RUN: %TRACE_VERIFY %t.aig --mode mul --trace-binary "$TRACE"
+```
 
 ## Project Structure
 
@@ -254,6 +300,7 @@ Installed via `uv sync`:
 | `run-abc-opt` | AIG optimizer using ABC commands and `abc.rc` aliases (`%AIG_TOOL`) |
 | `mockturtle-aig-judge` | Evaluate AIG with mockturtle (ASAP7 + Sky130) |
 | `abc-aig-judge` | Evaluate AIG with ABC technology mapping (ASAP7 + Sky130) |
+| `trace-verify` | Verify arithmetic AIGs with the external TRACE binary and write a JSON sidecar |
 | `submit-results` | Store benchmark result JSON |
 | `aggregate-results` | Aggregate per-benchmark JSONs into a summary |
 | `check-cec` | Run combinational equivalence check (CEC) between two summaries; outputs `cec.json` |

@@ -12,6 +12,7 @@ run-circt-synth = "circt_synth_tracker.tools.circt_synth:main"
 run-yosys = "circt_synth_tracker.tools.yosys:main"
 run-abc-opt = "circt_synth_tracker.tools.abc_opt:main"
 run-pass-benchmark = "circt_synth_tracker.tools.pass_benchmark:main"
+trace-verify = "circt_synth_tracker.utils.trace_verify:main"
 
 # Utility tools
 mockturtle-aig-judge = "circt_synth_tracker.utils.aig_judge:main"

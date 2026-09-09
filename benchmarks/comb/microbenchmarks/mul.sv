@@ -1,4 +1,5 @@
 // RUN: %SYNTH_TOOL %s --bw %BW -top mul -o %t.aig
+// RUN: %TRACE_VERIFY %t.aig --mode mul --trace-binary "$TRACE"
 // RUN: %judge %t.aig | %submit %s --name mul
 
 // Simple multiplication benchmark

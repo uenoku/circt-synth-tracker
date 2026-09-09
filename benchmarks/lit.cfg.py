@@ -92,6 +92,30 @@ if tech_map == 'abc':
 else:
     tech_map_command = 'mockturtle-aig-judge'
 
+# TRACE binary for arithmetic verification (optional; trace-verify also
+# auto-discovers trace/trace). Exposed as $TRACE so opt-in RUN lines can use
+# --trace-binary "$TRACE" without requiring TRACE in the outer environment.
+import shutil as _shutil
+
+trace_binary = os.environ.get('TRACE', str(project_root / 'trace' / 'trace'))
+config.environment['TRACE'] = trace_binary
+
+
+def _trace_available(candidate: str) -> bool:
+    if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+        return True
+    return _shutil.which(candidate) is not None
+
+
+if _trace_available(trace_binary):
+    trace_verify_cmd = 'trace-verify'
+    config.available_features.add('trace')
+else:
+    # TRACE is optional: degrade %TRACE_VERIFY to a no-op that prints a
+    # visible SKIP marker instead of failing tests that also cover
+    # synthesis and judging. Extra RUN args are echoed harmlessly.
+    trace_verify_cmd = 'echo "SKIP: TRACE binary not available"'
+
 # Bitwidth parameter (configurable via --param BW=<width>, default: 16)
 bw = lit_config.params.get('BW', '16')
 
@@ -104,6 +128,7 @@ if results_dir:
 # Add substitutions (order matters - more specific patterns first)
 config.substitutions.append(('%SYNTH_TOOL', tool_cmd))
 config.substitutions.append(('%AIG_TOOL', aig_tool_cmd))
+config.substitutions.append(('%TRACE_VERIFY', trace_verify_cmd))
 config.substitutions.append(('%FileCheck', filecheck))
 config.substitutions.append(('%judge', tech_map_command))
 config.substitutions.append(('%submit', submit_cmd))

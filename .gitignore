@@ -219,3 +219,6 @@ judge-build/
 
 # Local helper scripts
 run.sh
+
+# TRACE verifier clone (fetched in CI via git clone; see README)
+trace/

@@ -1,3 +1,4 @@
 RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/DotProduct/sv/DotProduct.sv --bw %BW -top DotProduct -o %t.aig
 RUN: %AIG_TOOL %t.aig -o %t.opt.aig
+RUN: %TRACE_VERIFY %t.opt.aig --mode dot --dot-terms 2 --trace-binary "$TRACE"
 RUN: %judge %t.opt.aig | %submit %s --name DotProduct

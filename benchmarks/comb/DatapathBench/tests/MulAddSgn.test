@@ -1,3 +1,4 @@
 RUN: %SYNTH_TOOL %S/../DatapathBench/benchmarks/MulAddSgn/sv/MulAddSgn.sv --bw %BW -top MulAddSgn -o %t.aig
 RUN: %AIG_TOOL %t.aig -o %t.opt.aig
+RUN: %TRACE_VERIFY %t.opt.aig --mode mac --signed --trace-binary "$TRACE"
 RUN: %judge %t.opt.aig | %submit %s --name MulAddSgn
