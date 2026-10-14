@@ -430,6 +430,11 @@ def main() -> int:
         help="Benchmark name override (default: inferred from input path)",
     )
     parser.add_argument(
+        "--suite",
+        default="lsils",
+        help="Benchmark suite name for --input-aig results (default: lsils)",
+    )
+    parser.add_argument(
         "--mode", choices=["lut-mapping", "sop-balancing"], required=True
     )
     parser.add_argument("--lut-size", type=int, default=6)
@@ -469,7 +474,7 @@ def main() -> int:
                 name = f"{input_aig.parent.name}_{input_aig.stem}"
             else:
                 name = input_aig.stem
-        workloads = [Workload(name=name, suite="lsils", aig_file=input_aig)]
+        workloads = [Workload(name=name, suite=args.suite, aig_file=input_aig)]
     else:
         workloads = discover_lsils_workloads(benchmarks_root)
         if args.max_benchmarks > 0:

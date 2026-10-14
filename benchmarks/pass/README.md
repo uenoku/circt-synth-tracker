@@ -1,6 +1,7 @@
 # Pass Benchmark Suite (`benchmarks/pass`)
 
-This suite runs pass-level compile-time benchmarks on pre-generated LSILS AIG inputs.
+This suite runs pass-level compile-time benchmarks on pre-generated LSILS AIG inputs,
+plus a fixed set of DatapathBench AIG fixtures generated from SystemVerilog.
 It compares CIRCT pass execution with equivalent ABC commands.
 
 `benchmarks/pass/commands.json` defines each mode and now includes `output`:
@@ -37,6 +38,18 @@ Notes:
 - Pass tests use `%PASS_LUT_SIZE` and `%PASS_CUT_SIZE` substitutions internally.
 - SOP balancing reports AIG metrics after structural hashing (`synth-structural-hash` for CIRCT, `strash` for ABC) so structurally equivalent nodes are normalized before comparison.
 - To collect both engines, run pass tests twice (`-DTOOL=circt` and `-DTOOL=abc`) and aggregate both result sets.
+
+## DatapathBench AIG fixtures
+
+DatapathBench pass tests use checked-in AIG fixtures generated from a fixed set of
+SV sources at `BW=16` and `BW=48` with `run-circt-synth`:
+
+```bash
+benchmarks/aig/datapathbench/generate_aigs.py \
+  --circt-verilog /path/to/circt-verilog \
+  --circt-synth /path/to/circt-synth \
+  --circt-translate /path/to/circt-translate
+```
 
 ## Sweep example
 
